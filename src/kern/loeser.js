@@ -16,6 +16,8 @@
  * Alle Größen in Gittereinheiten (eine Zelle, ein Zeitschritt).
  */
 
+import { liegtInForm, ausdehnung, pruefeForm } from './formen.js';
+
 // Die neun Richtungen: 0 ruhend, 1–4 gerade, 5–8 diagonal.
 const RICHTUNG_X = [0, 1, 0, -1, 0, 1, -1, -1, 1];
 const RICHTUNG_Y = [0, 0, 1, 0, -1, 1, 1, -1, -1];
@@ -51,12 +53,14 @@ function ruhezustand(richtung, dichte, ux, uy) {
  * @param {number} einstellungen.hoehe    Zellen vom Boden zur Decke
  * @param {number} einstellungen.windgeschwindigkeit  in Zellen je Zeitschritt
  * @param {number} einstellungen.zaehigkeit           Zähigkeit der Luft
+ * @param {object|null} einstellungen.hindernis       siehe `setzeHindernis`
  */
 export function erzeugeKanal({
   breite = 200,
   hoehe = 60,
   windgeschwindigkeit = 0.1,
   zaehigkeit = 0.01,
+  hindernis = null,
 } = {}) {
   if (breite < 3 || hoehe < 3) {
     throw new Error('Der Kanal braucht mindestens 3 × 3 Zellen.');
@@ -71,40 +75,90 @@ export function erzeugeKanal({
   // abgeleitet; muss über 0,5 liegen, sonst schaukelt sich die Rechnung auf.
   const angleichzeit = 3 * zaehigkeit + 0.5;
 
-  const zellart = new Uint8Array(anzahlZellen);
-  for (let x = 0; x < breite; x++) {
-    zellart[x] = HAFTWAND; // y = 0
-    zellart[x + (hoehe - 1) * breite] = GLEITWAND;
-  }
-
   const kanal = {
     breite,
     hoehe,
     windgeschwindigkeit,
     zaehigkeit,
     angleichzeit,
-    zellart,
+    hindernis: null,
+    zellart: new Uint8Array(anzahlZellen),
     anteile: new Float64Array(9 * anzahlZellen),
     anteileNeu: new Float64Array(9 * anzahlZellen),
     schrittzahl: 0,
   };
 
-  setzeAufAnfangszustand(kanal);
+  setzeHindernis(kanal, hindernis);
   return kanal;
 }
 
-/** Setzt den Kanal zurück: überall Dichte 1 und die volle Windgeschwindigkeit. */
+/**
+ * Setzt ein Hindernis in den Kanal — oder räumt ihn mit `null` wieder leer.
+ * Die Rechnung beginnt danach von vorn; ein Hindernis mitten im Lauf
+ * einzuwechseln wäre sonst ein Sprung, den die Strömung nicht verkraftet.
+ *
+ * Wie eine Form beschrieben wird, steht in `formen.js`.
+ *
+ * Hinderniszellen sind Haftwand — dieselbe Wandart wie der Boden. Die Luft
+ * strömt also nicht hindurch, sondern prallt zurück und haftet an der Form.
+ */
+export function setzeHindernis(kanal, hindernis = null) {
+  kanal.hindernis = hindernis;
+  baueZellarten(kanal);
+  setzeAufAnfangszustand(kanal);
+}
+
+/** Trägt Boden, Decke und das Hindernis in die Zellarten ein. */
+function baueZellarten(kanal) {
+  const { breite, hoehe, zellart, hindernis } = kanal;
+
+  zellart.fill(FLUID);
+  for (let x = 0; x < breite; x++) {
+    zellart[x] = HAFTWAND; // y = 0
+    zellart[x + (hoehe - 1) * breite] = GLEITWAND;
+  }
+
+  if (hindernis === null) return;
+  pruefeForm(hindernis);
+
+  // Ein- und Auslass werden in jedem Schritt neu gesetzt; ein Hindernis, das
+  // bis dorthin reicht, würde stillschweigend überschrieben. Lieber melden.
+  const kanten = ausdehnung(hindernis);
+  if (kanten.links < 1 || kanten.rechts > breite - 2) {
+    throw new Error('Das Hindernis reicht bis an den Einlass oder den Auslass.');
+  }
+
+  let zellenImHindernis = 0;
+  for (let y = 1; y < hoehe - 1; y++) {
+    for (let x = 1; x < breite - 1; x++) {
+      if (!liegtInForm(hindernis, x, y)) continue;
+      zellart[x + y * breite] = HAFTWAND;
+      zellenImHindernis++;
+    }
+  }
+  if (zellenImHindernis === 0) {
+    throw new Error('Das Hindernis deckt keine einzige Zelle ab — zu klein oder außerhalb des Kanals.');
+  }
+}
+
+/**
+ * Setzt den Kanal zurück: überall Dichte 1, in der Luft die volle
+ * Windgeschwindigkeit, in den Wänden Ruhe.
+ *
+ * Auch die Wandzellen werden gefüllt, obwohl in ihnen nichts gerechnet wird:
+ * sonst stünde dort die Dichte null, und ein Blick ins Hindernis lieferte statt
+ * „steht still" einen ungültigen Wert (null geteilt durch null).
+ */
 export function setzeAufAnfangszustand(kanal) {
-  const { breite, hoehe, windgeschwindigkeit, anteile } = kanal;
+  const { breite, hoehe, windgeschwindigkeit, zellart, anteile, anteileNeu } = kanal;
   const anzahlZellen = breite * hoehe;
 
-  anteile.fill(0);
-  for (let y = 1; y < hoehe - 1; y++) {
-    for (let x = 0; x < breite; x++) {
-      const zelle = x + y * breite;
-      for (let richtung = 0; richtung < 9; richtung++) {
-        anteile[richtung * anzahlZellen + zelle] = ruhezustand(richtung, 1, windgeschwindigkeit, 0);
-      }
+  for (let zelle = 0; zelle < anzahlZellen; zelle++) {
+    const ux = zellart[zelle] === FLUID ? windgeschwindigkeit : 0;
+    for (let richtung = 0; richtung < 9; richtung++) {
+      const menge = ruhezustand(richtung, 1, ux, 0);
+      anteile[richtung * anzahlZellen + zelle] = menge;
+      anteileNeu[richtung * anzahlZellen + zelle] = menge;
     }
   }
   kanal.schrittzahl = 0;
@@ -171,6 +225,17 @@ function stroemen(kanal) {
   for (let y = 1; y < hoehe - 1; y++) {
     for (let x = 1; x < breite - 1; x++) {
       const zelle = x + y * breite;
+
+      // In einer Wandzelle strömt nichts. Ihr Inhalt wird unverändert
+      // übernommen, damit dort weiterhin ruhende Luft abzulesen ist statt
+      // dessen, was zufällig aus der Nachbarschaft hineingelaufen wäre.
+      if (zellart[zelle] !== FLUID) {
+        for (let richtung = 0; richtung < 9; richtung++) {
+          anteileNeu[richtung * anzahlZellen + zelle] = anteile[richtung * anzahlZellen + zelle];
+        }
+        continue;
+      }
+
       for (let richtung = 0; richtung < 9; richtung++) {
         const herkunft = x - RICHTUNG_X[richtung] + (y - RICHTUNG_Y[richtung]) * breite;
         const art = zellart[herkunft];
