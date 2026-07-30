@@ -7,9 +7,11 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** Die Strömungsrechnung im leeren Kanal steht und läuft stabil.
-  **Etappe 1.1 liegt beim Nutzer zur Abnahme** (`node werkzeug/pruefe-kern.js`).
-  Danach **Etappe 1.2** — ein Hindernis in den Kanal setzen.
+- **Aktueller Stand:** **Etappe 1.1 abgenommen** (v0.2) — die Strömung im leeren Kanal
+  rechnet stabil, Grenzschicht am Boden vorhanden, prüfbar über
+  `node werkzeug/pruefe-kern.js`. Noch keine Bildschirmausgabe.
+  Als Nächstes **Etappe 1.2** — ein Hindernis in den Kanal setzen, an dem die Strömung
+  abprallt statt hindurchzuströmen.
 
 ---
 
@@ -89,7 +91,7 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 
 ### Abschnitt 1 — Kernlogik ohne Oberfläche
 
-- [ ] **1.1** Die Strömungsrechnung läuft im leeren Kanal stabil: Luft strömt von links nach rechts, haftet am Boden, gleitet an der Decke entlang, und das bleibt auch nach tausenden Rechenschritten so.
+- [x] **1.1** *(abgenommen 2026-07-30, v0.2)* Die Strömungsrechnung läuft im leeren Kanal stabil: Luft strömt von links nach rechts, haftet am Boden, gleitet an der Decke entlang, und das bleibt auch nach tausenden Rechenschritten so.
   - Abnahme: `node werkzeug/pruefe-kern.js` ausführen; die Ausgabe zeigt nach 2000 Schritten eine gleichbleibende Dichte, in Bodennähe eine langsamer werdende Strömung (die Grenzschicht) und darüber annähernd die vorgegebene Geschwindigkeit, keine Ausreißer.
   - Noch nicht: kein Hindernis, keine Bildschirmausgabe.
 - [ ] **1.2** Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
