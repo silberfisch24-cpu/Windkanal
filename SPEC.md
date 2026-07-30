@@ -7,7 +7,9 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** Etappe 1.1 — Strömungslöser auf leerem Gitter, noch ohne jede Oberfläche.
+- **Aktueller Stand:** Grundgerüst steht, alle Eckdaten geklärt, noch kein Programmcode.
+  Als Nächstes **Etappe 1.1** — Strömung im leeren Kanal, prüfbar über
+  `node werkzeug/pruefe-kern.js`, noch ohne jede Oberfläche.
 
 ---
 
