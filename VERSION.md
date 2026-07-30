@@ -1,27 +1,24 @@
-v0.1
-Projektgrundlage steht, und die Versionsvergabe ist geklärt.
+v0.2
+Die Strömungsrechnung läuft — im leeren Kanal, noch ohne Bild.
 
-Projektdefinition:
-- Zweck festgelegt: ein interaktiver 2D-Windkanal im Browser, in den man ein
-  Hindernis setzt und die Umströmung sofort sieht — anschaulich, ausdrücklich
-  nicht ingenieurstauglich
-- Kanalform geklärt: fester Boden mit Haftbedingung, reibungsfreie Decke
-  darüber; ob ein Körper unterströmt wird, ergibt sich aus Form und Höhe
-- Architektur festgelegt: statische Seite über GitHub Pages, reines JavaScript
-  ohne Framework und ohne Build-Schritt, Lattice-Boltzmann-Verfahren,
-  strikte Trennung von Kernlogik und Oberfläche
-- Etappenplan mit fünf Abschnitten und je eigenen Abnahmekriterien steht
-- Erfolgskriterium der ersten Version: Der Unterschied zwischen stumpfer Platte
-  und Tragflächenprofil wird im Strömungsbild unmittelbar deutlich
+Etappe 1.1 (abgenommen):
+- Luft strömt von links nach rechts durch den Kanal, haftet am Boden und gleitet
+  reibungsfrei an der Decke entlang
+- Über dem Boden bildet sich die Grenzschicht: unmittelbar an der Wand nur noch
+  7 % der Windgeschwindigkeit, ab etwa 15 Zellen Höhe die volle Strömung
+- Die Rechnung bleibt über tausende Schritte stabil; die Luftmenge im Kanal
+  pendelt sich ein, statt weiter anzuwachsen
+- Prüfbar über `node werkzeug/pruefe-kern.js`: neun Prüfpunkte und ein
+  Textdiagramm des Geschwindigkeitsprofils über die Kanalhöhe
 
-Versionsvergabe:
-- Versions-Tags entstehen ab jetzt aus dieser Datei: erste Zeile die Nummer,
-  darunter die Stichpunkte im Klartext
-- Der Workflow .github/workflows/tag.yml legt daraus beim Merge nach main den
-  annotierten Tag an; eine bereits vergebene Nummer wird nie überschrieben
-- Grund: Cloud-Sessions können technisch keine Tags setzen — git push von
-  refs/tags/* und die GitHub-API-Pfade /git/tags und /git/refs antworten mit
-  403, während Branch-Pushes durchgehen. Deshalb blieb dieser Tag zweimal
-  liegen. Der Workflow baut nichts und rührt keine ausgelieferte Datei an.
+Unterwegs festgelegt:
+- Randbedingungen: der Einlass gibt die Geschwindigkeit vor, der Auslass den
+  Druck. Beides vorne vorzugeben war ein Fehler — der Druck hatte dann keinen
+  Anker, und die Reibung staute über tausende Schritte immer mehr Luft auf
+- Voreinstellungen des Kanals: 200 × 60 Zellen, Windgeschwindigkeit 0,1 und
+  Zähigkeit 0,01 in Gittereinheiten; einstellbar werden sie in Etappe 1.5
+- package.json angelegt, ausschließlich mit "type": "module" — ohne sie lädt
+  Node die Dateien nicht. Keine Pakete, kein Build-Schritt
 
-Noch kein Programmcode: als Nächstes Etappe 1.1 (Strömung im leeren Kanal).
+Noch keine Bildschirmausgabe. Als Nächstes Etappe 1.2: ein Hindernis in den
+Kanal setzen, an dem die Strömung abprallt statt hindurchzuströmen.

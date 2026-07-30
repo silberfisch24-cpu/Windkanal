@@ -7,10 +7,12 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** Grundgerüst steht, alle Eckdaten geklärt, noch kein Programmcode.
-  Die abgeschlossene Projektgrundlage trägt den Tag `v0.1`.
-  Als Nächstes **Etappe 1.1** — Strömung im leeren Kanal, prüfbar über
-  `node werkzeug/pruefe-kern.js`, noch ohne jede Oberfläche.
+- **Aktueller Stand:** **Etappe 1.1 abgenommen** (`v0.2`) — die Strömung im leeren Kanal
+  rechnet stabil, Grenzschicht am Boden vorhanden, prüfbar über
+  `node werkzeug/pruefe-kern.js`. Noch keine Bildschirmausgabe.
+  Die Projektgrundlage davor trägt den Tag `v0.1`.
+  Als Nächstes **Etappe 1.2** — ein Hindernis in den Kanal setzen, an dem die Strömung
+  abprallt statt hindurchzuströmen.
 
 ---
 
@@ -80,7 +82,8 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
   - `tests/` — automatische Tests (Abschnitt 5)
   - `VERSION.md` — aktuelle Versionsnummer und die Stichpunkte dazu; Grundlage des Tags
   - `.github/workflows/tag.yml` — setzt daraus den Tag, siehe „Versionsvergabe"
-- **Abhängigkeiten:** zur Laufzeit keine. Für Entwicklung: Node.js mit eingebautem Testläufer (`node --test`) — keine installierten Pakete, damit das Projekt in fünf Jahren noch startet.
+- **Abhängigkeiten:** zur Laufzeit keine. Für Entwicklung: Node.js mit eingebautem Testläufer (`node --test`) — keine installierten Pakete, damit das Projekt in fünf Jahren noch startet. Die `package.json` enthält nur `"type": "module"` und keinerlei Pakete; ohne sie hält Node die `.js`-Dateien für das alte Modulformat und weigert sich, sie zu laden. Der Browser braucht sie nicht.
+- **Randbedingungen des Kanals** (festgelegt in Etappe 1.1): links wird die **Geschwindigkeit** vorgegeben, rechts der **Druck** (Dichte 1), oben Gleitwand, unten Haftwand. Die Aufteilung vorne Geschwindigkeit / hinten Druck ist notwendig: gibt man beides vorne vor und lässt hinten nur durchlaufen, hat der Druck keinen Anker und die Reibung staut immer weiter Luft auf, statt sich auf ein Gefälle einzupendeln — genau das trat beim ersten Versuch auf.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -92,7 +95,7 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 
 ### Abschnitt 1 — Kernlogik ohne Oberfläche
 
-- [ ] **1.1** Die Strömungsrechnung läuft im leeren Kanal stabil: Luft strömt von links nach rechts, haftet am Boden, gleitet an der Decke entlang, und das bleibt auch nach tausenden Rechenschritten so.
+- [x] **1.1** *(abgenommen 2026-07-30, v0.2)* Die Strömungsrechnung läuft im leeren Kanal stabil: Luft strömt von links nach rechts, haftet am Boden, gleitet an der Decke entlang, und das bleibt auch nach tausenden Rechenschritten so.
   - Abnahme: `node werkzeug/pruefe-kern.js` ausführen; die Ausgabe zeigt nach 2000 Schritten eine gleichbleibende Dichte, in Bodennähe eine langsamer werdende Strömung (die Grenzschicht) und darüber annähernd die vorgegebene Geschwindigkeit, keine Ausreißer.
   - Noch nicht: kein Hindernis, keine Bildschirmausgabe.
 - [ ] **1.2** Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
@@ -154,5 +157,20 @@ Fehler.*
 - **2026-07-30:** Beide offenen Annahmen geklärt.
   1. *Kanalform:* Es ist ein echter Kanal mit Wänden oben und unten, kein Freistrom. Boden mit Haftbedingung, Decke reibungsfrei und deutlich über den Objekten. Ob ein Körper unterströmt wird, ergibt sich aus seiner Form und seiner Höhe. Folge: Etappen 1.1, 1.3 und 3.1 umformuliert (noch keine davon war begonnen, daher keine neuen Nummern). Mitbewegter Boden als „Kann" aufgenommen.
   2. *Sprache:* Deutsch, bestätigt.
+- **2026-07-30:** Etappe 1.1 umgesetzt (Strömung im leeren Kanal). Dabei festgelegt, weil es
+  ohne Festlegung nicht rechenbar war:
+  1. *Randbedingungen:* Einlass gibt die Geschwindigkeit vor, Auslass den Druck — siehe
+     „Randbedingungen des Kanals" unter Architektur. Kein Umfangszuwachs, nur eine
+     Ausgestaltung der bereits geklärten Kanalform.
+  2. *Voreinstellungen des Kanals:* 200 × 60 Zellen, Windgeschwindigkeit 0,1 und Zähigkeit
+     0,01 in Gittereinheiten. Damit ist die Grenzschicht am Boden deutlich sichtbar und die
+     Decke bleibt weit genug entfernt. Einstellbar werden diese Größen erst in Etappe 1.5.
+  3. *`package.json` angelegt*, ausschließlich mit `"type": "module"` — ohne sie lädt Node
+     die Dateien nicht. Keine Pakete, kein Build-Schritt; die Zusage „bloße Dateisammlung"
+     bleibt unberührt.
+  4. *Bekannte, gewollte Randerscheinung:* An der Vorderkante des Bodens staut sich die Luft
+     (Dichte bis 1,022) und weicht nach oben aus. Das ist echte Strömung an einer Kante, kein
+     Rechenfehler; im Kanalinneren liegt die Dichte zwischen 1,0002 und 1,0032. Die Prüfpunkte
+     messen deshalb im Kanalinneren und weisen die Randwerte getrennt aus.
 - **2026-07-30:** Auslieferung am Schwesterprojekt *Steuerrechner* ausgerichtet: derselbe Weg (öffentlicher GitHub-Pages-Link), aber ohne dessen Actions-Workflow und ohne React/Vite, weil hier nichts zu bauen ist. Der CDU-Styleguide des Steuerrechners wird ausdrücklich nicht übernommen — er verbietet Farbverläufe, die die Strömungsdarstellung braucht.
 - **2026-07-30:** *Ausnahme vom Grundsatz „kein Actions-Workflow":* Ein Workflow kommt hinzu, allein für die Versionsvergabe. Anlass: Der Tag für die abgeschlossene erste Phase konnte zweimal nicht gesetzt werden. Geprüft wurde an diesem Tag, dass eine Cloud-Session Tags grundsätzlich nicht anlegen kann — `git push` von `refs/tags/*` sowie die API-Pfade `/git/tags` und `/git/refs` antworten mit 403, während gewöhnliche Branch-Pushes und sogar das Pushen von `.github/workflows/` durchgehen. Der Grundsatz galt dem *Bauen* der Seite und bleibt dafür unangetastet: Der neue Workflow baut nichts, verändert keine ausgelieferte Datei und wird nur durch eine Änderung an `VERSION.md` ausgelöst. Die Seite bleibt eine Dateisammlung ohne Build-Schritt. Folge: neue Dateien `VERSION.md` und `.github/workflows/tag.yml`, Abschnitt „Architektur" um „Versionsvergabe" ergänzt, Tag-Regeln in `CLAUDE.md` umgeschrieben.
