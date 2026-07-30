@@ -101,9 +101,17 @@ direkte Commits auf den Hauptzweig. Dann gilt:
 
 - Ein Branch je Etappe, nicht je Session
 - Die Abnahme durch den Nutzer bleibt Voraussetzung — erst danach zum Pull Request
-- Den Tag setzt der Nutzer nach dem Zusammenführen, oder du in einer Folgesession
-  auf dem Hauptzweig. Weise am Ende einer bestätigten Etappe darauf hin, welche
-  Versionsnummer fällig ist.
+- **Eine Cloud-Session kann keine Tags anlegen** — auch nicht mit Zugriff auf den
+  Hauptzweig. Die Umgebung antwortet auf `git push` von `refs/tags/*` und auf die
+  API-Pfade `/git/tags` und `/git/refs` mit 403. Eine neue Session mit anderen
+  Rechten hilft nicht; darauf zu warten kostet nur eine Session.
+- Entweder setzt der Nutzer den Tag selbst — im Browser über
+  `github.com/<Nutzer>/<Projekt>/releases/new`, bei *Choose a tag* die Nummer
+  eintippen, „Create new tag … on publish", *Target* `main`, *Publish* —, oder das
+  Projekt bekommt einen kleinen Actions-Workflow, der den Tag aus einer
+  Versionsdatei erzeugt (Branch-Pushes und `.github/workflows/` sind erlaubt).
+  Schlage den Workflow vor, sobald der Tag zum zweiten Mal liegenbleibt.
+- Weise am Ende einer bestätigten Etappe darauf hin, welche Versionsnummer fällig ist.
 
 ## Umfangsänderungen
 

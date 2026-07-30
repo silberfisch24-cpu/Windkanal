@@ -81,7 +81,9 @@ Ohne ausdrückliche Bestätigung: keinen Tag setzen, nicht zur nächsten Etappe 
    einmal erklärt wurde? Dann in `CLAUDE.md` (Fakt, immer gebraucht) oder in einen
    Skill (Vorgehensweise für einen Anlass) aufnehmen — und dem Nutzer sagen, was du
    aufgenommen hast.
-4. **Commit setzen.** Bei bestätigter Etappe zusätzlich den Tag.
+4. **Commit setzen.** Bei bestätigter Etappe zusätzlich den Tag — in diesem Projekt
+   dadurch, dass `VERSION.md` mit der neuen Nummer und den Stichpunkten im selben
+   Pull Request liegt; den Tag legt dann `.github/workflows/tag.yml` beim Merge an.
 
 Was nur im Gesprächsverlauf steht, ist nach der Session verloren. Das Nachtragen
 ist Voraussetzung, kein Abschlussritual.

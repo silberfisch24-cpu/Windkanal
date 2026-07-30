@@ -19,12 +19,15 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
 - Einstiegspunkt: `index.html`
 - Prüfskripte für die Kommandozeile: `werkzeug/`
 - Tests: `tests/`
+- Versionsstand: `VERSION.md` — daraus setzt `.github/workflows/tag.yml` den Tag
 
 ## Grenzen
 
 - Die Trennung Kern / Oberfläche wird nicht aufgeweicht: kein Browser-Zugriff in `src/kern/`.
 - Keine Laufzeit-Abhängigkeiten und kein Build-Schritt ohne Rückfrage — die Seite muss
-  weiterhin als bloße Dateisammlung über GitHub Pages laufen.
+  weiterhin als bloße Dateisammlung über GitHub Pages laufen. Der einzige
+  Actions-Workflow ist `tag.yml`; er vergibt nur die Versionsnummer und baut nichts.
+  Ein zweiter Workflow kommt nicht ohne Rückfrage dazu.
 - Kein Wechsel des Rechenverfahrens (Lattice-Boltzmann) ohne neue Begründung in `SPEC.md`.
 - Nichts wird gespeichert oder nach außen gesendet.
 - Der CDU-Styleguide des Schwesterprojekts *Steuerrechner* gilt hier bewusst nicht — siehe
@@ -88,7 +91,8 @@ Versionsnummern nach Nutzbarkeitsgrad, nicht nach Projektstruktur:
 - `0.x` — noch nicht durchgängig nutzbar
 - `x.0` — neue durchgängig nutzbare Stufe erreicht
 - `x.y` — bestätigte Etappe innerhalb dieser Stufe
-- Fehlerkorrektur ohne Änderung an Funktion oder Darstellung: nur Commit, kein Tag
+- Fehlerkorrektur ohne Änderung an Funktion oder Darstellung: nur Commit, kein Tag —
+  `VERSION.md` bleibt dann unberührt, sonst entsteht ungewollt ein Tag
 
 Vergebene Tags werden nie umnummeriert oder umbenannt.
 
@@ -111,16 +115,25 @@ direkte Commits auf den Hauptzweig. Dann gilt:
 
 - Ein Branch je Etappe, nicht je Session
 - Die Abnahme durch den Nutzer bleibt Voraussetzung — erst danach zum Pull Request
-- **Tags kann eine Cloud-Session grundsätzlich nicht setzen — auch nicht mit Zugriff
-  auf den Hauptzweig.** Die Umgebung sperrt jedes Anlegen von Tags: `git push` von
-  `refs/tags/*` und die GitHub-API-Pfade `/git/tags` und `/git/refs` antworten mit
-  403, während gewöhnliche Branch-Pushes durchgehen. Eine neue Session mit anderen
-  Rechten hilft deshalb nicht. Am 2026-07-30 geprüft.
-- Der Tag wird immer vom Nutzer selbst gesetzt, am einfachsten im Browser:
-  `github.com/silberfisch24-cpu/Windkanal/releases/new` → bei *Choose a tag* die
-  Nummer eintippen → „Create new tag … on publish" → *Target* `main` → *Publish*.
-  Nenne ihm am Ende einer bestätigten Etappe die fällige Versionsnummer und diesen
-  Weg — biete nicht an, den Tag selbst zu setzen.
+- **Tags kann eine Cloud-Session grundsätzlich nicht selbst setzen — auch nicht mit
+  Zugriff auf den Hauptzweig.** Die Umgebung sperrt jedes Anlegen von Tags: `git push`
+  von `refs/tags/*` und die GitHub-API-Pfade `/git/tags` und `/git/refs` antworten mit
+  403. Eine neue Session mit anderen Rechten hilft deshalb nicht. Am 2026-07-30
+  geprüft. Gewöhnliche Branch-Pushes und auch das Pushen von `.github/workflows/`
+  gehen durch — darauf beruht der Weg unten.
+- **Deshalb entsteht der Tag über `VERSION.md`.** Bei einer bestätigten Etappe
+  schreibst du diese Datei neu: erste Zeile die Versionsnummer in der Form `v0.1`,
+  darunter die Stichpunkte im Klartext. Beim Merge nach `main` legt
+  `.github/workflows/tag.yml` daraus den annotierten Tag an. Existiert die Nummer
+  schon, passiert nichts — überschrieben wird nie.
+- `VERSION.md` gehört in denselben Pull Request wie die Etappe, nicht in einen
+  eigenen. Vergisst du sie, läuft der Workflow nicht an und der Tag fehlt
+  stillschweigend — deshalb bei jeder bestätigten Etappe mit vorlegen.
+- Schlägt der Workflow fehl, ist die wahrscheinlichste Ursache die Einstellung
+  *Settings → Actions → General → **Workflow permissions***; sie muss auf
+  „Read and write permissions" stehen. Das ist etwas, das nur der Nutzer erledigen
+  kann. Nicht zu verwechseln mit *Actions permissions* weiter oben auf derselben
+  Seite („Allow all actions …") — die regelt etwas anderes.
 
 ## Umfangsänderungen
 

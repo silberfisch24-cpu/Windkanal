@@ -1,0 +1,45 @@
+name: Tag setzen
+
+# Setzt den Versions-Tag automatisch, sobald eine geaenderte VERSION.md auf main
+# ankommt. Grund: Cloud-Sessions duerfen keine Tags anlegen (siehe CLAUDE.md),
+# eine Action auf GitHub-Servern schon.
+
+on:
+  push:
+    branches: [main]
+    paths: ['VERSION.md']
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Vollstaendige Historie: aus einer flachen Arbeitskopie weist GitHub
+          # den Push mit "shallow update not allowed" zurueck.
+          fetch-depth: 0
+
+      - name: Tag aus VERSION.md erzeugen
+        run: |
+          TAG=$(head -n1 VERSION.md | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          MSG=$(tail -n +2 VERSION.md | tr -d '\r')
+
+          if ! printf '%s' "$TAG" | grep -qE '^v[0-9]+\.[0-9]+$'; then
+            echo "Erste Zeile von VERSION.md ist keine Versionsnummer: '$TAG'"
+            echo "Erwartet wird die Form v0.1, v1.0, v1.2 - siehe CLAUDE.md."
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG existiert bereits - kein Ueberschreiben, nichts zu tun."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf '%s\n\n%s\n' "$TAG" "$MSG" | git tag -a "$TAG" -F -
+          git push origin "refs/tags/$TAG"
+          echo "Tag $TAG gesetzt."
