@@ -7,12 +7,14 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 1.1 abgenommen** (`v0.2`) — die Strömung im leeren Kanal
-  rechnet stabil, Grenzschicht am Boden vorhanden, prüfbar über
-  `node werkzeug/pruefe-kern.js`. Noch keine Bildschirmausgabe.
-  Die Projektgrundlage davor trägt den Tag `v0.1`.
-  Als Nächstes **Etappe 1.2** — ein Hindernis in den Kanal setzen, an dem die Strömung
-  abprallt statt hindurchzuströmen.
+- **Aktueller Stand:** **Etappe 1.2 abgenommen** (`v0.3`) — im Kanal steht wahlweise ein
+  Kreis oder ein Rechteck, an dem die Strömung abprallt; davor staut sie sich, daneben
+  wird sie schneller, dahinter bleibt ein Totwasser stehen. Prüfbar über
+  `node werkzeug/pruefe-kern.js` (drei Teile: leerer Kanal, Kreis, Rechteck).
+  Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage,
+  `v0.2` Strömung im leeren Kanal.
+  Als Nächstes **Etappe 1.3** — alle vier Formen (Kreis, Rechteck, stumpfe Platte,
+  Tragflächenprofil) mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
 
 ---
 
@@ -99,7 +101,7 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 - [x] **1.1** *(abgenommen 2026-07-30, v0.2)* Die Strömungsrechnung läuft im leeren Kanal stabil: Luft strömt von links nach rechts, haftet am Boden, gleitet an der Decke entlang, und das bleibt auch nach tausenden Rechenschritten so.
   - Abnahme: `node werkzeug/pruefe-kern.js` ausführen; die Ausgabe zeigt nach 2000 Schritten eine gleichbleibende Dichte, in Bodennähe eine langsamer werdende Strömung (die Grenzschicht) und darüber annähernd die vorgegebene Geschwindigkeit, keine Ausreißer.
   - Noch nicht: kein Hindernis, keine Bildschirmausgabe.
-- [ ] **1.2** Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
+- [x] **1.2** *(abgenommen 2026-07-30, v0.3)* Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
   - Abnahme: Das Prüfskript zeichnet die Form als grobes Textbild und meldet, dass die Geschwindigkeit innerhalb des Hindernisses null ist und außen herum zunimmt.
   - Noch nicht: nur Kreis und Rechteck, Profil und Platte kommen in 1.3.
 - [ ] **1.3** Alle vier Formen stehen bereit — Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — jeweils mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
