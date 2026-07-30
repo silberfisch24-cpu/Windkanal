@@ -27,6 +27,8 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
   weiterhin als bloße Dateisammlung über GitHub Pages laufen.
 - Kein Wechsel des Rechenverfahrens (Lattice-Boltzmann) ohne neue Begründung in `SPEC.md`.
 - Nichts wird gespeichert oder nach außen gesendet.
+- Der CDU-Styleguide des Schwesterprojekts *Steuerrechner* gilt hier bewusst nicht — siehe
+  „Aussehen" in `SPEC.md`.
 
 ---
 
