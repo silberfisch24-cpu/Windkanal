@@ -134,6 +134,13 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   „Read and write permissions" stehen. Das ist etwas, das nur der Nutzer erledigen
   kann. Nicht zu verwechseln mit *Actions permissions* weiter oben auf derselben
   Seite („Allow all actions …") — die regelt etwas anderes.
+- **Branches kann eine Cloud-Session ebenso wenig löschen wie Tags setzen.**
+  `git push origin --delete` meldet „Everything up-to-date" und bricht die Verbindung
+  ab; der API-Weg antwortet mit 403 („Write access to this GitHub API path is not
+  permitted through this proxy"). Am 2026-07-30 geprüft, Wiederholversuche helfen
+  nicht. Den gemergten Branch löscht deshalb der Nutzer selbst — auf der
+  Pull-Request-Seite über **„Delete branch"**. Nach jedem Merge ungefragt daran
+  erinnern und dazusagen, dass nichts verloren geht.
 
 ## Umfangsänderungen
 
