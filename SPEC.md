@@ -7,12 +7,14 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 1.1 abgenommen** (`v0.2`) — die Strömung im leeren Kanal
-  rechnet stabil, Grenzschicht am Boden vorhanden, prüfbar über
-  `node werkzeug/pruefe-kern.js`. Noch keine Bildschirmausgabe.
-  Die Projektgrundlage davor trägt den Tag `v0.1`.
-  Als Nächstes **Etappe 1.2** — ein Hindernis in den Kanal setzen, an dem die Strömung
-  abprallt statt hindurchzuströmen.
+- **Aktueller Stand:** **Etappe 1.2 abgenommen** (`v0.3`) — im Kanal steht wahlweise ein
+  Kreis oder ein Rechteck, an dem die Strömung abprallt; davor staut sie sich, daneben
+  wird sie schneller, dahinter bleibt ein Totwasser stehen. Prüfbar über
+  `node werkzeug/pruefe-kern.js` (drei Teile: leerer Kanal, Kreis, Rechteck).
+  Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage,
+  `v0.2` Strömung im leeren Kanal.
+  Als Nächstes **Etappe 1.3** — alle vier Formen (Kreis, Rechteck, stumpfe Platte,
+  Tragflächenprofil) mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
 
 ---
 
@@ -84,6 +86,7 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
   - `.github/workflows/tag.yml` — setzt daraus den Tag, siehe „Versionsvergabe"
 - **Abhängigkeiten:** zur Laufzeit keine. Für Entwicklung: Node.js mit eingebautem Testläufer (`node --test`) — keine installierten Pakete, damit das Projekt in fünf Jahren noch startet. Die `package.json` enthält nur `"type": "module"` und keinerlei Pakete; ohne sie hält Node die `.js`-Dateien für das alte Modulformat und weigert sich, sie zu laden. Der Browser braucht sie nicht.
 - **Randbedingungen des Kanals** (festgelegt in Etappe 1.1): links wird die **Geschwindigkeit** vorgegeben, rechts der **Druck** (Dichte 1), oben Gleitwand, unten Haftwand. Die Aufteilung vorne Geschwindigkeit / hinten Druck ist notwendig: gibt man beides vorne vor und lässt hinten nur durchlaufen, hat der Druck keinen Anker und die Reibung staut immer weiter Luft auf, statt sich auf ein Gefälle einzupendeln — genau das trat beim ersten Versuch auf.
+- **Hindernisse im Kanal** (festgelegt in Etappe 1.2): Ein Hindernis ist nichts anderes als eine Gruppe von **Haftwand**-Zellen mitten im Gitter — dieselbe Wandart wie der Boden. Die Luft prallt daran zurück und haftet an der Oberfläche; ein eigener Mechanismus für Körper ist nicht nötig, genau darum wurde das Lattice-Boltzmann-Verfahren gewählt. Die Form selbst kennt der Löser nicht: `formen.js` beantwortet nur „liegt Zelle (x, y) in dieser Form?", `loeser.js` macht daraus Wandzellen. Ein Hindernis zu setzen oder zu wechseln **setzt die Rechnung zurück** — eine Wand mitten im Lauf einzublenden wäre ein Sprung, den die Strömung nicht verkraftet. Ein Hindernis darf Einlass und Auslass nicht berühren, weil diese beiden Spalten in jedem Schritt neu gesetzt werden; der Versuch wird gemeldet statt stillschweigend übergangen.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -98,7 +101,7 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 - [x] **1.1** *(abgenommen 2026-07-30, v0.2)* Die Strömungsrechnung läuft im leeren Kanal stabil: Luft strömt von links nach rechts, haftet am Boden, gleitet an der Decke entlang, und das bleibt auch nach tausenden Rechenschritten so.
   - Abnahme: `node werkzeug/pruefe-kern.js` ausführen; die Ausgabe zeigt nach 2000 Schritten eine gleichbleibende Dichte, in Bodennähe eine langsamer werdende Strömung (die Grenzschicht) und darüber annähernd die vorgegebene Geschwindigkeit, keine Ausreißer.
   - Noch nicht: kein Hindernis, keine Bildschirmausgabe.
-- [ ] **1.2** Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
+- [x] **1.2** *(abgenommen 2026-07-30, v0.3)* Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
   - Abnahme: Das Prüfskript zeichnet die Form als grobes Textbild und meldet, dass die Geschwindigkeit innerhalb des Hindernisses null ist und außen herum zunimmt.
   - Noch nicht: nur Kreis und Rechteck, Profil und Platte kommen in 1.3.
 - [ ] **1.3** Alle vier Formen stehen bereit — Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — jeweils mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
@@ -172,5 +175,28 @@ Fehler.*
      (Dichte bis 1,022) und weicht nach oben aus. Das ist echte Strömung an einer Kante, kein
      Rechenfehler; im Kanalinneren liegt die Dichte zwischen 1,0002 und 1,0032. Die Prüfpunkte
      messen deshalb im Kanalinneren und weisen die Randwerte getrennt aus.
+- **2026-07-30:** Etappe 1.2 umgesetzt (Hindernis im Kanal, Kreis und Rechteck). Dabei
+  festgelegt:
+  1. *Hindernis = Haftwand:* siehe „Hindernisse im Kanal" unter Architektur. Kein
+     Umfangszuwachs, sondern die Ausgestaltung dessen, was das Rechenverfahren ohnehin
+     vorsieht.
+  2. *Beschreibung einer Form:* schlichtes Objekt mit `art` und dem **Mittelpunkt** `(x, y)`
+     in Zellen — Kreis über `durchmesser`, Rechteck über `breite` und `hoehe`. Der
+     Mittelpunkt statt einer Ecke, weil Anstellwinkel (Etappe 1.3) um ihn gedreht wird.
+  3. *Drei Anpassungen am Löser*, die erst nötig wurden, als Wandzellen mitten im Gitter
+     liegen: Wandzellen werden beim Zurücksetzen mit ruhender Luft der Dichte 1 gefüllt
+     (sonst liefert ein Blick ins Hindernis „null geteilt durch null" statt „steht still");
+     Wandzellen strömen nicht mit, ihr Inhalt bleibt stehen (sonst laufen Werte aus der
+     Nachbarschaft hinein); ein Hindernis an Einlass oder Auslass wird abgewiesen. Am leeren
+     Kanal ändert keine dieser Anpassungen etwas — die Prüfpunkte aus Etappe 1.1 liefern
+     unverändert dieselben Zahlen.
+  4. *Prüfmaß für Teil 2 und 3:* 120 × 60 Zellen statt 200 × 60, Hindernis 16 Zellen groß.
+     Grund: allein die Bildgröße im Textbild — die Form soll erkennbar sein. Die
+     Voreinstellungen des Kanals bleiben unberührt.
+  5. *Bekannte, gewollte Randerscheinung:* Hinter dem Hindernis läuft die Strömung
+     stellenweise rückwärts (bis etwa −7 % der Windgeschwindigkeit), und die Dichte
+     schwankt weiter als im leeren Kanal (0,968 bis 1,038 statt 0,994 bis 1,022). Beides
+     ist der Nachlauf eines umströmten Körpers, kein Rechenfehler; über 20.000 Schritte
+     geprüft, ohne dass Werte davonlaufen.
 - **2026-07-30:** Auslieferung am Schwesterprojekt *Steuerrechner* ausgerichtet: derselbe Weg (öffentlicher GitHub-Pages-Link), aber ohne dessen Actions-Workflow und ohne React/Vite, weil hier nichts zu bauen ist. Der CDU-Styleguide des Steuerrechners wird ausdrücklich nicht übernommen — er verbietet Farbverläufe, die die Strömungsdarstellung braucht.
 - **2026-07-30:** *Ausnahme vom Grundsatz „kein Actions-Workflow":* Ein Workflow kommt hinzu, allein für die Versionsvergabe. Anlass: Der Tag für die abgeschlossene erste Phase konnte zweimal nicht gesetzt werden. Geprüft wurde an diesem Tag, dass eine Cloud-Session Tags grundsätzlich nicht anlegen kann — `git push` von `refs/tags/*` sowie die API-Pfade `/git/tags` und `/git/refs` antworten mit 403, während gewöhnliche Branch-Pushes und sogar das Pushen von `.github/workflows/` durchgehen. Der Grundsatz galt dem *Bauen* der Seite und bleibt dafür unangetastet: Der neue Workflow baut nichts, verändert keine ausgelieferte Datei und wird nur durch eine Änderung an `VERSION.md` ausgelöst. Die Seite bleibt eine Dateisammlung ohne Build-Schritt. Folge: neue Dateien `VERSION.md` und `.github/workflows/tag.yml`, Abschnitt „Architektur" um „Versionsvergabe" ergänzt, Tag-Regeln in `CLAUDE.md` umgeschrieben.
