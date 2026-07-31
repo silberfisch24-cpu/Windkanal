@@ -38,7 +38,7 @@ sobald sie geklärt sind.*
   - Kraftanzeige (Widerstand/Auftrieb) als grobe Größenordnung — bewusst zurückgestellt
   - Eigene Formen zeichnen — bewusst zurückgestellt
   - Mitbewegter Boden (wie das Laufband in echten Fahrzeug-Windkanälen) — bewusst zurückgestellt, siehe „Kanalform" unten
-  - Zwischen mehreren Farbschemata wählen können — bewusst zurückgestellt (angemerkt 2026-07-31). Etappe 4.1 legt **eine** stimmige Skala je Darstellungsart fest; eine Auswahl wäre der Schritt danach und würde eine eigene Etappe brauchen
+  - ~~Zwischen mehreren Farbschemata wählen können~~ — am 2026-07-31 aus „Kann" in den Plan geholt und als **Etappe 4.4** aufgenommen
 - **Zielgruppe:** interessierte Laien und Schüler; jemand, der den Link öffnet, soll ohne Anleitung in etwa einer Minute zu einem sinnvollen Strömungsbild kommen.
 - **Daten:** keine. Nichts wird gespeichert, nichts hochgeladen, nichts nachgeladen — alle Formen sind im Programm hinterlegt. Damit besteht kein Schutzbedarf.
 - **Umgebung:** statische Webseite, aufgerufen über einen GitHub-Pages-Link — wie beim Schwesterprojekt *Steuerrechner*, dort unter <https://silberfisch24-cpu.github.io/Steuerrechner/>. Keine Installation, kein Server, keine Anmeldung. Zielbrowser: Safari (iOS/macOS), Chrome, Firefox, Edge in aktuellen Versionen.
@@ -153,12 +153,16 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 
 ### Abschnitt 4 — Darstellung und Politur
 
-- [ ] **4.1** Farbskalen sind stimmig gewählt und mit einer Legende erklärt.
-  - Abnahme: Man erkennt ohne Nachfrage, welche Farbe schnell und welche langsam bedeutet.
+- [ ] **4.1** Farbskalen sind stimmig gewählt und mit einer Legende erklärt; der Körper bekommt einen glatten Umriss.
+  - Abnahme: Man erkennt ohne Nachfrage, welche Farbe schnell und welche langsam bedeutet. Der Kreis sieht rund aus statt treppig.
+  - Der Umriss wird über das Farbfeld gezeichnet und **verändert die Rechnung nicht** — er kommt aus der wahren Form in `formen.js`, nicht aus den Wandzellen (entschieden 2026-07-31, siehe „Der Körper im Bild ist eckig" unter *Architektur*). Bewusst in Kauf genommen: Das Bild zeigt danach einen glatten Körper, an dem die Luft in Wahrheit treppig abprallt.
 - [ ] **4.2** Die Oberfläche sitzt auf kleinen und großen Bildschirmen, im Hoch- wie im Querformat.
   - Abnahme: Auf dem iPhone hoch und quer prüfen; nichts überlappt, nichts ist abgeschnitten.
 - [ ] **4.3** Der Startzustand und kurze Erklärtexte machen die Seite ohne Anleitung verständlich.
   - Abnahme: Jemandem den Link geben und zusehen, ob er ohne Erklärung zurechtkommt.
+- [ ] **4.4** *(aufgenommen 2026-07-31)* Zwischen mehreren Farbschemata lässt sich wählen.
+  - Abnahme: Das Schema am laufenden Bild umschalten; die Strömung läuft dabei weiter, und die Legende aus 4.1 ändert sich mit.
+  - Setzt 4.1 voraus: Erst muss je Darstellungsart **eine** stimmige Skala stehen, sonst wählt man zwischen mehreren gleich unfertigen.
 
 ### Abschnitt 5 — Absicherung durch Tests
 
@@ -360,3 +364,18 @@ Fehler.*
      Dateisammlung" bleibt unberührt. Was sie **nicht** belegt: dass die echte
      Modulaufteilung im Browser lädt und dass der GitHub-Pages-Link trägt. Beides ist
      Abnahmekriterium von Etappe 2.3.
+- **2026-07-31:** Zwei Entscheidungen des Nutzers zu den Beobachtungen aus der Abnahme
+  von 2.1 — beide **Umfangszuwachs**, beide ausdrücklich entschieden:
+  1. *Der eckige Körper wird über einen glatten Umriss gelöst*, nicht über eine Änderung
+     im Kern. Der Umriss wird über das Farbfeld gezeichnet und stammt aus der wahren
+     Form, nicht aus den Wandzellen; die Rechnung bleibt unberührt und die 47 Prüfpunkte
+     aus Abschnitt 1 verschieben sich nicht. Aufgenommen in **Etappe 4.1**, deren
+     Abnahmekriterium entsprechend erweitert wurde. Bewusst in Kauf genommen: Das Bild
+     zeigt danach einen glatten Körper, an dem die Luft in Wahrheit treppig abprallt —
+     eine Beschönigung um genau eine Zellbreite, die der Anschauung dient und dem
+     Zweck des Projekts („anschaulich, nicht ingenieurstauglich") nicht widerspricht.
+  2. *Farbschemata zur Auswahl werden aus „Kann" in den Plan geholt* — neue **Etappe
+     4.4**, angehängt statt eingeschoben. Sie setzt 4.1 voraus: Ohne eine erste stimmige
+     Skala je Darstellungsart wählte man zwischen mehreren gleich unfertigen. Der
+     „Kann"-Eintrag bleibt als durchgestrichener Verweis stehen, damit nachvollziehbar
+     bleibt, dass die Funktion einmal zurückgestellt war.
