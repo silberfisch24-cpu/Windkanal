@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Windkanal</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --grund: #fcfcfb;
+        --schrift: #0b0b0b;
+        --schrift-leise: #52514e;
+        --linie: #e3e2dd;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem 1rem 3rem;
+        background: var(--grund);
+        color: var(--schrift);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.5;
+      }
+
+      main {
+        max-width: 60rem;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin: 0 0 0.25rem;
+      }
+
+      .untertitel {
+        margin: 0 0 1.5rem;
+        color: var(--schrift-leise);
+      }
+
+      /* Die Zeichenfläche ist nur 200 × 60 Bildpunkte groß — ein Punkt je
+         Rechenzelle. Der Browser vergrößert sie hier auf Bildschirmbreite und
+         glättet dabei; das spart eigenen Vergrößerungscode. */
+      #stroemungsbild {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--linie);
+        border-radius: 4px;
+      }
+
+      #laufanzeige {
+        margin: 0.75rem 0 0;
+        color: var(--schrift-leise);
+        font-size: 0.875rem;
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Windkanal</h1>
+      <p class="untertitel">
+        Geschwindigkeit der Luft um einen Kreis — hell ist langsam, dunkel ist schnell.
+      </p>
+
+      <canvas id="stroemungsbild" aria-label="Farbfeld der Strömungsgeschwindigkeit im Kanal"></canvas>
+      <p id="laufanzeige">Die Rechnung läuft an …</p>
+    </main>
+
+    <script type="module" src="src/ui/start.js"></script>
+  </body>
+</html>

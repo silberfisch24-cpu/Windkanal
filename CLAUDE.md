@@ -147,6 +147,24 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   nicht. Den gemergten Branch löscht deshalb der Nutzer selbst — auf der
   Pull-Request-Seite über **„Delete branch"**. Nach jedem Merge ungefragt daran
   erinnern und dazusagen, dass nichts verloren geht.
+- **Der Nutzer kann die Seite nicht über `localhost` ansehen.** Die Session läuft in
+  einem Container in der Cloud; `python3 -m http.server 8000` startet dort und ist für
+  ihn nicht erreichbar. Ab Abschnitt 2 hängt aber jede Abnahme daran, dass er das Bild
+  sieht. **Ungefragt eine lauffähige Vorschau als Artifact veröffentlichen**, sobald
+  eine Etappe etwas Sichtbares ändert. Weil ein Artifact aus einer einzigen Datei
+  bestehen muss, die Quellen aber ES-Module sind: Dateien in Abhängigkeitsreihenfolge
+  aneinanderhängen, dabei die `import`-Zeilen entfernen und das Wort `export`
+  streichen, gegenprüfen, dass kein Name auf oberster Ebene doppelt vorkommt, und
+  `<meta charset="utf-8">` voranstellen — ohne die Angabe zerlegt es die Umlaute. Sonst
+  keine Zeile ändern, auch nicht die Gestaltung: Er soll das abnehmen, was ausgeliefert
+  wird. Dazusagen, was die Vorschau **nicht** belegt — dass die echte Modulaufteilung im
+  Browser lädt und dass der Pages-Link trägt. Das ist kein Build-Schritt: Die Datei
+  entsteht außerhalb des Repos und wird nie eingecheckt.
+- **Vor dem Veröffentlichen im eigenen Browser gegenprüfen.** Chromium liegt unter
+  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`; mit `--headless --no-sandbox
+  --screenshot=… --virtual-time-budget=…` gegen den lokalen Server lässt sich ein Bild
+  aufnehmen und selbst ansehen. So fallen Zeichensatz- und Ladefehler auf, bevor der
+  Nutzer sie sieht.
 
 ## Umfangsänderungen
 
