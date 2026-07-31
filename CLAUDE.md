@@ -8,6 +8,10 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
 - Starten: `python3 -m http.server 8000`, dann <http://localhost:8000> im Browser öffnen
   (nötig, weil ES-Module aus einer lokalen Datei heraus vom Browser blockiert werden)
 - Kernlogik prüfen (Abschnitt 1, ohne Oberfläche): `node werkzeug/pruefe-kern.js`
+- Vorschau für die Abnahme bauen: `node werkzeug/baue-vorschau.js <ziel.html>` — legt die
+  Seite zu einer einzigen Datei zusammen, damit sie sich als Artifact veröffentlichen
+  lässt. Nur für Cloud-Sessions nötig, siehe dort. **Kein Build-Schritt:** Das Ergebnis
+  muss außerhalb des Repos liegen (das Skript weigert sich sonst) und wird nie eingecheckt.
 - Tests: `node --test tests/`
 - Linting: keins — bewusst, siehe Abhängigkeiten in `SPEC.md`
 - Build: keiner — die Dateien werden unverändert ausgeliefert
@@ -23,7 +27,8 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
   oder weil eine Erscheinung Zeit braucht, bis sie sich zeigt (Etappe 1.4: 6600 statt
   2000 Schritte, damit die Wirbelablösung eingeschwungen ist). Die Abweichung gehört mit
   Begründung in den Änderungsverlauf von `SPEC.md`, sonst liest sie sich später wie eine
-  stille Änderung der Voreinstellungen.
+  stille Änderung der Voreinstellungen. Dort liegt auch `baue-vorschau.js`, das nichts
+  prüft, sondern die Seite für die Abnahme zusammenlegt.
 - Tests: `tests/`
 - Versionsstand: `VERSION.md` — daraus setzt `.github/workflows/tag.yml` den Tag
 
@@ -151,20 +156,29 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   einem Container in der Cloud; `python3 -m http.server 8000` startet dort und ist für
   ihn nicht erreichbar. Ab Abschnitt 2 hängt aber jede Abnahme daran, dass er das Bild
   sieht. **Ungefragt eine lauffähige Vorschau als Artifact veröffentlichen**, sobald
-  eine Etappe etwas Sichtbares ändert. Weil ein Artifact aus einer einzigen Datei
-  bestehen muss, die Quellen aber ES-Module sind: Dateien in Abhängigkeitsreihenfolge
-  aneinanderhängen, dabei die `import`-Zeilen entfernen und das Wort `export`
-  streichen, gegenprüfen, dass kein Name auf oberster Ebene doppelt vorkommt, und
-  `<meta charset="utf-8">` voranstellen — ohne die Angabe zerlegt es die Umlaute. Sonst
-  keine Zeile ändern, auch nicht die Gestaltung: Er soll das abnehmen, was ausgeliefert
-  wird. Dazusagen, was die Vorschau **nicht** belegt — dass die echte Modulaufteilung im
-  Browser lädt und dass der Pages-Link trägt. Das ist kein Build-Schritt: Die Datei
-  entsteht außerhalb des Repos und wird nie eingecheckt.
+  eine Etappe etwas Sichtbares ändert:
+
+  ```
+  node werkzeug/baue-vorschau.js <arbeitsverzeichnis>/vorschau.html
+  ```
+
+  Das Skript legt die Seite zu einer einzigen Datei zusammen — ein Artifact kann nicht
+  aus mehreren bestehen, die Quellen sind aber ES-Module. Es sucht sich die Dateien
+  selbst aus den `import`-Zeilen zusammen, es gibt also **keine Liste zu pflegen**, wenn
+  eine Etappe eine Datei hinzufügt. Es bricht ab, wenn zwei Dateien denselben Namen auf
+  oberster Ebene vergeben, und es weigert sich, ins Repo zu schreiben.
+
+  Am Quelltext wird dabei nichts geändert außer den `import`-Zeilen und dem Wort
+  `export` — auch nicht die Gestaltung. Der Nutzer soll das abnehmen, was ausgeliefert
+  wird, nicht eine aufgehübschte Fassung. Ihm jedes Mal dazusagen, was die Vorschau
+  **nicht** belegt: dass die echte Modulaufteilung im Browser lädt und dass der
+  Pages-Link trägt (beides Abnahmekriterium von Etappe 2.3).
 - **Vor dem Veröffentlichen im eigenen Browser gegenprüfen.** Chromium liegt unter
   `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`; mit `--headless --no-sandbox
-  --screenshot=… --virtual-time-budget=…` gegen den lokalen Server lässt sich ein Bild
-  aufnehmen und selbst ansehen. So fallen Zeichensatz- und Ladefehler auf, bevor der
-  Nutzer sie sieht.
+  --disable-gpu --screenshot=… --virtual-time-budget=…` gegen einen lokalen Server im
+  Arbeitsverzeichnis lässt sich ein Bild aufnehmen und selbst ansehen. So fallen
+  Zeichensatz- und Ladefehler auf, bevor der Nutzer sie sieht — genau das ist am
+  2026-07-31 passiert.
 
 ## Umfangsänderungen
 
