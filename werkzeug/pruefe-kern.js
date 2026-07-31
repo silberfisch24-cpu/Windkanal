@@ -17,19 +17,31 @@
  * angestellt; Platte und Profil zusätzlich in der Strömung; und die Gegenprobe
  * zur Höhe über dem Boden — ein aufsitzendes Rechteck gegen dasselbe Rechteck
  * angehoben.
+ *
+ * Teil 7 (Etappe 1.4): die drei abgeleiteten Größen — Geschwindigkeit, Druck,
+ * Wirbelstärke — am angeströmten Kreis. Kernstück ist die Wirbelablösung: hinter
+ * dem Kreis kehrt sich die Drehrichtung der Luft in gleichmäßigem Takt um.
  */
 
 import {
   erzeugeKanal,
+  schritt,
   schritte,
   dichteBei,
   geschwindigkeitBei,
   istFluid,
 } from '../src/kern/loeser.js';
+import { leseFelder, druckBei, wirbelstaerkeBei } from '../src/kern/felder.js';
 import { ausdehnung } from '../src/kern/formen.js';
 
 const SCHRITTE_GESAMT = 2000;
 const ZWISCHENSTAND_ALLE = 500;
+
+// Teil 7: Bis die Wirbelablösung eingeschwungen ist, dauert es — die Strömung
+// hinter dem Kreis ist zunächst noch spiegelbildlich und kippt erst nach und
+// nach ins Schwingen. Erst danach wird aufgezeichnet.
+const EINSCHWINGEN = 4000;
+const AUFZEICHNUNG = 2600;
 
 console.log('Windkanal — Prüfung der Kernlogik');
 console.log('=================================');
@@ -52,12 +64,13 @@ const bestandenTeile = [
   zeigeFormenschau(),
   pruefeNeueFormenInStroemung(),
   pruefeBodenfreiheit(),
+  pruefeAbgeleiteteGroessen(),
 ];
 
 const allesBestanden = bestandenTeile.every(Boolean);
 console.log('\n=================================');
 if (allesBestanden) {
-  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.3 erfüllt.');
+  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.4 erfüllt.');
 } else {
   console.log('Ergebnis: Mindestens ein Prüfpunkt nicht bestanden.');
 }
@@ -515,6 +528,197 @@ function pruefeBodenfreiheit() {
   ]);
 }
 
+// --- Teil 7: Geschwindigkeit, Druck, Wirbelstärke (Etappe 1.4) -------------
+
+/**
+ * Derselbe Kreis wie in Teil 2, nur länger gerechnet. Gezeigt wird, was sich aus
+ * dem Gitter ablesen lässt: Druck und Wirbelstärke als Bild, und die
+ * Wirbelstärke an einer festen Stelle hinter dem Kreis über die Zeit.
+ *
+ * Der Vorzeichenwechsel dort ist das Abnahmekriterium dieser Etappe. Er ist
+ * nicht willkürlich: Ein umströmter Kreis wirft abwechselnd links- und
+ * rechtsdrehende Wirbel ab (die „Kármánsche Wirbelstraße"). Wer an einer Stelle
+ * im Nachlauf stehen bleibt, sieht deshalb abwechselnd die eine und die andere
+ * Drehrichtung vorbeiziehen.
+ */
+function pruefeAbgeleiteteGroessen() {
+  const titel = 'Teil 7 — Geschwindigkeit, Druck und Wirbelstärke am Kreis (Etappe 1.4)';
+  console.log(`\n${titel}`);
+  console.log('-'.repeat(titel.length));
+
+  const kanal = erzeugeKanal({
+    breite: 120,
+    hoehe: 60,
+    windgeschwindigkeit: 0.1,
+    zaehigkeit: 0.01,
+    hindernis: { art: 'kreis', x: 40, y: 30, durchmesser: 16 },
+  });
+  beschreibeKanal(kanal);
+  console.log(`Hindernis: ${beschreibeHindernis(kanal.hindernis)}\n`);
+
+  const form = kanal.hindernis;
+  const kanten = ausdehnung(form);
+
+  schritte(kanal, EINSCHWINGEN);
+
+  // Die Messstelle liegt eine halbe Kreisbreite hinter dem Körper, auf seiner
+  // Mittellinie — dort ziehen die abgelösten Wirbel abwechselnd vorbei.
+  const messstelle = { x: kanten.rechts + 8, y: form.y };
+
+  const verlauf = [];
+  for (let n = 0; n < AUFZEICHNUNG; n++) {
+    schritt(kanal);
+    verlauf.push(wirbelstaerkeBei(kanal, messstelle.x, messstelle.y));
+  }
+
+  const felder = leseFelder(kanal);
+
+  console.log(`Druckbild nach ${kanal.schrittzahl} Schritten`);
+  zeichneFeldbild(kanal, felder.druck, 'Unterdruck (Sog)', 'Überdruck (Stau)');
+
+  console.log(`\nWirbelstärkebild nach ${kanal.schrittzahl} Schritten`);
+  console.log('  Die abwechselnden Flecken hinter dem Kreis sind die abgelösten Wirbel.');
+  zeichneFeldbild(kanal, felder.wirbelstaerke, 'Drehung im Uhrzeigersinn', 'Drehung dagegen');
+
+  console.log(
+    `\nWirbelstärke an einer festen Stelle hinter dem Kreis (x = ${messstelle.x}, y = ${messstelle.y}),` +
+      ` über ${AUFZEICHNUNG} Schritte`
+  );
+  zeichneZeitverlauf(verlauf, EINSCHWINGEN);
+
+  // --- Messwerte für die Prüfpunkte
+  const abweichung = vergleicheFeldMitEinzelabfrage(kanal, felder);
+
+  const staupunkt = druckBei(kanal, kanten.links - 2, form.y); // vor dem Kreis
+  const sog = druckBei(kanal, kanten.rechts + 2, form.y); // unmittelbar dahinter
+  const druckImKoerper = druckBei(kanal, form.x, form.y);
+
+  const freieStroemung = wirbelstaerkeBei(kanal, 15, kanal.hoehe - 8); // weit weg von allem
+  const amBoden = wirbelstaerkeBei(kanal, 15, 1);
+  const ueberDemKreis = mittlereWirbelstaerke(kanal, form.x, kanten.oben + 1, kanten.oben + 3);
+  const unterDemKreis = mittlereWirbelstaerke(kanal, form.x, kanten.unten - 3, kanten.unten - 1);
+
+  // Vorzeichenwechsel mit Schwelle, damit kleines Zittern um die Null nicht als
+  // Wechsel durchgeht: gezählt wird erst, wenn der Wert deutlich auf die andere
+  // Seite ausschlägt.
+  const ausschlag = Math.max(...verlauf.map(Math.abs));
+  const wechsel = findeVorzeichenwechsel(verlauf, 0.25 * ausschlag);
+  const abstaende = wechsel.slice(1).map((stelle, n) => stelle.schritt - wechsel[n].schritt);
+  const mittlererAbstand = abstaende.reduce((summe, wert) => summe + wert, 0) / (abstaende.length || 1);
+  const groessteAbweichung = Math.max(...abstaende.map((wert) => Math.abs(wert - mittlererAbstand)));
+
+  return melde([
+    {
+      name: 'Das ganze Feld auf einmal liefert dasselbe wie die Einzelabfrage',
+      bestanden: abweichung.groesste === 0 && abweichung.zellen > 0,
+      befund:
+        `${abweichung.zellen} Zellen geprüft (Geschwindigkeit, Druck, Wirbelstärke),` +
+        ` größter Unterschied ${abweichung.groesste} — kein Feld ist verschoben oder vertauscht`,
+    },
+    {
+      name: 'Vor dem Kreis staut sich der Druck, dahinter zieht es',
+      bestanden: staupunkt > 0 && sog < 0 && druckImKoerper === 0,
+      befund:
+        `zwei Zellen davor ${vorzeichenbehaftet(staupunkt)} (Überdruck),` +
+        ` zwei Zellen dahinter ${vorzeichenbehaftet(sog)} (Unterdruck);` +
+        ` im Körper selbst ${druckImKoerper} — dort hat Druck keine Bedeutung`,
+    },
+    {
+      name: 'Wirbelstärke: in der freien Strömung nahe null, am Boden deutlich',
+      bestanden: Math.abs(freieStroemung) < 0.1 * Math.abs(amBoden) && amBoden < 0,
+      befund:
+        `oben im freien Strom ${vorzeichenbehaftet(freieStroemung)},` +
+        ` unmittelbar über dem Boden ${vorzeichenbehaftet(amBoden)}` +
+        ` — die Grenzschicht ist die Scherung, die die Wirbelstärke misst`,
+    },
+    {
+      name: 'Über und unter dem Kreis dreht die Luft gegensinnig',
+      bestanden: ueberDemKreis < 0 && unterDemKreis > 0,
+      befund:
+        `oben ${vorzeichenbehaftet(ueberDemKreis)} (im Uhrzeigersinn),` +
+        ` unten ${vorzeichenbehaftet(unterDemKreis)} (dagegen)` +
+        ` — beide Seiten scheren die Luft, aber in entgegengesetzte Richtung`,
+    },
+    {
+      // Das Abnahmekriterium der Etappe.
+      name: 'Hinter dem Kreis kehrt sich die Wirbelstärke periodisch im Vorzeichen um',
+      bestanden:
+        wechsel.length >= 4 && abstaende.length > 0 && groessteAbweichung < 0.2 * mittlererAbstand,
+      befund:
+        `${wechsel.length} Vorzeichenwechsel in ${AUFZEICHNUNG} Schritten,` +
+        ` im Mittel alle ${Math.round(mittlererAbstand)} Schritte` +
+        ` (Schwankung höchstens ${Math.round(groessteAbweichung)} Schritte,` +
+        ` also ${(100 * groessteAbweichung / mittlererAbstand).toFixed(1)} %);` +
+        ` eine volle Umdrehung des Wechselspiels dauert ${Math.round(2 * mittlererAbstand)} Schritte,` +
+        ` stärkster Ausschlag ${ausschlag.toFixed(4)}`,
+    },
+  ]);
+}
+
+/** Zahl mit Vorzeichen, damit „positiv" und „negativ" im Text ablesbar sind. */
+function vorzeichenbehaftet(wert) {
+  return (wert >= 0 ? '+' : '') + wert.toExponential(2);
+}
+
+/** Mittlere Wirbelstärke in einem senkrechten Stück einer Spalte. */
+function mittlereWirbelstaerke(kanal, x, yVon, yBis) {
+  let summe = 0;
+  let zellen = 0;
+  for (let y = yVon; y <= yBis; y++) {
+    if (!istFluid(kanal, x, y)) continue;
+    summe += wirbelstaerkeBei(kanal, x, y);
+    zellen++;
+  }
+  return zellen === 0 ? NaN : summe / zellen;
+}
+
+/**
+ * Gegenprobe: Was `leseFelder` für den ganzen Kanal liefert, muss Zelle für
+ * Zelle dasselbe sein wie die Einzelabfrage. Das prüft weniger die Rechnung als
+ * die Buchführung — ein vertauschter Zellindex fiele hier sofort auf.
+ */
+function vergleicheFeldMitEinzelabfrage(kanal, felder) {
+  let groesste = 0;
+  let zellen = 0;
+  for (let y = 0; y < kanal.hoehe; y++) {
+    for (let x = 0; x < kanal.breite; x++) {
+      const zelle = x + y * kanal.breite;
+      const luft = istFluid(kanal, x, y);
+      const { ux, uy } = luft ? geschwindigkeitBei(kanal, x, y) : { ux: 0, uy: 0 };
+      const unterschiede = [
+        Math.abs(felder.ux[zelle] - ux),
+        Math.abs(felder.uy[zelle] - uy),
+        Math.abs(felder.tempo[zelle] - Math.hypot(ux, uy)),
+        Math.abs(felder.druck[zelle] - druckBei(kanal, x, y)),
+        Math.abs(felder.wirbelstaerke[zelle] - wirbelstaerkeBei(kanal, x, y)),
+      ];
+      groesste = Math.max(groesste, ...unterschiede);
+      zellen++;
+    }
+  }
+  return { groesste, zellen };
+}
+
+/**
+ * Sucht die Stellen, an denen der Wert das Vorzeichen wechselt. Gezählt wird
+ * erst, wenn er die Schwelle auf der anderen Seite überschreitet — sonst zählte
+ * jedes Zittern um die Null als Wechsel.
+ */
+function findeVorzeichenwechsel(reihe, schwelle) {
+  const wechsel = [];
+  let seite = 0; // 0 noch unentschieden, +1 oben, -1 unten
+  for (let n = 0; n < reihe.length; n++) {
+    if (reihe[n] > schwelle && seite !== 1) {
+      if (seite === -1) wechsel.push({ schritt: n, nach: '+' });
+      seite = 1;
+    } else if (reihe[n] < -schwelle && seite !== -1) {
+      if (seite === 1) wechsel.push({ schritt: n, nach: '-' });
+      seite = -1;
+    }
+  }
+  return wechsel;
+}
+
 // --- Ausgabe ---------------------------------------------------------------
 
 function beschreibeKanal(kanal) {
@@ -619,6 +823,98 @@ function zeichneFormbild(kanal) {
     console.log(`  |${zeile}|`);
   }
   console.log(`  ${'-'.repeat(kanal.breite + 2)}  Boden`);
+}
+
+/**
+ * Textbild eines Feldes, das nach beiden Seiten ausschlagen kann — Druck
+ * (Unterdruck / Überdruck) ebenso wie Wirbelstärke (die eine Drehrichtung / die
+ * andere). Blockeinteilung wie im Strömungsbild.
+ *
+ * Je Block wird nicht gemittelt, sondern der stärkste Wert genommen: dünne
+ * Scherschichten und die Wirbel dahinter würden sich sonst gegenseitig
+ * wegmitteln, und übrig bliebe ein leeres Bild.
+ */
+function zeichneFeldbild(kanal, werte, negativ, positiv) {
+  const ZIEL_SPALTEN = 60;
+  const blockBreite = Math.max(1, Math.ceil(kanal.breite / ZIEL_SPALTEN));
+  const blockHoehe = blockBreite * 2;
+
+  // Maßstab aus dem Feld selbst, ohne die beiden Randstreifen: dort setzen
+  // Einlass und Auslass die Werte, das sagt über den Kanal nichts aus.
+  let staerkster = 0;
+  for (let y = 1; y < kanal.hoehe - 1; y++) {
+    for (let x = 5; x < kanal.breite - 5; x++) {
+      if (!istFluid(kanal, x, y)) continue;
+      staerkster = Math.max(staerkster, Math.abs(werte[x + y * kanal.breite]));
+    }
+  }
+
+  const stufen = [
+    { grenze: -0.5, zeichen: 'X' },
+    { grenze: -0.15, zeichen: 'x' },
+    { grenze: 0.15, zeichen: ' ' },
+    { grenze: 0.5, zeichen: 'o' },
+    { grenze: Infinity, zeichen: 'O' },
+  ];
+
+  console.log(`  Legende: '#' Hindernis, ' ' fast nichts`);
+  console.log(`           'X' stark, 'x' schwach — ${negativ}`);
+  console.log(`           'O' stark, 'o' schwach — ${positiv}`);
+  console.log(`  Maßstab: stärkster Wert im Kanal ${staerkster.toExponential(2)}`);
+
+  for (let yOben = kanal.hoehe - 1; yOben >= 0; yOben -= blockHoehe) {
+    let zeile = '';
+    for (let xLinks = 0; xLinks < kanal.breite; xLinks += blockBreite) {
+      let wand = false;
+      let staerkerWert = 0;
+      let zellen = 0;
+      for (let y = Math.max(0, yOben - blockHoehe + 1); y <= yOben; y++) {
+        for (let x = xLinks; x < Math.min(kanal.breite, xLinks + blockBreite); x++) {
+          if (!istFluid(kanal, x, y)) {
+            if (y > 0 && y < kanal.hoehe - 1) wand = true;
+            continue;
+          }
+          const wert = werte[x + y * kanal.breite];
+          if (Math.abs(wert) > Math.abs(staerkerWert)) staerkerWert = wert;
+          zellen++;
+        }
+      }
+      if (wand || zellen === 0) {
+        zeile += '#';
+        continue;
+      }
+      const anteil = staerkster === 0 ? 0 : staerkerWert / staerkster;
+      zeile += stufen.find((stufe) => anteil < stufe.grenze).zeichen;
+    }
+    console.log(`  |${zeile}|`);
+  }
+  console.log(`  ${'-'.repeat(Math.ceil(kanal.breite / blockBreite) + 2)}  Boden`);
+}
+
+/**
+ * Zeitverlauf eines Wertes als liegende Kurve: die Null steht in der Mitte, der
+ * Ausschlag geht nach links und rechts. Ausgegeben wird nicht jeder Schritt,
+ * sonst wären es tausende Zeilen.
+ */
+function zeichneZeitverlauf(reihe, versatzSchritte) {
+  const HALBE_BREITE = 30;
+  const ZEILEN = 52;
+  const abstand = Math.max(1, Math.round(reihe.length / ZEILEN));
+  const ausschlag = Math.max(...reihe.map(Math.abs)) || 1;
+
+  console.log(
+    `  Null in der Mitte, links Drehung im Uhrzeigersinn, rechts dagegen;` +
+      ` Rand entspricht ${ausschlag.toExponential(2)}`
+  );
+  console.log(`  Schritt   ${'-'.repeat(HALBE_BREITE)}0${'-'.repeat(HALBE_BREITE)}`);
+
+  for (let n = 0; n < reihe.length; n += abstand) {
+    const stelle = Math.round((reihe[n] / ausschlag) * HALBE_BREITE);
+    const zeichen = Array(2 * HALBE_BREITE + 1).fill(' ');
+    zeichen[HALBE_BREITE] = '|';
+    zeichen[HALBE_BREITE + stelle] = '#';
+    console.log(`  ${String(versatzSchritte + n + 1).padStart(7)}   ${zeichen.join('')}`);
+  }
 }
 
 // --- Messungen -------------------------------------------------------------
