@@ -190,6 +190,16 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   **nie ins Repo**, aus demselben Grund, aus dem sich `baue-vorschau.js` weigert, dorthin
   zu schreiben. Zu prüfen ist dabei auch der angehaltene oder umgeschaltete Zustand,
   nicht nur der eingeschwungene.
+- **`--window-size` stellt keine Handybreite ein.** Chrome erzwingt eine
+  Mindestfensterbreite von 500 Punkten: `--window-size=393,852` ergibt ein Sichtfeld von
+  500, das Bild wird aber auf 393 beschnitten — die Seite sieht dann aus, als liefe sie
+  über den Rand, obwohl sie es nicht tut. Genau darauf bin ich am 2026-07-31 (Etappe 2.3)
+  hereingefallen. `--force-device-scale-factor` hilft nicht, es skaliert die Rasterung,
+  nicht das Sichtfeld. Der Weg, der trägt: eine Hilfsseite im Arbeitsverzeichnis, die
+  `index.html` in einem `<iframe>` fester Breite lädt. Der Rahmen bekommt ein echtes
+  Sichtfeld dieser Breite; darin lassen sich `scrollWidth` gegen `clientWidth` und die
+  Größe der Schaltflächen messen. Wie jedes Prüfgerüst gehört auch diese Seite
+  ausschließlich ins Arbeitsverzeichnis, **nie ins Repo**.
 - **`--virtual-time-budget` misst keine Laufzeit.** Unter virtueller Zeit stimmen die
   Angaben aus `performance.now()` nicht mit der Wanduhr überein; die angezeigte Bildfolge
   („0 Bilder je Sekunde") und der Fortschritt der Strömung sind dort nicht aussagekräftig.

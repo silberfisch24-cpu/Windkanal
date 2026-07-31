@@ -429,3 +429,30 @@ Fehler.*
   4. *An der Kernlogik keine Zeile geändert.* `node werkzeug/pruefe-kern.js` läuft
      unverändert durch (47 Prüfpunkte). Die Oberfläche kommt mit `setzeHindernis` und
      `setzeAufAnfangszustand` aus, die seit Abschnitt 1 bereitstehen.
+- **2026-07-31:** Etappe 2.3 umgesetzt (öffentlich erreichbar, auf Handy und Tablet
+  geprüft). Dabei festgelegt:
+  1. *`.nojekyll` in der Wurzel.* GitHub Pages schiebt bei „Deploy from a branch"
+     sonst einen Jekyll-Lauf zwischen Repo und Auslieferung. Für den heutigen
+     Dateibestand ändert das nichts — kein Verzeichnis beginnt mit `_`, keine Datei
+     hat einen Kopfteil, den Jekyll verarbeiten würde. Die Datei ist Vorsorge, kein
+     Fehlerbehebung: Sie nimmt den Bauschritt ganz heraus, der sonst irgendwann an
+     einer neuen Datei scheitern oder sie stillschweigend weglassen könnte. Die
+     Zusage „bloße Dateisammlung ohne Build-Schritt" wird dadurch stärker, nicht
+     schwächer.
+  2. *`:hover` nur noch bei echtem Zeiger* (`@media (hover: hover)`). Auf einem
+     Touchscreen kennt der Browser kein Verlassen der Fläche: die Hervorhebung bliebe
+     nach dem Antippen hängen und sähe aus wie „diese Schaltfläche ist gewählt" —
+     genau die Bedeutung, die bei der Formauswahl schon die blaue Füllung trägt.
+  3. *Gemessen vor dem Vorlegen*, in einem Rahmen fester Breite statt am Fenster:
+     bei 393 (iPhone hochkant), 852 (iPhone quer) und 820 Punkten (iPad hochkant)
+     ist `scrollWidth` gleich `clientWidth` — nichts läuft seitlich über. Alle sechs
+     Schaltflächen messen mindestens 44 Punkte in beiden Richtungen. Formwechsel,
+     Anhalten und Zurücksetzen wurden bei 393 Punkten tatsächlich angeklickt und
+     führen zu denselben Zuständen wie am großen Bildschirm.
+  4. *Bekannte Grenze, bewusst offen gelassen:* Im Querformat des iPhones (393 Punkte
+     hoch) reicht die Seite über den Bildschirm hinaus — man muss scrollen, um das
+     Strömungsbild ganz und die Laufanzeige darunter zu sehen. Abgeschnitten ist
+     nichts. Das Sitzen im Hoch- und Querformat ist Abnahmekriterium von Etappe 4.2
+     und wird hier nicht vorweggenommen.
+  5. *An der Kernlogik und an allen Dateien unter `src/` keine Zeile geändert.*
+     `node werkzeug/pruefe-kern.js` läuft unverändert durch (47 Prüfpunkte).
