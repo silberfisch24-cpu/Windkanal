@@ -37,6 +37,53 @@ export const FLUID = 0;
 export const HAFTWAND = 1; // Luft haftet an ihr — erzeugt die Grenzschicht
 export const GLEITWAND = 2; // Luft gleitet reibungsfrei entlang
 
+/**
+ * Die vorgesehenen Auflösungsstufen: wie fein der Kanal in Zellen zerlegt wird.
+ *
+ * Alle drei haben dasselbe Seitenverhältnis (10 : 3). Dieselbe Szene sieht
+ * deshalb in jeder Stufe gleich aus — nur feiner aufgelöst, mit schärferen
+ * Wirbeln. `faktor` sagt, wie viele Zellen einer groben Zelle entsprechen; wer
+ * eine in groben Zellen beschriebene Form auf eine feinere Stufe umrechnen
+ * will, multipliziert ihre Maße damit.
+ *
+ * Die Zellenzahlen liegen im Bereich, den die Architektur vorsieht (etwa 12.000
+ * bis 50.000): darunter verschwimmt das Bild, darüber wird es auf dem Handy zu
+ * langsam für eine flüssige Darstellung.
+ */
+export const AUFLOESUNGEN = {
+  grob: { breite: 200, hoehe: 60, faktor: 1 },
+  mittel: { breite: 280, hoehe: 84, faktor: 1.4 },
+  fein: { breite: 400, hoehe: 120, faktor: 2 },
+};
+
+/** Ohne Angabe wird grob gerechnet — die Stufe, die auf jedem Gerät läuft. */
+export const VOREINGESTELLTE_AUFLOESUNG = 'grob';
+
+/**
+ * Zulässige Windgeschwindigkeit in Zellen je Schritt.
+ *
+ * Die Obergrenze ist gemessen, nicht geschätzt: der leere Kanal hält bis etwa
+ * 0,25 durch, mit einem Hindernis darin bricht die Rechnung schon zwischen 0,15
+ * und 0,16 zusammen. An der Körperkante wird die Luft nämlich auf gut das
+ * Doppelte beschleunigt, und dort nähert sie sich der Schallgeschwindigkeit des
+ * Gitters (0,577) so weit, dass das Verfahren aufschaukelt. 0,12 lässt dazu
+ * Abstand — geprüft mit der schärfsten Form, einer angestellten Platte, in
+ * jeder Auflösungsstufe.
+ *
+ * Die Untergrenze ist keine Frage der Rechnung, sondern der Anschauung:
+ * darunter steht das Bild praktisch still.
+ */
+export const WIND_MINDESTENS = 0.01;
+export const WIND_HOECHSTENS = 0.12;
+
+/**
+ * Kleinste zulässige Zähigkeit. Aus ihr folgt die Angleichzeit (3 · Zähigkeit +
+ * 0,5); je näher die an 0,5 rückt, desto weniger dämpft die Rechnung und desto
+ * eher schaukelt sie sich auf. Gemessen: bei 0,002 (Angleichzeit 0,506) bricht
+ * sie zusammen, ab 0,004 läuft sie. 0,005 lässt dazu Abstand.
+ */
+export const ZAEHIGKEIT_MINDESTENS = 0.005;
+
 /** Ruhezustand einer Richtung bei gegebener Dichte und Geschwindigkeit. */
 function ruhezustand(richtung, dichte, ux, uy) {
   const projektion = 3 * (RICHTUNG_X[richtung] * ux + RICHTUNG_Y[richtung] * uy);
@@ -48,36 +95,41 @@ function ruhezustand(richtung, dichte, ux, uy) {
  * Legt einen leeren Kanal an: Boden haftend, Decke gleitend, überall die
  * vorgegebene Windgeschwindigkeit.
  *
+ * Die Kanalgröße wird entweder als **Auflösungsstufe** angegeben oder als eigene
+ * Maße — genau eines von beidem. Die Stufe ist der übliche Weg; eigene Maße gibt
+ * es für Prüfskripte, die einen kürzeren Kanal brauchen, damit ein Textbild
+ * lesbar bleibt.
+ *
  * @param {object} einstellungen
- * @param {number} einstellungen.breite   Zellen in Strömungsrichtung
- * @param {number} einstellungen.hoehe    Zellen vom Boden zur Decke
+ * @param {string} einstellungen.aufloesung  'grob', 'mittel' oder 'fein'
+ * @param {number} einstellungen.breite   Zellen in Strömungsrichtung (statt der Stufe)
+ * @param {number} einstellungen.hoehe    Zellen vom Boden zur Decke (statt der Stufe)
  * @param {number} einstellungen.windgeschwindigkeit  in Zellen je Zeitschritt
  * @param {number} einstellungen.zaehigkeit           Zähigkeit der Luft
  * @param {object|null} einstellungen.hindernis       siehe `setzeHindernis`
  */
 export function erzeugeKanal({
-  breite = 200,
-  hoehe = 60,
+  aufloesung,
+  breite,
+  hoehe,
   windgeschwindigkeit = 0.1,
   zaehigkeit = 0.01,
   hindernis = null,
 } = {}) {
-  if (breite < 3 || hoehe < 3) {
-    throw new Error('Der Kanal braucht mindestens 3 × 3 Zellen.');
-  }
-  if (zaehigkeit <= 0) {
-    throw new Error('Die Zähigkeit muss größer als null sein.');
-  }
+  const masse = kanalmasse(aufloesung, breite, hoehe);
+  pruefeWindgeschwindigkeit(windgeschwindigkeit);
+  pruefeZaehigkeit(zaehigkeit);
 
-  const anzahlZellen = breite * hoehe;
+  const anzahlZellen = masse.breite * masse.hoehe;
 
   // Wie schnell sich eine Zelle ihrem Ruhezustand annähert. Aus der Zähigkeit
   // abgeleitet; muss über 0,5 liegen, sonst schaukelt sich die Rechnung auf.
   const angleichzeit = 3 * zaehigkeit + 0.5;
 
   const kanal = {
-    breite,
-    hoehe,
+    breite: masse.breite,
+    hoehe: masse.hoehe,
+    aufloesung: masse.aufloesung, // null bei eigenen Maßen
     windgeschwindigkeit,
     zaehigkeit,
     angleichzeit,
@@ -90,6 +142,75 @@ export function erzeugeKanal({
 
   setzeHindernis(kanal, hindernis);
   return kanal;
+}
+
+/**
+ * Ermittelt Breite und Höhe: entweder aus der Auflösungsstufe oder aus eigenen
+ * Maßen. Beides zugleich wäre widersprüchlich — dann stünde nicht fest, welche
+ * Angabe gilt, und die andere verschwände stillschweigend.
+ */
+function kanalmasse(aufloesung, breite, hoehe) {
+  const eigeneMasse = breite !== undefined || hoehe !== undefined;
+
+  if (aufloesung !== undefined && eigeneMasse) {
+    throw new Error(
+      'Der Kanal bekommt entweder eine aufloesung oder eigene Maße (breite und hoehe) — nicht beides.'
+    );
+  }
+
+  if (eigeneMasse) {
+    if (!Number.isFinite(breite) || !Number.isFinite(hoehe)) {
+      throw new Error('Eigene Maße brauchen sowohl breite als auch hoehe in Zellen.');
+    }
+    if (breite < 3 || hoehe < 3) {
+      throw new Error('Der Kanal braucht mindestens 3 × 3 Zellen.');
+    }
+    return { breite, hoehe, aufloesung: null };
+  }
+
+  const name = aufloesung ?? VOREINGESTELLTE_AUFLOESUNG;
+  const stufe = AUFLOESUNGEN[name];
+  if (stufe === undefined) {
+    throw new Error(
+      `Unbekannte Auflösung: ${name}. Möglich sind ${Object.keys(AUFLOESUNGEN).join(', ')}.`
+    );
+  }
+  return { breite: stufe.breite, hoehe: stufe.hoehe, aufloesung: name };
+}
+
+/**
+ * Ändert die Windgeschwindigkeit mitten im Lauf, **ohne** die Rechnung
+ * zurückzusetzen.
+ *
+ * Anders als beim Hindernis ist das unbedenklich: der Einlass wird in jedem
+ * Schritt ohnehin neu gesetzt, der neue Wind wandert also von vorn durch den
+ * Kanal, statt schlagartig überall zu gelten. Bis er hinten ankommt, vergehen
+ * einige hundert Schritte — genau so, wie man in einem echten Windkanal am
+ * Gebläse dreht.
+ */
+export function setzeWindgeschwindigkeit(kanal, windgeschwindigkeit) {
+  pruefeWindgeschwindigkeit(windgeschwindigkeit);
+  kanal.windgeschwindigkeit = windgeschwindigkeit;
+}
+
+/** Wirft, wenn der Wind außerhalb des Bereichs liegt, in dem die Rechnung trägt. */
+function pruefeWindgeschwindigkeit(wert) {
+  if (!Number.isFinite(wert) || wert < WIND_MINDESTENS || wert > WIND_HOECHSTENS) {
+    throw new Error(
+      `Die Windgeschwindigkeit muss zwischen ${WIND_MINDESTENS} und ${WIND_HOECHSTENS} Zellen je Schritt liegen` +
+        ' — darüber bricht die Rechnung an der Körperkante zusammen, darunter steht das Bild still.'
+    );
+  }
+}
+
+/** Wirft, wenn die Zähigkeit so klein ist, dass die Rechnung aufschaukelt. */
+function pruefeZaehigkeit(wert) {
+  if (!Number.isFinite(wert) || wert < ZAEHIGKEIT_MINDESTENS) {
+    throw new Error(
+      `Die Zähigkeit muss mindestens ${ZAEHIGKEIT_MINDESTENS} betragen` +
+        ' — darunter dämpft die Rechnung zu wenig und schaukelt sich auf.'
+    );
+  }
 }
 
 /**

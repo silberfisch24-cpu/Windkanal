@@ -21,6 +21,12 @@
  * Teil 7 (Etappe 1.4): die drei abgeleiteten Größen — Geschwindigkeit, Druck,
  * Wirbelstärke — am angeströmten Kreis. Kernstück ist die Wirbelablösung: hinter
  * dem Kreis kehrt sich die Drehrichtung der Luft in gleichmäßigem Takt um.
+ *
+ * Teil 8 (Etappe 1.5): dieselbe Szene in den drei Auflösungsstufen, je 2000
+ * Schritte, dazu die Rechenzeit je Schritt; anschließend langsamer und schneller
+ * Wind, ein Windwechsel mitten im Lauf und die Grenzfälle, die abgewiesen werden
+ * müssen. Dieser Teil ist der längste — die feine Stufe rechnet viermal so viele
+ * Zellen wie die grobe.
  */
 
 import {
@@ -30,6 +36,11 @@ import {
   dichteBei,
   geschwindigkeitBei,
   istFluid,
+  setzeWindgeschwindigkeit,
+  AUFLOESUNGEN,
+  WIND_MINDESTENS,
+  WIND_HOECHSTENS,
+  ZAEHIGKEIT_MINDESTENS,
 } from '../src/kern/loeser.js';
 import { leseFelder, druckBei, wirbelstaerkeBei } from '../src/kern/felder.js';
 import { ausdehnung } from '../src/kern/formen.js';
@@ -42,6 +53,20 @@ const ZWISCHENSTAND_ALLE = 500;
 // nach ins Schwingen. Erst danach wird aufgezeichnet.
 const EINSCHWINGEN = 4000;
 const AUFZEICHNUNG = 2600;
+
+/**
+ * Teil 8: Die Szene, an der die drei Auflösungsstufen verglichen werden — in
+ * groben Zellen beschrieben und für die feineren Stufen hochgerechnet, damit
+ * alle drei dasselbe zeigen und sich allein die Feinheit unterscheidet.
+ */
+const VERGLEICHSSZENE = { art: 'kreis', x: 40, y: 30, durchmesser: 16 };
+
+/** Wind für den Stufenvergleich — die Voreinstellung des Kanals. */
+const WIND_VERGLEICH = 0.1;
+
+/** Schritte vor und nach dem Windwechsel mitten im Lauf. */
+const VOR_DEM_WECHSEL = 1000;
+const NACH_DEM_WECHSEL = 1500;
 
 console.log('Windkanal — Prüfung der Kernlogik');
 console.log('=================================');
@@ -65,12 +90,13 @@ const bestandenTeile = [
   pruefeNeueFormenInStroemung(),
   pruefeBodenfreiheit(),
   pruefeAbgeleiteteGroessen(),
+  pruefeAufloesungUndWind(),
 ];
 
 const allesBestanden = bestandenTeile.every(Boolean);
 console.log('\n=================================');
 if (allesBestanden) {
-  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.4 erfüllt.');
+  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.5 erfüllt.');
 } else {
   console.log('Ergebnis: Mindestens ein Prüfpunkt nicht bestanden.');
 }
@@ -719,10 +745,271 @@ function findeVorzeichenwechsel(reihe, schwelle) {
   return wechsel;
 }
 
+// --- Teil 8: Auflösungsstufen und Windgeschwindigkeit (Etappe 1.5) ---------
+
+function pruefeAufloesungUndWind() {
+  const titel = 'Teil 8 — Auflösungsstufen und Windgeschwindigkeit (Etappe 1.5)';
+  console.log(`\n${titel}`);
+  console.log('-'.repeat(titel.length));
+  console.log(
+    `Dieselbe Szene — ein angeströmter Kreis — in allen drei Stufen, je ${SCHRITTE_GESAMT} Schritte`
+  );
+  console.log(`bei Wind ${WIND_VERGLEICH}. Der Kreis wächst mit der Auflösung mit.\n`);
+
+  const stufen = [];
+  console.log(
+    '  Stufe     Kanal        Zellen   Kreis   ungültig   Dichte kleinste..größte   höchste Geschw.   ms/Schritt   Mio Zellen je s'
+  );
+  for (const [name, stufe] of Object.entries(AUFLOESUNGEN)) {
+    const hindernis = aufStufe(VERGLEICHSSZENE, stufe.faktor);
+    const kanal = erzeugeKanal({
+      aufloesung: name,
+      windgeschwindigkeit: WIND_VERGLEICH,
+      zaehigkeit: 0.01,
+      hindernis,
+    });
+    const lauf = rechneUndBeobachte(kanal, SCHRITTE_GESAMT);
+    const zellen = kanal.breite * kanal.hoehe;
+    stufen.push({ name, kanal, zellen, durchmesser: hindernis.durchmesser, ...lauf });
+
+    console.log(
+      `  ${name.padEnd(9)}` +
+        ` ${`${kanal.breite} × ${kanal.hoehe}`.padEnd(12)}` +
+        ` ${String(zellen).padStart(6)}` +
+        `   ${String(hindernis.durchmesser).padStart(5)}` +
+        `   ${String(lauf.ungueltige).padStart(8)}` +
+        `   ${`${lauf.dichteKleinste.toFixed(4)}..${lauf.dichteGroesste.toFixed(4)}`.padStart(22)}` +
+        `   ${lauf.letzterStand.hoechsteGeschwindigkeit.toFixed(4).padStart(15)}` +
+        `   ${lauf.msJeSchritt.toFixed(2).padStart(10)}` +
+        `   ${(lauf.zellenJeSekunde / 1e6).toFixed(1).padStart(15)}`
+    );
+  }
+
+  // --- Windgeschwindigkeit an beiden Enden des erlaubten Bereichs
+  console.log(
+    `\nWind an beiden Enden des erlaubten Bereichs (${WIND_MINDESTENS} und ${WIND_HOECHSTENS}),` +
+      ` grobe Stufe, je ${SCHRITTE_GESAMT} Schritte`
+  );
+  console.log('  Wind     ungültig   Dichte kleinste..größte   gemessen vor dem Kreis   Anteil der Vorgabe');
+
+  const windlaeufe = [];
+  for (const wind of [WIND_MINDESTENS, WIND_HOECHSTENS]) {
+    const kanal = erzeugeKanal({
+      aufloesung: 'grob',
+      windgeschwindigkeit: wind,
+      zaehigkeit: 0.01,
+      hindernis: VERGLEICHSSZENE,
+    });
+    const lauf = rechneUndBeobachte(kanal, SCHRITTE_GESAMT);
+    // Weit vor dem Kreis und weit über dem Boden: dort ist die Strömung
+    // ungestört, dort muss die Vorgabe unverfälscht ankommen.
+    const gemessen = geschwindigkeitBei(kanal, 15, kanal.hoehe - 15).ux;
+    windlaeufe.push({ wind, gemessen, anteil: gemessen / wind, ...lauf });
+
+    console.log(
+      `  ${String(wind).padEnd(8)}` +
+        ` ${String(lauf.ungueltige).padStart(8)}` +
+        `   ${`${lauf.dichteKleinste.toFixed(4)}..${lauf.dichteGroesste.toFixed(4)}`.padStart(22)}` +
+        `   ${gemessen.toFixed(5).padStart(22)}` +
+        `   ${(100 * (gemessen / wind)).toFixed(1).padStart(16)} %`
+    );
+  }
+
+  // --- Wind mitten im Lauf ändern
+  const wechselkanal = erzeugeKanal({
+    aufloesung: 'grob',
+    windgeschwindigkeit: WIND_MINDESTENS,
+    zaehigkeit: 0.01,
+    hindernis: VERGLEICHSSZENE,
+  });
+  // Weit hinter dem Kreis: dorthin muss der neue Wind erst wandern. Die Luft ist
+  // dort schneller als die Vorgabe, weil der Kreis den Kanal verengt — gemessen
+  // wird hier nicht der Betrag, sondern dass die Änderung überhaupt ankommt.
+  const messstelle = { x: 150, y: wechselkanal.hoehe - 15 };
+  const vorher = rechneUndBeobachte(wechselkanal, VOR_DEM_WECHSEL);
+  const tempoVorher = geschwindigkeitBei(wechselkanal, messstelle.x, messstelle.y).ux;
+  const schrittzahlVorher = wechselkanal.schrittzahl;
+
+  setzeWindgeschwindigkeit(wechselkanal, WIND_HOECHSTENS);
+  const nachher = rechneUndBeobachte(wechselkanal, NACH_DEM_WECHSEL);
+  const tempoNachher = geschwindigkeitBei(wechselkanal, messstelle.x, messstelle.y).ux;
+
+  console.log(
+    `\nWind mitten im Lauf von ${WIND_MINDESTENS} auf ${WIND_HOECHSTENS} gedreht` +
+      ` (nach ${schrittzahlVorher} Schritten, gemessen bei x = ${messstelle.x})`
+  );
+  console.log(
+    `  davor ${tempoVorher.toFixed(5)}, ${NACH_DEM_WECHSEL} Schritte danach ${tempoNachher.toFixed(5)}` +
+      ` — der neue Wind wandert von vorn durch den Kanal, statt überall auf einmal zu gelten.`
+  );
+  console.log(
+    '  Der Wert liegt über der Vorgabe, weil die Messstelle hinter dem Kreis liegt und die Luft dort'
+  );
+  console.log('  durch die Verengung schneller strömt. Geprüft wird, dass die Änderung ankommt.');
+
+  // --- Was abgewiesen werden muss
+  const abzuweisen = [
+    ['Wind über der Grenze', () => erzeugeKanal({ windgeschwindigkeit: WIND_HOECHSTENS + 0.01 })],
+    ['Wind bei null', () => erzeugeKanal({ windgeschwindigkeit: 0 })],
+    ['Zähigkeit zu klein', () => erzeugeKanal({ zaehigkeit: ZAEHIGKEIT_MINDESTENS / 2 })],
+    ['unbekannte Auflösungsstufe', () => erzeugeKanal({ aufloesung: 'sehr fein' })],
+    ['Stufe und eigene Maße zugleich', () => erzeugeKanal({ aufloesung: 'grob', breite: 100, hoehe: 40 })],
+    ['nur eines der eigenen Maße', () => erzeugeKanal({ breite: 100 })],
+    ['Wind im Lauf über die Grenze gedreht', () => setzeWindgeschwindigkeit(erzeugeKanal(), 0.5)],
+  ];
+  const durchgerutscht = abzuweisen.filter(([, versuch]) => !wirftFehler(versuch)).map(([name]) => name);
+
+  // --- Messwerte für die Prüfpunkte
+  const groessteDichteabweichung = Math.max(
+    ...stufen.map((s) => Math.max(Math.abs(s.dichteKleinste - 1), Math.abs(s.dichteGroesste - 1)))
+  );
+  const tempoJeStufe = stufen.map((s) => s.letzterStand.hoechsteGeschwindigkeit);
+  const tempoUnterschied =
+    (Math.max(...tempoJeStufe) - Math.min(...tempoJeStufe)) / Math.min(...tempoJeStufe);
+  const durchsatz = stufen.map((s) => s.zellenJeSekunde);
+  const durchsatzUnterschied =
+    (Math.max(...durchsatz) - Math.min(...durchsatz)) / Math.min(...durchsatz);
+  const langsamsteStufe = stufen.reduce((a, b) => (a.msJeSchritt > b.msJeSchritt ? a : b));
+
+  return melde([
+    {
+      // Das Abnahmekriterium der Etappe.
+      name: 'Grob, mittel und fein rechnen je 2000 Schritte durch, ohne dass ein Wert ins Unendliche läuft',
+      bestanden: stufen.every((s) => s.ungueltige === 0),
+      befund: stufen
+        .map((s) => `${s.name} ${s.zellen} Zellen: ${s.ungueltige} ungültige Werte`)
+        .join(', '),
+    },
+    {
+      name: 'Die Dichte bleibt in jeder Stufe dicht bei 1 — nichts staut sich auf, nichts läuft leer',
+      bestanden: groessteDichteabweichung < 0.1,
+      befund:
+        `größte Abweichung von 1 über alle Stufen und Zwischenstände: ${groessteDichteabweichung.toFixed(4)}` +
+        ' (erlaubt bis 0.1) — die Werte schwanken um den Ruhezustand, statt wegzudriften',
+    },
+    {
+      name: 'Alle drei Stufen zeigen dieselbe Strömung, nur unterschiedlich fein aufgelöst',
+      bestanden: tempoUnterschied < 0.25,
+      befund:
+        `höchste Geschwindigkeit ${tempoJeStufe.map((t) => t.toFixed(4)).join(' / ')} (grob / mittel / fein),` +
+        ` Unterschied ${(100 * tempoUnterschied).toFixed(1)} % — die Stufe ändert die Schärfe, nicht die Strömung`,
+    },
+    {
+      name: 'Die Rechenzeit wächst mit der Zellenzahl, nicht schneller',
+      bestanden: durchsatzUnterschied < 0.3,
+      befund:
+        stufen.map((s) => `${s.name} ${s.msJeSchritt.toFixed(2)} ms je Schritt`).join(', ') +
+        `; je Sekunde ${durchsatz.map((d) => (d / 1e6).toFixed(1)).join(' / ')} Mio Zellen` +
+        ` (Unterschied ${(100 * durchsatzUnterschied).toFixed(1)} %).` +
+        ` Auf diesem Rechner schafft die langsamste Stufe (${langsamsteStufe.name})` +
+        ` ${Math.round(1000 / langsamsteStufe.msJeSchritt)} Schritte je Sekunde`,
+    },
+    {
+      name: 'Langsamster und schnellster erlaubter Wind laufen beide stabil und kommen unverfälscht an',
+      bestanden:
+        windlaeufe.every((w) => w.ungueltige === 0) &&
+        windlaeufe.every((w) => w.anteil > 0.9 && w.anteil < 1.1),
+      befund: windlaeufe
+        .map(
+          (w) =>
+            `Wind ${w.wind}: ${w.ungueltige} ungültige Werte,` +
+            ` vor dem Kreis ${(100 * w.anteil).toFixed(1)} % der Vorgabe`
+        )
+        .join('; '),
+    },
+    {
+      name: 'Der Wind lässt sich mitten im Lauf ändern, ohne die Rechnung zurückzusetzen',
+      bestanden:
+        vorher.ungueltige === 0 &&
+        nachher.ungueltige === 0 &&
+        wechselkanal.schrittzahl === VOR_DEM_WECHSEL + NACH_DEM_WECHSEL &&
+        tempoNachher > 3 * tempoVorher,
+      befund:
+        `Schrittzahl läuft von ${schrittzahlVorher} auf ${wechselkanal.schrittzahl} weiter (kein Rücksetzen),` +
+        ` die Strömung zieht von ${tempoVorher.toFixed(5)} auf ${tempoNachher.toFixed(5)} an,` +
+        ` ${vorher.ungueltige + nachher.ungueltige} ungültige Werte`,
+    },
+    {
+      name: 'Einstellungen außerhalb des geprüften Bereichs werden gemeldet statt stillschweigend gerechnet',
+      bestanden: durchgerutscht.length === 0,
+      befund:
+        durchgerutscht.length === 0
+          ? `alle ${abzuweisen.length} Fälle abgewiesen: ${abzuweisen.map(([name]) => name).join(', ')}`
+          : `durchgerutscht: ${durchgerutscht.join(', ')}`,
+    },
+  ]);
+}
+
+/**
+ * Rechnet einen Kanal durch und behält dabei im Auge, ob etwas aus dem Ruder
+ * läuft. Zwischenstände statt nur eines Endstandes, damit ein Ausreißer
+ * mittendrin nicht durchrutscht.
+ *
+ * Die Rechenzeit wird nur um die Rechenschritte selbst gemessen — das Messen
+ * des Zustands ist teurer als die Rechnung und würde die Zahl verfälschen.
+ */
+function rechneUndBeobachte(kanal, schrittzahl) {
+  let rechenzeit = 0;
+  let ungueltige = 0;
+  let dichteKleinste = Infinity;
+  let dichteGroesste = -Infinity;
+  let letzterStand = null;
+
+  for (let gerechnet = 0; gerechnet < schrittzahl; gerechnet += ZWISCHENSTAND_ALLE) {
+    const dieseRunde = Math.min(ZWISCHENSTAND_ALLE, schrittzahl - gerechnet);
+    const anfang = performance.now();
+    schritte(kanal, dieseRunde);
+    rechenzeit += performance.now() - anfang;
+
+    letzterStand = messeGesamtzustand(kanal);
+    ungueltige += letzterStand.ungueltige;
+    dichteKleinste = Math.min(dichteKleinste, letzterStand.dichteKleinste);
+    dichteGroesste = Math.max(dichteGroesste, letzterStand.dichteGroesste);
+  }
+
+  const msJeSchritt = rechenzeit / schrittzahl;
+  return {
+    ungueltige,
+    dichteKleinste,
+    dichteGroesste,
+    letzterStand,
+    msJeSchritt,
+    zellenJeSekunde: (kanal.breite * kanal.hoehe * 1000) / msJeSchritt,
+  };
+}
+
+/**
+ * Rechnet eine in groben Zellen beschriebene Form auf eine feinere Stufe um.
+ * Ohne das zeigte die feine Stufe nicht dieselbe Szene schärfer, sondern einen
+ * kleineren Körper in einem größeren Kanal — und der Vergleich sagte nichts aus.
+ *
+ * Der Anstellwinkel wird nicht mitskaliert: er ist ein Winkel, kein Maß.
+ */
+function aufStufe(form, faktor) {
+  const umgerechnet = { ...form };
+  for (const mass of ['x', 'y', 'durchmesser', 'breite', 'hoehe', 'laenge', 'dicke', 'bodenabstand']) {
+    if (umgerechnet[mass] !== undefined) umgerechnet[mass] = Math.round(umgerechnet[mass] * faktor);
+  }
+  return umgerechnet;
+}
+
+/** Hat der Versuch einen Fehler geworfen? Für die Prüfung der Grenzfälle. */
+function wirftFehler(versuch) {
+  try {
+    versuch();
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 // --- Ausgabe ---------------------------------------------------------------
 
 function beschreibeKanal(kanal) {
-  console.log(`Kanal: ${kanal.breite} × ${kanal.hoehe} Zellen, Wind ${kanal.windgeschwindigkeit} Zellen je Schritt,`);
+  const stufe = kanal.aufloesung === null ? 'eigene Maße' : `Stufe ${kanal.aufloesung}`;
+  console.log(
+    `Kanal: ${kanal.breite} × ${kanal.hoehe} Zellen (${stufe}), Wind ${kanal.windgeschwindigkeit} Zellen je Schritt,`
+  );
   console.log(`Zähigkeit ${kanal.zaehigkeit} (Angleichzeit ${kanal.angleichzeit.toFixed(3)}), Boden haftend, Decke gleitend`);
 }
 
