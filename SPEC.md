@@ -7,14 +7,14 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 1.2 abgenommen** (`v0.3`) — im Kanal steht wahlweise ein
-  Kreis oder ein Rechteck, an dem die Strömung abprallt; davor staut sie sich, daneben
-  wird sie schneller, dahinter bleibt ein Totwasser stehen. Prüfbar über
-  `node werkzeug/pruefe-kern.js` (drei Teile: leerer Kanal, Kreis, Rechteck).
-  Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage,
-  `v0.2` Strömung im leeren Kanal.
-  Als Nächstes **Etappe 1.3** — alle vier Formen (Kreis, Rechteck, stumpfe Platte,
-  Tragflächenprofil) mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
+- **Aktueller Stand:** **Etappe 1.3 abgenommen** (`v0.4`) — alle vier Formen stehen
+  bereit (Kreis, Rechteck, stumpfe Platte, Tragflächenprofil), jede mit Größe,
+  Anstellwinkel und Höhe über dem Boden einstellbar; ein aufsitzender Körper wird nicht
+  unterströmt, ein angehobener schon. Prüfbar über `node werkzeug/pruefe-kern.js`
+  (sechs Teile, 35 Prüfpunkte). Noch keine Bildschirmausgabe. Frühere Stände:
+  `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im Kanal.
+  Als Nächstes **Etappe 1.4** — Geschwindigkeit, Druck und Wirbelstärke aus dem
+  Rechengitter ablesen.
 
 ---
 
@@ -86,7 +86,8 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
   - `.github/workflows/tag.yml` — setzt daraus den Tag, siehe „Versionsvergabe"
 - **Abhängigkeiten:** zur Laufzeit keine. Für Entwicklung: Node.js mit eingebautem Testläufer (`node --test`) — keine installierten Pakete, damit das Projekt in fünf Jahren noch startet. Die `package.json` enthält nur `"type": "module"` und keinerlei Pakete; ohne sie hält Node die `.js`-Dateien für das alte Modulformat und weigert sich, sie zu laden. Der Browser braucht sie nicht.
 - **Randbedingungen des Kanals** (festgelegt in Etappe 1.1): links wird die **Geschwindigkeit** vorgegeben, rechts der **Druck** (Dichte 1), oben Gleitwand, unten Haftwand. Die Aufteilung vorne Geschwindigkeit / hinten Druck ist notwendig: gibt man beides vorne vor und lässt hinten nur durchlaufen, hat der Druck keinen Anker und die Reibung staut immer weiter Luft auf, statt sich auf ein Gefälle einzupendeln — genau das trat beim ersten Versuch auf.
-- **Hindernisse im Kanal** (festgelegt in Etappe 1.2): Ein Hindernis ist nichts anderes als eine Gruppe von **Haftwand**-Zellen mitten im Gitter — dieselbe Wandart wie der Boden. Die Luft prallt daran zurück und haftet an der Oberfläche; ein eigener Mechanismus für Körper ist nicht nötig, genau darum wurde das Lattice-Boltzmann-Verfahren gewählt. Die Form selbst kennt der Löser nicht: `formen.js` beantwortet nur „liegt Zelle (x, y) in dieser Form?", `loeser.js` macht daraus Wandzellen. Ein Hindernis zu setzen oder zu wechseln **setzt die Rechnung zurück** — eine Wand mitten im Lauf einzublenden wäre ein Sprung, den die Strömung nicht verkraftet. Ein Hindernis darf Einlass und Auslass nicht berühren, weil diese beiden Spalten in jedem Schritt neu gesetzt werden; der Versuch wird gemeldet statt stillschweigend übergangen.
+- **Hindernisse im Kanal** (festgelegt in Etappe 1.2): Ein Hindernis ist nichts anderes als eine Gruppe von **Haftwand**-Zellen mitten im Gitter — dieselbe Wandart wie der Boden. Die Luft prallt daran zurück und haftet an der Oberfläche; ein eigener Mechanismus für Körper ist nicht nötig, genau darum wurde das Lattice-Boltzmann-Verfahren gewählt. Die Form selbst kennt der Löser nicht: `formen.js` beantwortet nur „liegt Zelle (x, y) in dieser Form?", `loeser.js` macht daraus Wandzellen. Ein Hindernis zu setzen oder zu wechseln **setzt die Rechnung zurück** — eine Wand mitten im Lauf einzublenden wäre ein Sprung, den die Strömung nicht verkraftet. Ein Hindernis darf Einlass und Auslass nicht berühren, weil diese beiden Spalten in jedem Schritt neu gesetzt werden; der Versuch wird gemeldet statt stillschweigend übergangen. Dasselbe gilt seit Etappe 1.3 nach oben: ein Hindernis, das bis an die Decke reicht, wird abgewiesen statt abgeschnitten — sonst sähe es aus, als hinge der Körper an der Decke. Am Boden ist das Aufsitzen dagegen gewollt.
+- **Formen, Anstellung und Höhe über dem Boden** (festgelegt in Etappe 1.3): Vier Arten stehen bereit — `kreis` (Durchmesser), `rechteck` (Breite, Höhe), `platte` (Länge, Dicke) und `profil` (Länge, Dicke). Platte und Profil bekommen dieselbe voreingestellte Dicke, 12 % der Länge und mindestens 3 Zellen, damit sich bei gleicher Länge allein die Form unterscheidet — genau darauf zielt das Erfolgskriterium. Das Profil folgt der üblichen NACA-Formel für symmetrische Vierziffern-Profile: vorn rund, dickste Stelle bei knapp einem Drittel der Länge, hinten spitz auslaufend; die Platte ist vorn und hinten abgeschnitten. Der **Anstellwinkel** in Grad gilt für jede Form, positiv hebt die Anströmkante; gedreht wird dabei nicht die Form, sondern der abgefragte Punkt entgegengesetzt — dadurch bleibt jede Form in ihrem eigenen Koordinatensystem einfach beschreibbar und der Winkel steht an einer einzigen Stelle. Beim Kreis bleibt er wirkungslos. Die **Höhe über dem Boden** wird entweder als Mittelpunkt `y` oder als `bodenabstand` angegeben — freie Zellen zwischen Boden und Unterkante, 0 heißt „sitzt auf". Genau eines von beidem, beides zugleich wäre widersprüchlich. Jede Form geht vor der Benutzung durch `normalisiereForm`: prüfen, Fehlendes ergänzen, einen Bodenabstand in ein `y` umrechnen. In `kanal.hindernis` steht danach die vervollständigte Form, damit niemand nachrechnen muss, wo der Körper tatsächlich steht.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -104,8 +105,9 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 - [x] **1.2** *(abgenommen 2026-07-30, v0.3)* Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
   - Abnahme: Das Prüfskript zeichnet die Form als grobes Textbild und meldet, dass die Geschwindigkeit innerhalb des Hindernisses null ist und außen herum zunimmt.
   - Noch nicht: nur Kreis und Rechteck, Profil und Platte kommen in 1.3.
-- [ ] **1.3** Alle vier Formen stehen bereit — Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — jeweils mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
+- [x] **1.3** *(abgenommen 2026-07-31, v0.4)* Alle vier Formen stehen bereit — Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — jeweils mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
   - Abnahme: Das Prüfskript zeigt jede Form als Textbild, auch gedreht. Zusätzlich zwei Gegenproben: ein auf dem Boden aufsitzendes Rechteck lässt darunter nichts durch (Geschwindigkeit dort null), dasselbe Rechteck angehoben wird sichtbar unterströmt.
+  - Noch nicht: Der Unterschied zwischen Platte und Profil ist nur als Beobachtung ausgewiesen, noch nicht als Prüffall — der kommt in 5.2.
 - [ ] **1.4** Aus dem Rechengitter lassen sich Geschwindigkeit, Druck und Wirbelstärke ablesen.
   - Abnahme: Das Prüfskript gibt für einen angeströmten Kreis aus, dass sich hinter ihm die Wirbelstärke periodisch im Vorzeichen umkehrt — das ist die Wirbelablösung in Zahlen.
 - [ ] **1.5** Auflösung und Windgeschwindigkeit sind einstellbare Größen; die Rechnung bleibt in allen vorgesehenen Stufen stabil.
@@ -200,3 +202,31 @@ Fehler.*
      geprüft, ohne dass Werte davonlaufen.
 - **2026-07-30:** Auslieferung am Schwesterprojekt *Steuerrechner* ausgerichtet: derselbe Weg (öffentlicher GitHub-Pages-Link), aber ohne dessen Actions-Workflow und ohne React/Vite, weil hier nichts zu bauen ist. Der CDU-Styleguide des Steuerrechners wird ausdrücklich nicht übernommen — er verbietet Farbverläufe, die die Strömungsdarstellung braucht.
 - **2026-07-30:** *Ausnahme vom Grundsatz „kein Actions-Workflow":* Ein Workflow kommt hinzu, allein für die Versionsvergabe. Anlass: Der Tag für die abgeschlossene erste Phase konnte zweimal nicht gesetzt werden. Geprüft wurde an diesem Tag, dass eine Cloud-Session Tags grundsätzlich nicht anlegen kann — `git push` von `refs/tags/*` sowie die API-Pfade `/git/tags` und `/git/refs` antworten mit 403, während gewöhnliche Branch-Pushes und sogar das Pushen von `.github/workflows/` durchgehen. Der Grundsatz galt dem *Bauen* der Seite und bleibt dafür unangetastet: Der neue Workflow baut nichts, verändert keine ausgelieferte Datei und wird nur durch eine Änderung an `VERSION.md` ausgelöst. Die Seite bleibt eine Dateisammlung ohne Build-Schritt. Folge: neue Dateien `VERSION.md` und `.github/workflows/tag.yml`, Abschnitt „Architektur" um „Versionsvergabe" ergänzt, Tag-Regeln in `CLAUDE.md` umgeschrieben.
+- **2026-07-31:** Etappe 1.3 umgesetzt (alle vier Formen, Anstellwinkel, Höhe über dem
+  Boden). Dabei festgelegt:
+  1. *Platte und Profil, Anstellwinkel, Bodenabstand:* siehe „Formen, Anstellung und Höhe
+     über dem Boden" unter Architektur. Kein Umfangszuwachs — beide Formen und alle drei
+     Einstellungen stehen von Anfang an in den Anforderungen.
+  2. *Gleiche voreingestellte Dicke für Platte und Profil* (12 % der Länge). Sonst
+     vergliche der spätere Prüffall aus Etappe 5.2 zwei verschieden große Körper und
+     nicht zwei Formen.
+  3. *Vorzeichen des Anstellwinkels:* positiv hebt die Anströmkante. Das musste festgelegt
+     werden, weil beide Richtungen denkbar sind; gewählt ist die übliche Leserichtung
+     „positiver Anstellwinkel hebt die Nase". Ein Prüfpunkt misst es nach, damit es nicht
+     unbemerkt kippt.
+  4. *Bodenabstand als zweiter Weg, die Höhe anzugeben.* Aus dem Mittelpunkt
+     zurückzurechnen wäre bei gedrehten Formen jedes Mal Handarbeit gewesen — und die
+     Gegenprobe „sitzt auf dem Boden" ließe sich nicht sauber treffen. Entweder `y` oder
+     `bodenabstand`, nie beides.
+  5. *Neue Absage: Hindernis an der Decke.* Bisher waren nur Einlass und Auslass
+     geschützt; mit einstellbarer Höhe ist das Überschreiten nach oben der naheliegende
+     Fehlgriff.
+  6. *Prüfmaß für Teil 4:* Platte und Profil dort 10 statt der voreingestellten 4 Zellen
+     dick. Grund wie schon beim Kanalmaß in Etappe 1.2 allein die Bildgröße im Textbild —
+     mit der Voreinstellung wären beide nur ein Strich, und der Unterschied der Formen
+     ginge verloren. In der Strömung (Teil 5) gilt die Voreinstellung.
+  7. *Nebenbefund, noch kein Prüffall:* Hinter der stumpfen Platte strömt die Luft mit
+     52 % der Windgeschwindigkeit rückwärts, hinter dem Profil bei gleicher Länge, Dicke
+     und Anstellung (20°) nur mit 29 %. Genau dieser Unterschied ist das Erfolgskriterium
+     des Projekts; als harter Prüffall gehört er nach Etappe 5.2, hier wird er nur
+     ausgewiesen.
