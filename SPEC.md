@@ -7,17 +7,18 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 1.5 abgenommen (`v0.6`) — Abschnitt 1 ist damit
-  abgeschlossen.** Die Kernlogik rechnet vollständig ohne Oberfläche: Strömung im Kanal,
-  alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden, Geschwindigkeit,
-  Druck und Wirbelstärke ablesbar, und drei Auflösungsstufen (grob/mittel/fein) bei
-  einstellbarer Windgeschwindigkeit, jede Stufe stabil. Prüfbar über
-  `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden).
-  Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung
-  im leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete
-  Größen. Als Nächstes **Etappe 2.1** — die Seite zeigt die laufende Strömung um einen
-  fest eingebauten Kreis als Farbfeld auf dem Bildschirm. Das ist der erste Schritt in
-  `src/ui/`, das bisher leer ist.
+- **Aktueller Stand:** **Etappe 2.1 abgenommen (`v0.7`) — das erste Bild steht auf dem
+  Bildschirm.** `index.html` zeigt die laufende Strömung um einen fest eingebauten Kreis
+  als Farbfeld der Geschwindigkeit; nach etwa fünf Sekunden lösen sich sichtbar Wirbel ab.
+  Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik: Strömung im Kanal, alle vier
+  Formen mit Größe, Anstellwinkel und Höhe über dem Boden, Geschwindigkeit, Druck und
+  Wirbelstärke ablesbar, drei Auflösungsstufen bei einstellbarer Windgeschwindigkeit.
+  Prüfbar über `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden).
+  Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis
+  im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6` Auflösung und
+  Windgeschwindigkeit. Noch nichts bedienbar: keine Schaltflächen, keine Regler, nur eine
+  der vier Darstellungsarten. Als Nächstes **Etappe 2.2** — Form auswählen sowie Starten,
+  Anhalten und Zurücksetzen über Schaltflächen.
 
 ---
 
@@ -37,6 +38,7 @@ sobald sie geklärt sind.*
   - Kraftanzeige (Widerstand/Auftrieb) als grobe Größenordnung — bewusst zurückgestellt
   - Eigene Formen zeichnen — bewusst zurückgestellt
   - Mitbewegter Boden (wie das Laufband in echten Fahrzeug-Windkanälen) — bewusst zurückgestellt, siehe „Kanalform" unten
+  - Zwischen mehreren Farbschemata wählen können — bewusst zurückgestellt (angemerkt 2026-07-31). Etappe 4.1 legt **eine** stimmige Skala je Darstellungsart fest; eine Auswahl wäre der Schritt danach und würde eine eigene Etappe brauchen
 - **Zielgruppe:** interessierte Laien und Schüler; jemand, der den Link öffnet, soll ohne Anleitung in etwa einer Minute zu einem sinnvollen Strömungsbild kommen.
 - **Daten:** keine. Nichts wird gespeichert, nichts hochgeladen, nichts nachgeladen — alle Formen sind im Programm hinterlegt. Damit besteht kein Schutzbedarf.
 - **Umgebung:** statische Webseite, aufgerufen über einen GitHub-Pages-Link — wie beim Schwesterprojekt *Steuerrechner*, dort unter <https://silberfisch24-cpu.github.io/Steuerrechner/>. Keine Installation, kein Server, keine Anmeldung. Zielbrowser: Safari (iOS/macOS), Chrome, Firefox, Edge in aktuellen Versionen.
@@ -94,6 +96,7 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Abgeleitete Größen** (festgelegt in Etappe 1.4): Der Löser speichert neun Teilchenanteile je Zelle — Zahlen, die für sich nichts zeigen. `felder.js` rechnet daraus die drei Größen aus, die man sehen will. **Geschwindigkeit** als `ux`, `uy` und Betrag. **Druck** aus der Dichte, und zwar als *Unterschied zum Ruhedruck* (`(dichte − 1) / 3`) statt absolut: die Dichte liegt in der Rechnung immer dicht bei 1, die Abweichung ist die ganze Aussage, und eine Farbskala von 0,333 bis 0,334 wäre nicht lesbar. **Wirbelstärke** als Drehung der Luft (`∂uy/∂x − ∂ux/∂y`), positiv gegen den Uhrzeigersinn, gerechnet aus dem Unterschied der Nachbargeschwindigkeiten. Dabei gilt für Wände eine eigene Regel, ohne die die Wirbelstärke falsch herauskäme: eine **Haftwand** zählt mit Geschwindigkeit null — genau diese Scherung soll sie ja messen —, eine **Gleitwand** wird längs mitgezogen, damit an der reibungsfreien Decke keine Drehung ausgewiesen wird, die es dort nicht gibt; am Gitterrand wird einseitig abgeleitet. In Wandzellen selbst steht überall null. Zwei Wege stehen bereit: Einzelabfrage (`druckBei`, `wirbelstaerkeBei` — für Messungen und Prüfungen) und `leseFelder` für das ganze Gitter auf einmal. Letzteres schreibt in Felder, die man behalten und wiedergeben kann, weil die Darstellung sie sechzigmal je Sekunde braucht und ebenso oft neuen Speicher anzufordern Ruckeln bedeutete.
 - **Auflösung und Windgeschwindigkeit** (festgelegt in Etappe 1.5): Die Kanalgröße wird nicht mehr frei in Zellen angegeben, sondern über eine von drei **Auflösungsstufen** — `grob` 200 × 60, `mittel` 280 × 84, `fein` 400 × 120 Zellen. Alle drei haben dasselbe Seitenverhältnis (10 : 3), damit dieselbe Szene in jeder Stufe gleich aussieht und sich allein die Schärfe unterscheidet; jede Stufe führt einen `faktor` mit (1 / 1,4 / 2), mit dem sich in groben Zellen beschriebene Maße hochrechnen lassen. Die Zellenzahlen 12.000 / 23.520 / 48.000 liegen im Bereich, den „Darstellung" oben vorsieht. Eigene Maße bleiben möglich, aber nur **statt** einer Stufe, nicht zusätzlich — die Prüfskripte brauchen sie für kürzere Kanäle, in denen ein Textbild lesbar bleibt. **Windgeschwindigkeit 0,01 bis 0,12** Zellen je Schritt, **Zähigkeit mindestens 0,005**; beide Grenzen sind gemessen, nicht geschätzt (siehe Änderungsverlauf 2026-07-31). Werte außerhalb werden abgewiesen statt stillschweigend gerechnet, weil ein aufgeschaukeltes Gitter sich später wie ein Programmfehler liest. Der Wind lässt sich **mitten im Lauf ändern, ohne die Rechnung zurückzusetzen** — anders als beim Hindernis: der Einlass wird ohnehin in jedem Schritt neu gesetzt, der neue Wind wandert also von vorn durch den Kanal, wie wenn man am Gebläse dreht. Das Umrechnen einer Form auf eine feinere Stufe steht bewusst noch **nicht** im Kern, sondern im Prüfskript; ob es dorthin gehört, entscheidet sich in Etappe 3.2, wenn die Oberfläche es zum zweiten Mal braucht.
 - **Bild auf dem Bildschirm** (festgelegt in Etappe 2.1): Gezeigt wird zunächst **eine** der vier vorgesehenen Darstellungsarten, das Farbfeld der Geschwindigkeit; die übrigen drei kommen in Etappe 3.3 dazu. Die **Farbskala** ist einfarbig und läuft von hell nach dunkel — hell ist langsam, dunkel ist schnell. Eine Regenbogenskala (blau-grün-gelb-rot) wäre bunter, aber ihre Reihenfolge steckt nicht in der Farbe selbst: welcher Ton „mehr" bedeutet, müsste man auswendig wissen. Bei einer Helligkeitsskala liegt die Ordnung im Bild und bleibt auch für Farbenblinde und im Schwarzweißdruck lesbar. Die **Obergrenze der Skala liegt fest** bei dem Doppelten der Windgeschwindigkeit — nicht beim größten Wert des jeweiligen Einzelbildes: eine mitwandernde Skala änderte die Bedeutung der Farben sechzigmal je Sekunde, das ganze Bild flackerte, obwohl sich die Strömung kaum ändert. Das Doppelte deckt ab, was tatsächlich vorkommt (an der Körperkante gemessen 1,73-fach). **Wandzellen** — Boden, Decke, Hindernis — bekommen ein neutrales Grau außerhalb der Skala, sonst erschiene das Hindernis als besonders langsam strömende Luft. Die **Zeichenfläche hat die Größe des Rechengitters**, ein Bildpunkt je Zelle; auf Bildschirmbreite vergrößert wird sie vom Browser über die Formatvorlage, was die Übergänge nebenbei glättet und eigenen Vergrößerungscode spart. Dass der Kern y vom Boden nach oben zählt, die Zeichenfläche aber von oben nach unten, wird an genau einer Stelle umgekehrt (in `darstellung.js`) und sonst nirgends.
+- **Der Körper im Bild ist eckig** (festgestellt in Etappe 2.1): Der Kreis erscheint auf dem Bildschirm nicht rund, sondern treppig, mit je einer einzelnen vorstehenden Zelle links, rechts, oben und unten. Das ist die Rasterung, und zwar aus zwei getrennten Gründen. **Erstens** ist ein Kreis von 16 Zellen Durchmesser nicht runder darstellbar als das Gitter — 16 Zellen sind 16 Stufen. **Zweitens** zählt `liegtInForm` eine Zelle zum Kreis, wenn ihr Mittelpunkt höchstens einen Radius entfernt liegt (`<=`); genau auf den vier Hauptrichtungen liegt der Mittelpunkt exakt auf dem Rand und wird mitgezählt. Daraus entsteht die einzelne Nase, die auffälliger wirkt als die Treppe selbst — und sie bleibt in jeder Auflösung bestehen, weil sie nicht von der Feinheit abhängt, sondern von der Vergleichsrichtung. Wesentlich dabei: **die Rechnung sieht dieselbe Treppe.** Das ist kein Zeichenfehler, sondern die Form, an der die Luft tatsächlich zurückprallt — beim gewählten Verfahren ist ein Körper nichts anderes als eine Gruppe von Wandzellen. Dass das die Strömung nicht verfälscht, ist gemessen: der Wirbeltakt aus Etappe 1.4 entspricht einer Strouhal-Zahl von etwa 0,25, dem für diese Anströmung erwarteten Wert. Drei Wege, das Bild zu glätten, in aufsteigender Eingriffstiefe: eine feinere Auflösung (Etappe 3.2) macht die Stufen im Verhältnis kleiner; ein über das Farbfeld gezeichneter **glatter Umriss** der wahren Form macht den Körper rund, ohne die Rechnung anzufassen (in `formen.js` von Anfang an vorgesehen — „der Löser macht daraus Wandzellen, die Oberfläche später einen Umriss") und wäre der Kandidat für Etappe 4.1, allerdings um den Preis, dass das Bild einen glatten Körper zeigt, an dem die Luft in Wahrheit treppig abprallt; die Vergleichsrichtung im Kern von `<=` auf `<` zu ändern nähme die vier Nasen weg, verschöbe aber die wirksame Größe jedes Kreises um eine Zelle und damit sämtliche 47 Prüfpunkte aus Abschnitt 1 — deshalb **nicht** ohne eigenen Anlass.
 - **Takt der Bildschleife** (festgelegt in Etappe 2.1): Je Einzelbild wird nicht eine feste Zahl von Rechenschritten gerechnet, sondern so viele, wie in ein **Zeitbudget von 12 ms** passen (höchstens 20). Eine feste Zahl wäre einfacher, aber falsch: auf einem schnellen Rechner bliebe Leistung liegen, auf dem Handy käme das Bild nicht mehr nach und es ruckelte. Über das Budget bleibt die Bildfolge auf jedem Gerät gleichmäßig; auf schwächeren Geräten läuft dafür die Strömung langsamer ab. Das ist die bewusste Wahl: lieber langsamer als ruckelig.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
@@ -126,8 +129,11 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 
 ### Abschnitt 2 — Minimale Bedienbarkeit
 
-- [ ] **2.1** Die Seite zeigt die laufende Strömung um einen fest eingebauten Kreis als Farbfeld auf dem Bildschirm.
+- [x] **2.1** *(abgenommen 2026-07-31, v0.7)* Die Seite zeigt die laufende Strömung um einen fest eingebauten Kreis als Farbfeld auf dem Bildschirm.
   - Abnahme: `index.html` im Browser öffnen; das Bild bewegt sich sichtbar und ruckelfrei.
+  - Noch nicht: nur eine der vier Darstellungsarten (Geschwindigkeit), keine Legende zur
+    Farbskala, keine Bedienung. Die Ecken und Kanten des Kreises sind die Rasterung des
+    Rechengitters — siehe „Der Körper im Bild ist eckig" unter *Architektur*.
 - [ ] **2.2** Form auswählen sowie Starten, Anhalten und Zurücksetzen sind über Schaltflächen bedienbar.
   - Abnahme: Ohne Neuladen der Seite zwischen allen vier Formen wechseln und die Simulation zurücksetzen.
 - [ ] **2.3** Die Seite ist unter <https://silberfisch24-cpu.github.io/Windkanal/> öffentlich erreichbar und läuft auf iPhone und iPad.
@@ -333,3 +339,24 @@ Fehler.*
   9. *Bewusst noch nicht dabei:* keine Legende zur Farbskala (Etappe 4.1), kein
      Dunkelmodus und keine Anpassung an Hoch- und Querformat (4.2), keine Reaktion auf
      Fenstergrößen und Tabwechsel (3.4), keine Bedienelemente (2.2).
+- **2026-07-31:** Etappe 2.1 abgenommen (`v0.7`). Zwei Beobachtungen des Nutzers dabei
+  aufgenommen, beide **ohne Änderung am Programm**:
+  1. *Farbschemata zur Auswahl* — als „Kann" zurückgestellt. Bisher sah der Plan mit
+     Etappe 4.1 genau **eine** stimmige Skala je Darstellungsart vor; eine Auswahl geht
+     darüber hinaus und braucht eine eigene Etappe. Einordnung: Erweiterung im
+     bestehenden Rahmen, kein anderer Zweck — sie kann jederzeit als Etappe 4.4 in den
+     Plan rücken, sobald der Nutzer das entscheidet.
+  2. *Der Kreis wirkt eckig.* Nachgeprüft, nicht geschätzt: siehe „Der Körper im Bild ist
+     eckig" unter *Architektur*. Es sind zwei Ursachen, nicht eine — die Treppe des
+     Gitters und zusätzlich vier einzelne vorstehende Zellen aus der Vergleichsrichtung
+     `<=` in `liegtInForm`. Die zweite verschwindet auch in feinerer Auflösung nicht. Das
+     war keine bekannte Erscheinung, sondern fiel erst am Bild auf; die Kernlogik ist
+     davon unberührt und bleibt es vorerst.
+  3. *Für die Abnahme veröffentlicht:* Weil die Session in der Cloud lief, war
+     `localhost` für den Nutzer nicht erreichbar. Die Abnahme erfolgte über eine
+     zusammengelegte Einzeldatei-Vorschau derselben fünf Quelldateien (`import`-Zeilen
+     entfernt, sonst Zeile für Zeile unverändert, mit Gegenprobe auf doppelte Namen).
+     Sie liegt außerhalb des Repos und ist kein Build-Schritt — die Zusage „bloße
+     Dateisammlung" bleibt unberührt. Was sie **nicht** belegt: dass die echte
+     Modulaufteilung im Browser lädt und dass der GitHub-Pages-Link trägt. Beides ist
+     Abnahmekriterium von Etappe 2.3.

@@ -1,50 +1,51 @@
-v0.6
-Auflösung und Windgeschwindigkeit sind einstellbare Größen — die Rechnung bleibt
-in allen drei Stufen stabil. Abschnitt 1 ist damit abgeschlossen.
+v0.7
+Das erste Bild steht auf dem Bildschirm: die Seite zeigt die laufende Strömung
+um einen fest eingebauten Kreis als Farbfeld.
 
-Etappe 1.5 (abgenommen):
-- Der Kanal wird jetzt über eine von drei Auflösungsstufen angelegt statt über
-  eine frei getippte Zellenzahl: grob (200 × 60), mittel (280 × 84) und fein
-  (400 × 120 Zellen)
-- Alle drei haben dasselbe Seitenverhältnis. Dieselbe Szene sieht deshalb in
-  jeder Stufe gleich aus — nur schärfer. Die höchste Geschwindigkeit weicht
-  zwischen den Stufen nur um 3 Prozent ab
-- Die Windgeschwindigkeit hat einen geprüften Bereich von 0,01 bis 0,12 und
-  lässt sich mitten im Lauf ändern, ohne dass die Rechnung neu beginnt. Der
-  neue Wind wandert dann von vorn durch den Kanal, wie wenn man am Gebläse
-  dreht. Beim Hindernis geht das weiterhin nicht — eine Wand mitten im Gitter
-  einzublenden wäre ein Sprung, den die Strömung nicht verkraftet
-- Einstellungen außerhalb des geprüften Bereichs werden gemeldet statt
-  stillschweigend gerechnet
-- Prüfbar über `node werkzeug/pruefe-kern.js`: acht Teile, 47 Prüfpunkte, etwa
-  60 Sekunden. Der neue Teil 8 rechnet alle drei Stufen je 2000 Schritte durch
-  und meldet die Rechenzeit je Schritt
+Etappe 2.1 (abgenommen):
+- `index.html` öffnen genügt — es läuft eine Strömung von links nach rechts um
+  einen Kreis, gezeichnet als Farbfeld der Geschwindigkeit. Hell heißt langsam,
+  dunkel heißt schnell
+- Nach etwa fünf Sekunden lösen sich hinter dem Kreis abwechselnd links und
+  rechts Wirbel ab und wandern nach rechts aus dem Bild. Das ist dieselbe
+  Anordnung, an der Etappe 1.4 die Wirbelablösung in Zahlen nachgemessen hat
+- Unter dem Bild steht, wie viele Bilder je Sekunde laufen, wie viele
+  Rechenschritte in einem Bild stecken und wie weit die Rechnung ist
+- Drei neue Dateien in der Oberfläche; an der Kernlogik ist keine Zeile geändert
 
 Unterwegs festgelegt:
-- Die Grenze der Windgeschwindigkeit ist gemessen, nicht geschätzt. Der leere
-  Kanal hält Wind bis etwa 0,25 aus, mit einem Hindernis darin bricht die
-  Rechnung schon zwischen 0,15 und 0,16 zusammen: an der Körperkante wird die
-  Luft auf gut das Doppelte beschleunigt und kommt dort der
-  Schallgeschwindigkeit des Rechengitters zu nahe. 0,12 lässt Abstand,
-  nachgeprüft mit der schärfsten Form — einer angestellten Platte — in jeder
-  Stufe
-- Ebenso bei der Zähigkeit: bei 0,002 bricht die Rechnung zusammen, ab 0,004
-  läuft sie. Erlaubt ist sie deshalb ab 0,005
-- Die Untergrenze des Windes ist dagegen keine Frage der Rechnung, sondern der
-  Anschauung: darunter steht das Bild praktisch still
-- Die grobe Stufe entspricht genau der bisherigen Voreinstellung. Die Etappen
-  1.1 bis 1.4 rechnen daher unverändert weiter — der Wirbeltakt hinter dem
-  Kreis steht weiterhin bei 637 Schritten
+- Die Farbskala ist einfarbig und läuft hell nach dunkel, statt ein Regenbogen
+  zu sein. Bei einem Regenbogen müsste man auswendig wissen, ob Gelb mehr
+  bedeutet als Grün; bei einer Helligkeitsskala liegt die Reihenfolge im Bild
+  und bleibt auch für Farbenblinde lesbar
+- Das obere Ende der Skala liegt fest beim Doppelten der Windgeschwindigkeit
+  und richtet sich nicht nach dem größten Wert des jeweiligen Bildes. Sonst
+  änderte sich die Bedeutung der Farben sechzigmal je Sekunde und das ganze
+  Bild flackerte
+- Je Bild wird nach einem Zeitbudget von 12 Millisekunden gerechnet statt nach
+  einer festen Schrittzahl. Damit bleibt die Bildfolge auf jedem Gerät
+  gleichmäßig; auf schwächeren Geräten läuft dafür die Strömung langsamer ab.
+  Lieber langsamer als ruckelig
+- Gemessen: Zeichnen 0,21 ms, Felder auslesen 1,62 ms, ein Rechenschritt
+  1,02 ms. Das sind rund elf Rechenschritte und knapp 14 ms je Bild — die
+  16,7 ms für 60 Bilder je Sekunde bleiben eingehalten
 
 Bekannte Grenzen dieses Standes:
-- Dass die feine Stufe schärfere Wirbel zeigt, ist nicht geprüft — nur, dass
-  alle drei dieselbe Strömung zeigen und stabil bleiben. Die Schärfe braucht
-  ein Bild und kommt in Etappe 3.2
-- Die Rechenzeiten gelten für den Prüfrechner: dort schafft die feine Stufe
-  rund 130 Schritte je Sekunde. Auf dem Handy wird das deutlich weniger sein,
-  genau dafür sieht Etappe 3.2 eine geräteabhängige Voreinstellung vor
-- Die Windgrenze ist an Kreis, Rechteck und angestellter Platte geprüft, nicht
-  an jeder denkbaren Kombination
+- Der Kreis sieht eckig aus. Das ist die Rasterung des Rechengitters und kein
+  Zeichenfehler: die Rechnung sieht dieselbe Treppe, denn ein Körper ist bei
+  diesem Verfahren nichts anderes als eine Gruppe von Wandzellen. Zusätzlich
+  steht auf jeder der vier Hauptrichtungen eine einzelne Zelle vor, weil eine
+  Zelle genau auf dem Rand noch mitzählt — das bleibt auch in feinerer
+  Auflösung so. Die Strömung ist davon nicht verfälscht, der Wirbeltakt trifft
+  den erwarteten Wert
+- Bedienen lässt sich nichts: keine Schaltflächen, keine Regler, eine feste
+  Szene. Das kommt in den Etappen 2.2 und 3.1
+- Nur eine der vier Darstellungsarten ist da, und ohne Legende. Druck,
+  Wirbelstärke und Teilchen kommen in 3.3, die Legende in 4.1
+- Kein Dunkelmodus, keine Anpassung an Hoch- und Querformat, keine Reaktion auf
+  Fenstergrößen oder Tabwechsel — das sind die Etappen 3.4 und 4.2
+- Auf iPhone und iPad ungeprüft. Ob dort 60 Bilder je Sekunde gehalten werden,
+  zeigt erst Etappe 2.3
 
-Noch keine Bildschirmausgabe. Als Nächstes Etappe 2.1: die Seite zeigt die
-laufende Strömung um einen fest eingebauten Kreis als Farbfeld.
+Als Nächstes Etappe 2.2: Form auswählen sowie Starten, Anhalten und
+Zurücksetzen über Schaltflächen.
