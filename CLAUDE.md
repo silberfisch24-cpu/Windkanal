@@ -179,6 +179,22 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   Arbeitsverzeichnis lässt sich ein Bild aufnehmen und selbst ansehen. So fallen
   Zeichensatz- und Ladefehler auf, bevor der Nutzer sie sieht — genau das ist am
   2026-07-31 passiert.
+- **Bedienelemente dabei wirklich betätigen, nicht nur abbilden.** Ein Standbild zeigt
+  den Anfangszustand; ob eine Schaltfläche oder ein Regler etwas bewirkt, zeigt es
+  nicht. Playwright ist in der Umgebung **nicht** installiert, und der kopflose Browser
+  kann von sich aus nicht klicken. Der Weg, der sich am 2026-07-31 (Etappe 2.2) bewährt
+  hat: `index.html` samt `src/` ins Arbeitsverzeichnis kopieren, in die **Kopie** vor
+  `</body>` ein kleines Skript einsetzen, das eine über `?klick=Profil,Anhalten`
+  übergebene Liste von Beschriftungen nacheinander per `setTimeout` anklickt, und dann
+  je Zustand ein Bild aufnehmen. Das Skript gehört ausschließlich in die Kopie —
+  **nie ins Repo**, aus demselben Grund, aus dem sich `baue-vorschau.js` weigert, dorthin
+  zu schreiben. Zu prüfen ist dabei auch der angehaltene oder umgeschaltete Zustand,
+  nicht nur der eingeschwungene.
+- **`--virtual-time-budget` misst keine Laufzeit.** Unter virtueller Zeit stimmen die
+  Angaben aus `performance.now()` nicht mit der Wanduhr überein; die angezeigte Bildfolge
+  („0 Bilder je Sekunde") und der Fortschritt der Strömung sind dort nicht aussagekräftig.
+  Für Fragen nach Geschwindigkeit oder Einschwingen die Rechnung stattdessen ohne Browser
+  über ein kleines Node-Skript gegen `src/kern/` laufen lassen.
 
 ## Umfangsänderungen
 
