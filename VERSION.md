@@ -1,39 +1,45 @@
-v0.3
-Ein Hindernis im Kanal — die Strömung prallt daran ab, noch ohne Bild.
+v0.4
+Alle vier Formen stehen bereit — anstellbar und in der Höhe verstellbar, noch ohne Bild.
 
-Etappe 1.2 (abgenommen):
-- Ein Kreis oder ein Rechteck lässt sich in den Kanal setzen. Die Luft strömt
-  nicht hindurch, sondern prallt ab und haftet an der Oberfläche — dieselbe
-  Wandart wie am Boden
-- Vor dem Hindernis staut sich die Luft (Rechteck: auf 10 % der
-  Windgeschwindigkeit abgebremst, Kreis: 26 %), daneben muss sie durch den
-  engeren Rest und wird schneller (165 bis 176 %), dahinter bleibt ein
-  langsamer Bereich stehen, in dem sie sogar rückwärts läuft
-- Ein Hindernis zu setzen beginnt die Rechnung von vorn; eine Wand mitten im
-  Lauf einzublenden wäre ein Sprung, den die Strömung nicht verkraftet
-- Prüfbar über `node werkzeug/pruefe-kern.js`: drei Teile — leerer Kanal wie
-  bisher, dann Kreis und Rechteck, je mit Textbild der Strömung und sechs
-  Prüfpunkten; 21 Prüfpunkte insgesamt
+Etappe 1.3 (abgenommen):
+- Neben Kreis und Rechteck gibt es jetzt die stumpfe Platte und das
+  Tragflächenprofil. Das Profil ist vorn rund und läuft hinten spitz aus, die
+  Platte ist vorn und hinten abgeschnitten
+- Jede Form lässt sich anstellen: ein positiver Winkel hebt die Anströmkante,
+  so wie ein Flugzeug im Steigflug die Nase hebt. Beim Kreis bleibt der Winkel
+  wirkungslos — das wird eigens nachgemessen
+- Die Höhe über dem Boden ist wahlweise als Mittelpunkt oder als Bodenabstand
+  anzugeben. Bodenabstand 0 heißt: die Form sitzt auf dem Boden auf und wird
+  nicht unterströmt; angehoben strömt die Luft durch den Spalt, dort sogar
+  schneller als der Wind (165 %)
+- Prüfbar über `node werkzeug/pruefe-kern.js`: sechs Teile — die drei bisherigen,
+  dazu alle vier Formen als Textbild (waagerecht und angestellt), Platte und
+  Profil in der Strömung sowie die Gegenprobe zur Bodenfreiheit; 35 Prüfpunkte
+  insgesamt
 
 Unterwegs festgelegt:
-- Eine Form wird als schlichtes Objekt beschrieben, mit dem Mittelpunkt in
-  Zellen: Kreis über den Durchmesser, Rechteck über Breite und Höhe. Der
-  Mittelpunkt statt einer Ecke, weil der Anstellwinkel in Etappe 1.3 um ihn
-  gedreht wird
-- Die Formen bekamen eine eigene Datei src/kern/formen.js, wie in SPEC.md
-  ohnehin vorgesehen — sie beantwortet nur, welche Zellen zur Form gehören,
-  und weiß nichts über Strömung
-- Drei Anpassungen am Löser wurden erst nötig, als Wandzellen mitten im Gitter
-  liegen: Wandzellen werden mit ruhender Luft gefüllt, sie strömen nicht mit,
-  und ein Hindernis am Einlass oder Auslass wird abgewiesen. Am leeren Kanal
-  ändert das nichts — die Prüfpunkte aus Etappe 1.1 liefern unverändert
-  dieselben Zahlen
+- Platte und Profil bekommen dieselbe voreingestellte Dicke, 12 % der Länge.
+  Grund: Beim späteren Vergleich der beiden soll sich allein die Form
+  unterscheiden, nicht die Größe
+- Das Profil folgt der üblichen NACA-Formel für symmetrische Vierziffern-Profile:
+  vorn rund, dickste Stelle bei knapp einem Drittel der Länge, hinten spitz
+- Gedreht wird nicht die Form, sondern der abgefragte Punkt entgegengesetzt.
+  Dadurch bleibt jede Form in ihrem eigenen Koordinatensystem einfach
+  beschreibbar, und der Anstellwinkel steht an einer einzigen Stelle im Code
+- Ein Hindernis, das bis an die Decke reicht, wird jetzt abgewiesen statt
+  abgeschnitten. Bisher waren nur Einlass und Auslass geschützt; mit
+  einstellbarer Höhe ist das Überschreiten nach oben der naheliegende Fehlgriff.
+  Am Boden bleibt das Aufsitzen ausdrücklich gewollt
 
-Bekannt und gewollt: Hinter dem Hindernis läuft die Strömung stellenweise
-rückwärts, und die Dichte schwankt weiter als im leeren Kanal (0,968 bis 1,038
-statt 0,994 bis 1,022). Das ist der Nachlauf eines umströmten Körpers, kein
-Rechenfehler; über 20.000 Schritte geprüft, ohne dass Werte davonlaufen.
+Erster Hinweis auf das Erfolgskriterium des Projekts: Hinter der stumpfen Platte
+strömt die Luft mit 52 % der Windgeschwindigkeit rückwärts, hinter dem Profil bei
+gleicher Länge, Dicke und Anstellung nur mit 29 %. Das ist bisher eine
+Beobachtung, kein Prüffall — als solcher kommt es in Etappe 5.2.
 
-Noch keine Bildschirmausgabe. Als Nächstes Etappe 1.3: alle vier Formen —
-Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — mit einstellbarer Größe,
-Anstellwinkel und Höhe über dem Boden.
+Bekannte Grenze: Bei weniger als etwa drei Zellen Dicke kann eine gedrehte Form
+zu einer Treppe aus einzeln stehenden Zellen zerfallen, durch die die Luft
+diagonal hindurchschlüpft. Die voreingestellte Mindestdicke liegt deshalb bei
+drei Zellen; wer von Hand weniger angibt, bekommt keine Warnung.
+
+Noch keine Bildschirmausgabe. Als Nächstes Etappe 1.4: Geschwindigkeit, Druck und
+Wirbelstärke aus dem Rechengitter ablesen.

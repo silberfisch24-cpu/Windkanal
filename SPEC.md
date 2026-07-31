@@ -7,14 +7,14 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 1.2 abgenommen** (`v0.3`) — im Kanal steht wahlweise ein
-  Kreis oder ein Rechteck, an dem die Strömung abprallt; davor staut sie sich, daneben
-  wird sie schneller, dahinter bleibt ein Totwasser stehen. Prüfbar über
-  `node werkzeug/pruefe-kern.js` (drei Teile: leerer Kanal, Kreis, Rechteck).
-  Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage,
-  `v0.2` Strömung im leeren Kanal.
-  Als Nächstes **Etappe 1.3** — alle vier Formen (Kreis, Rechteck, stumpfe Platte,
-  Tragflächenprofil) mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
+- **Aktueller Stand:** **Etappe 1.3 abgenommen** (`v0.4`) — alle vier Formen stehen
+  bereit (Kreis, Rechteck, stumpfe Platte, Tragflächenprofil), jede mit Größe,
+  Anstellwinkel und Höhe über dem Boden einstellbar; ein aufsitzender Körper wird nicht
+  unterströmt, ein angehobener schon. Prüfbar über `node werkzeug/pruefe-kern.js`
+  (sechs Teile, 35 Prüfpunkte). Noch keine Bildschirmausgabe. Frühere Stände:
+  `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im Kanal.
+  Als Nächstes **Etappe 1.4** — Geschwindigkeit, Druck und Wirbelstärke aus dem
+  Rechengitter ablesen.
 
 ---
 
@@ -105,8 +105,9 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 - [x] **1.2** *(abgenommen 2026-07-30, v0.3)* Ein Hindernis lässt sich in den Kanal setzen; die Strömung prallt an ihm ab statt hindurchzuströmen.
   - Abnahme: Das Prüfskript zeichnet die Form als grobes Textbild und meldet, dass die Geschwindigkeit innerhalb des Hindernisses null ist und außen herum zunimmt.
   - Noch nicht: nur Kreis und Rechteck, Profil und Platte kommen in 1.3.
-- [ ] **1.3** Alle vier Formen stehen bereit — Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — jeweils mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
+- [x] **1.3** *(abgenommen 2026-07-31, v0.4)* Alle vier Formen stehen bereit — Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — jeweils mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
   - Abnahme: Das Prüfskript zeigt jede Form als Textbild, auch gedreht. Zusätzlich zwei Gegenproben: ein auf dem Boden aufsitzendes Rechteck lässt darunter nichts durch (Geschwindigkeit dort null), dasselbe Rechteck angehoben wird sichtbar unterströmt.
+  - Noch nicht: Der Unterschied zwischen Platte und Profil ist nur als Beobachtung ausgewiesen, noch nicht als Prüffall — der kommt in 5.2.
 - [ ] **1.4** Aus dem Rechengitter lassen sich Geschwindigkeit, Druck und Wirbelstärke ablesen.
   - Abnahme: Das Prüfskript gibt für einen angeströmten Kreis aus, dass sich hinter ihm die Wirbelstärke periodisch im Vorzeichen umkehrt — das ist die Wirbelablösung in Zahlen.
 - [ ] **1.5** Auflösung und Windgeschwindigkeit sind einstellbare Größen; die Rechnung bleibt in allen vorgesehenen Stufen stabil.
