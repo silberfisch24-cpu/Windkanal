@@ -7,15 +7,17 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 1.4 abgenommen** (`v0.5`) — aus dem Rechengitter lassen
-  sich Geschwindigkeit, Druck und Wirbelstärke ablesen; hinter dem angeströmten Kreis
-  kehrt sich die Drehrichtung im gleichmäßigen Takt um (Wirbelablösung). Davor stehen
-  alle vier Formen bereit, jede mit Größe, Anstellwinkel und Höhe über dem Boden.
-  Prüfbar über `node werkzeug/pruefe-kern.js` (sieben Teile, 40 Prüfpunkte, etwa 22
-  Sekunden). Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage,
-  `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen.
-  Als Nächstes **Etappe 1.5** — Auflösung und Windgeschwindigkeit als einstellbare
-  Größen, in allen Stufen stabil.
+- **Aktueller Stand:** **Etappe 1.5 abgenommen (`v0.6`) — Abschnitt 1 ist damit
+  abgeschlossen.** Die Kernlogik rechnet vollständig ohne Oberfläche: Strömung im Kanal,
+  alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden, Geschwindigkeit,
+  Druck und Wirbelstärke ablesbar, und drei Auflösungsstufen (grob/mittel/fein) bei
+  einstellbarer Windgeschwindigkeit, jede Stufe stabil. Prüfbar über
+  `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden).
+  Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung
+  im leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete
+  Größen. Als Nächstes **Etappe 2.1** — die Seite zeigt die laufende Strömung um einen
+  fest eingebauten Kreis als Farbfeld auf dem Bildschirm. Das ist der erste Schritt in
+  `src/ui/`, das bisher leer ist.
 
 ---
 
@@ -114,8 +116,11 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 - [x] **1.4** *(abgenommen 2026-07-31, v0.5)* Aus dem Rechengitter lassen sich Geschwindigkeit, Druck und Wirbelstärke ablesen.
   - Abnahme: Das Prüfskript gibt für einen angeströmten Kreis aus, dass sich hinter ihm die Wirbelstärke periodisch im Vorzeichen umkehrt — das ist die Wirbelablösung in Zahlen.
   - Noch nicht: Die Werte stehen in Gittereinheiten, nicht in Metern je Sekunde oder Pascal — belastbare Zahlen sind ausdrücklich nicht Ziel des Projekts.
-- [ ] **1.5** Auflösung und Windgeschwindigkeit sind einstellbare Größen; die Rechnung bleibt in allen vorgesehenen Stufen stabil.
+- [x] **1.5** *(abgenommen 2026-07-31, v0.6)* Auflösung und Windgeschwindigkeit sind einstellbare Größen; die Rechnung bleibt in allen vorgesehenen Stufen stabil.
   - Abnahme: Das Prüfskript rechnet grob, mittel und fein je 2000 Schritte durch, ohne dass Werte ins Unendliche laufen; es meldet zusätzlich, wie lange ein Rechenschritt je Stufe dauert.
+  - Noch nicht: Dass die feine Stufe *schärfere* Wirbel zeigt, ist nicht geprüft — nur, dass alle drei Stufen dieselbe Strömung zeigen und stabil bleiben. Die Schärfe braucht ein Bild und ist Abnahmekriterium von 3.2.
+
+**Abschnitt 1 ist damit abgeschlossen.** Die Kernlogik rechnet ohne Oberfläche vollständig.
 
 ### Abschnitt 2 — Minimale Bedienbarkeit
 

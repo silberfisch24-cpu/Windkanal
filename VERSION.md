@@ -1,42 +1,50 @@
-v0.5
-Geschwindigkeit, Druck und Wirbelstärke sind aus dem Gitter ablesbar — die
-Wirbelablösung hinter dem Kreis erscheint als Zahl.
+v0.6
+Auflösung und Windgeschwindigkeit sind einstellbare Größen — die Rechnung bleibt
+in allen drei Stufen stabil. Abschnitt 1 ist damit abgeschlossen.
 
-Etappe 1.4 (abgenommen):
-- Aus der Rechnung lassen sich jetzt die drei Größen ablesen, die später die
-  drei Farbfelder auf dem Bildschirm ergeben: wie schnell und wohin die Luft
-  strömt, wie hoch der Druck ist und wie stark sie sich dreht
-- Der Druck wird als Unterschied zum Ruhezustand angegeben: positiv heißt Stau
-  (vor dem Körper), negativ heißt Sog (dahinter)
-- Die Wirbelstärke macht sichtbar, was man sonst nur ahnt. Ein umströmter Kreis
-  wirft abwechselnd links- und rechtsdrehende Wirbel ab, immer im selben Takt —
-  hier alle 637 Schritte eine volle Runde. Dieselbe Erscheinung lässt eine
-  Fahnenstange im Wind singen
-- Prüfbar über `node werkzeug/pruefe-kern.js`: sieben Teile, 40 Prüfpunkte,
-  etwa 22 Sekunden. Der neue Teil 7 zeigt das Druck- und das Wirbelstärkebild
-  als Textbild und schreibt die Wirbelstärke hinter dem Kreis über 2600
-  Schritte mit; sie kehrt sich alle 318 Schritte im Vorzeichen um, mit einer
-  Schwankung von 8 Prozent
+Etappe 1.5 (abgenommen):
+- Der Kanal wird jetzt über eine von drei Auflösungsstufen angelegt statt über
+  eine frei getippte Zellenzahl: grob (200 × 60), mittel (280 × 84) und fein
+  (400 × 120 Zellen)
+- Alle drei haben dasselbe Seitenverhältnis. Dieselbe Szene sieht deshalb in
+  jeder Stufe gleich aus — nur schärfer. Die höchste Geschwindigkeit weicht
+  zwischen den Stufen nur um 3 Prozent ab
+- Die Windgeschwindigkeit hat einen geprüften Bereich von 0,01 bis 0,12 und
+  lässt sich mitten im Lauf ändern, ohne dass die Rechnung neu beginnt. Der
+  neue Wind wandert dann von vorn durch den Kanal, wie wenn man am Gebläse
+  dreht. Beim Hindernis geht das weiterhin nicht — eine Wand mitten im Gitter
+  einzublenden wäre ein Sprung, den die Strömung nicht verkraftet
+- Einstellungen außerhalb des geprüften Bereichs werden gemeldet statt
+  stillschweigend gerechnet
+- Prüfbar über `node werkzeug/pruefe-kern.js`: acht Teile, 47 Prüfpunkte, etwa
+  60 Sekunden. Der neue Teil 8 rechnet alle drei Stufen je 2000 Schritte durch
+  und meldet die Rechenzeit je Schritt
 
 Unterwegs festgelegt:
-- Druck als Unterschied zum Ruhedruck statt absolut. Absolut schwankt der Wert
-  nur in der dritten Nachkommastelle und wäre als Farbskala nicht lesbar
-- An der Haftwand zählt die Wand für die Wirbelstärke als stehende Luft — genau
-  diese Scherung soll sie ja messen. An der reibungsfreien Decke wird sie
-  dagegen mitgezogen, sonst sähe die Decke im Bild aus wie ein zweiter Boden
-- Zwei Wege zum Ablesen: eine einzelne Zelle abfragen oder das ganze Gitter auf
-  einmal in Felder schreiben, die sich wiederverwenden lassen. Der zweite Weg
-  ist für die spätere Darstellung gedacht, die sechzigmal je Sekunde alles
-  braucht
-- Teil 7 rechnet 6600 statt der sonst üblichen 2000 Schritte, davon die ersten
-  4000 zum Einschwingen. Die Wirbelablösung setzt nicht sofort ein: die
-  Strömung hinter dem Kreis ist zunächst spiegelbildlich und kippt erst nach
-  und nach ins Schwingen
+- Die Grenze der Windgeschwindigkeit ist gemessen, nicht geschätzt. Der leere
+  Kanal hält Wind bis etwa 0,25 aus, mit einem Hindernis darin bricht die
+  Rechnung schon zwischen 0,15 und 0,16 zusammen: an der Körperkante wird die
+  Luft auf gut das Doppelte beschleunigt und kommt dort der
+  Schallgeschwindigkeit des Rechengitters zu nahe. 0,12 lässt Abstand,
+  nachgeprüft mit der schärfsten Form — einer angestellten Platte — in jeder
+  Stufe
+- Ebenso bei der Zähigkeit: bei 0,002 bricht die Rechnung zusammen, ab 0,004
+  läuft sie. Erlaubt ist sie deshalb ab 0,005
+- Die Untergrenze des Windes ist dagegen keine Frage der Rechnung, sondern der
+  Anschauung: darunter steht das Bild praktisch still
+- Die grobe Stufe entspricht genau der bisherigen Voreinstellung. Die Etappen
+  1.1 bis 1.4 rechnen daher unverändert weiter — der Wirbeltakt hinter dem
+  Kreis steht weiterhin bei 637 Schritten
 
-Bekannte, gewollte Erscheinung: Im Druckbild erscheint fast der ganze Kanal als
-leichter Überdruck. Das ist richtig so — der Auslass hält den Druck hinten fest,
-die Reibung erzeugt ein Gefälle nach vorn. Stau und Sog am Körper heben sich
-davon ab, liegen aber auf dieser schiefen Ebene.
+Bekannte Grenzen dieses Standes:
+- Dass die feine Stufe schärfere Wirbel zeigt, ist nicht geprüft — nur, dass
+  alle drei dieselbe Strömung zeigen und stabil bleiben. Die Schärfe braucht
+  ein Bild und kommt in Etappe 3.2
+- Die Rechenzeiten gelten für den Prüfrechner: dort schafft die feine Stufe
+  rund 130 Schritte je Sekunde. Auf dem Handy wird das deutlich weniger sein,
+  genau dafür sieht Etappe 3.2 eine geräteabhängige Voreinstellung vor
+- Die Windgrenze ist an Kreis, Rechteck und angestellter Platte geprüft, nicht
+  an jeder denkbaren Kombination
 
-Noch keine Bildschirmausgabe. Als Nächstes Etappe 1.5: Auflösung und
-Windgeschwindigkeit als einstellbare Größen, in allen Stufen stabil.
+Noch keine Bildschirmausgabe. Als Nächstes Etappe 2.1: die Seite zeigt die
+laufende Strömung um einen fest eingebauten Kreis als Farbfeld.
