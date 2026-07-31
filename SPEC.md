@@ -7,14 +7,15 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 1.3 abgenommen** (`v0.4`) — alle vier Formen stehen
-  bereit (Kreis, Rechteck, stumpfe Platte, Tragflächenprofil), jede mit Größe,
-  Anstellwinkel und Höhe über dem Boden einstellbar; ein aufsitzender Körper wird nicht
-  unterströmt, ein angehobener schon. Prüfbar über `node werkzeug/pruefe-kern.js`
-  (sechs Teile, 35 Prüfpunkte). Noch keine Bildschirmausgabe. Frühere Stände:
-  `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im Kanal.
-  Als Nächstes **Etappe 1.4** — Geschwindigkeit, Druck und Wirbelstärke aus dem
-  Rechengitter ablesen.
+- **Aktueller Stand:** **Etappe 1.4 abgenommen** (`v0.5`) — aus dem Rechengitter lassen
+  sich Geschwindigkeit, Druck und Wirbelstärke ablesen; hinter dem angeströmten Kreis
+  kehrt sich die Drehrichtung im gleichmäßigen Takt um (Wirbelablösung). Davor stehen
+  alle vier Formen bereit, jede mit Größe, Anstellwinkel und Höhe über dem Boden.
+  Prüfbar über `node werkzeug/pruefe-kern.js` (sieben Teile, 40 Prüfpunkte, etwa 22
+  Sekunden). Noch keine Bildschirmausgabe. Frühere Stände: `v0.1` Projektgrundlage,
+  `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen.
+  Als Nächstes **Etappe 1.5** — Auflösung und Windgeschwindigkeit als einstellbare
+  Größen, in allen Stufen stabil.
 
 ---
 
@@ -88,6 +89,7 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Randbedingungen des Kanals** (festgelegt in Etappe 1.1): links wird die **Geschwindigkeit** vorgegeben, rechts der **Druck** (Dichte 1), oben Gleitwand, unten Haftwand. Die Aufteilung vorne Geschwindigkeit / hinten Druck ist notwendig: gibt man beides vorne vor und lässt hinten nur durchlaufen, hat der Druck keinen Anker und die Reibung staut immer weiter Luft auf, statt sich auf ein Gefälle einzupendeln — genau das trat beim ersten Versuch auf.
 - **Hindernisse im Kanal** (festgelegt in Etappe 1.2): Ein Hindernis ist nichts anderes als eine Gruppe von **Haftwand**-Zellen mitten im Gitter — dieselbe Wandart wie der Boden. Die Luft prallt daran zurück und haftet an der Oberfläche; ein eigener Mechanismus für Körper ist nicht nötig, genau darum wurde das Lattice-Boltzmann-Verfahren gewählt. Die Form selbst kennt der Löser nicht: `formen.js` beantwortet nur „liegt Zelle (x, y) in dieser Form?", `loeser.js` macht daraus Wandzellen. Ein Hindernis zu setzen oder zu wechseln **setzt die Rechnung zurück** — eine Wand mitten im Lauf einzublenden wäre ein Sprung, den die Strömung nicht verkraftet. Ein Hindernis darf Einlass und Auslass nicht berühren, weil diese beiden Spalten in jedem Schritt neu gesetzt werden; der Versuch wird gemeldet statt stillschweigend übergangen. Dasselbe gilt seit Etappe 1.3 nach oben: ein Hindernis, das bis an die Decke reicht, wird abgewiesen statt abgeschnitten — sonst sähe es aus, als hinge der Körper an der Decke. Am Boden ist das Aufsitzen dagegen gewollt.
 - **Formen, Anstellung und Höhe über dem Boden** (festgelegt in Etappe 1.3): Vier Arten stehen bereit — `kreis` (Durchmesser), `rechteck` (Breite, Höhe), `platte` (Länge, Dicke) und `profil` (Länge, Dicke). Platte und Profil bekommen dieselbe voreingestellte Dicke, 12 % der Länge und mindestens 3 Zellen, damit sich bei gleicher Länge allein die Form unterscheidet — genau darauf zielt das Erfolgskriterium. Das Profil folgt der üblichen NACA-Formel für symmetrische Vierziffern-Profile: vorn rund, dickste Stelle bei knapp einem Drittel der Länge, hinten spitz auslaufend; die Platte ist vorn und hinten abgeschnitten. Der **Anstellwinkel** in Grad gilt für jede Form, positiv hebt die Anströmkante; gedreht wird dabei nicht die Form, sondern der abgefragte Punkt entgegengesetzt — dadurch bleibt jede Form in ihrem eigenen Koordinatensystem einfach beschreibbar und der Winkel steht an einer einzigen Stelle. Beim Kreis bleibt er wirkungslos. Die **Höhe über dem Boden** wird entweder als Mittelpunkt `y` oder als `bodenabstand` angegeben — freie Zellen zwischen Boden und Unterkante, 0 heißt „sitzt auf". Genau eines von beidem, beides zugleich wäre widersprüchlich. Jede Form geht vor der Benutzung durch `normalisiereForm`: prüfen, Fehlendes ergänzen, einen Bodenabstand in ein `y` umrechnen. In `kanal.hindernis` steht danach die vervollständigte Form, damit niemand nachrechnen muss, wo der Körper tatsächlich steht.
+- **Abgeleitete Größen** (festgelegt in Etappe 1.4): Der Löser speichert neun Teilchenanteile je Zelle — Zahlen, die für sich nichts zeigen. `felder.js` rechnet daraus die drei Größen aus, die man sehen will. **Geschwindigkeit** als `ux`, `uy` und Betrag. **Druck** aus der Dichte, und zwar als *Unterschied zum Ruhedruck* (`(dichte − 1) / 3`) statt absolut: die Dichte liegt in der Rechnung immer dicht bei 1, die Abweichung ist die ganze Aussage, und eine Farbskala von 0,333 bis 0,334 wäre nicht lesbar. **Wirbelstärke** als Drehung der Luft (`∂uy/∂x − ∂ux/∂y`), positiv gegen den Uhrzeigersinn, gerechnet aus dem Unterschied der Nachbargeschwindigkeiten. Dabei gilt für Wände eine eigene Regel, ohne die die Wirbelstärke falsch herauskäme: eine **Haftwand** zählt mit Geschwindigkeit null — genau diese Scherung soll sie ja messen —, eine **Gleitwand** wird längs mitgezogen, damit an der reibungsfreien Decke keine Drehung ausgewiesen wird, die es dort nicht gibt; am Gitterrand wird einseitig abgeleitet. In Wandzellen selbst steht überall null. Zwei Wege stehen bereit: Einzelabfrage (`druckBei`, `wirbelstaerkeBei` — für Messungen und Prüfungen) und `leseFelder` für das ganze Gitter auf einmal. Letzteres schreibt in Felder, die man behalten und wiedergeben kann, weil die Darstellung sie sechzigmal je Sekunde braucht und ebenso oft neuen Speicher anzufordern Ruckeln bedeutete.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -108,8 +110,9 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 - [x] **1.3** *(abgenommen 2026-07-31, v0.4)* Alle vier Formen stehen bereit — Kreis, Rechteck, stumpfe Platte, Tragflächenprofil — jeweils mit einstellbarer Größe, Anstellwinkel und Höhe über dem Boden.
   - Abnahme: Das Prüfskript zeigt jede Form als Textbild, auch gedreht. Zusätzlich zwei Gegenproben: ein auf dem Boden aufsitzendes Rechteck lässt darunter nichts durch (Geschwindigkeit dort null), dasselbe Rechteck angehoben wird sichtbar unterströmt.
   - Noch nicht: Der Unterschied zwischen Platte und Profil ist nur als Beobachtung ausgewiesen, noch nicht als Prüffall — der kommt in 5.2.
-- [ ] **1.4** Aus dem Rechengitter lassen sich Geschwindigkeit, Druck und Wirbelstärke ablesen.
+- [x] **1.4** *(abgenommen 2026-07-31, v0.5)* Aus dem Rechengitter lassen sich Geschwindigkeit, Druck und Wirbelstärke ablesen.
   - Abnahme: Das Prüfskript gibt für einen angeströmten Kreis aus, dass sich hinter ihm die Wirbelstärke periodisch im Vorzeichen umkehrt — das ist die Wirbelablösung in Zahlen.
+  - Noch nicht: Die Werte stehen in Gittereinheiten, nicht in Metern je Sekunde oder Pascal — belastbare Zahlen sind ausdrücklich nicht Ziel des Projekts.
 - [ ] **1.5** Auflösung und Windgeschwindigkeit sind einstellbare Größen; die Rechnung bleibt in allen vorgesehenen Stufen stabil.
   - Abnahme: Das Prüfskript rechnet grob, mittel und fein je 2000 Schritte durch, ohne dass Werte ins Unendliche laufen; es meldet zusätzlich, wie lange ein Rechenschritt je Stufe dauert.
 
@@ -230,3 +233,32 @@ Fehler.*
      und Anstellung (20°) nur mit 29 %. Genau dieser Unterschied ist das Erfolgskriterium
      des Projekts; als harter Prüffall gehört er nach Etappe 5.2, hier wird er nur
      ausgewiesen.
+- **2026-07-31:** Etappe 1.4 umgesetzt (Geschwindigkeit, Druck und Wirbelstärke ablesen).
+  Dabei festgelegt:
+  1. *Neue Datei `src/kern/felder.js`* mit den drei abgeleiteten Größen — siehe
+     „Abgeleitete Größen" unter Architektur. Kein Umfangszuwachs: die Datei war in der
+     Dateistruktur von Anfang an vorgesehen, und alle drei Größen stehen als
+     Darstellungsarten in den Anforderungen.
+  2. *Druck als Unterschied zum Ruhedruck, nicht absolut.* Das musste entschieden
+     werden, weil beides vertretbar ist; ausschlaggebend war die spätere Farbskala:
+     absolut schwankt der Wert nur in der dritten Nachkommastelle.
+  3. *Wandregel für die Wirbelstärke.* An der Haftwand zählt die Wand als stehende
+     Luft, an der Gleitwand wird sie längs mitgezogen. Ohne diese Unterscheidung
+     erschiene an der reibungsfreien Decke eine Drehung, die es dort nicht gibt — die
+     Decke sähe im Bild aus wie ein zweiter Boden.
+  4. *Prüfmaß für Teil 7:* 6600 Schritte statt der sonst üblichen 2000, davon die
+     ersten 4000 zum Einschwingen. Grund: Die Wirbelablösung setzt nicht sofort ein —
+     die Strömung hinter dem Kreis ist zunächst spiegelbildlich und kippt erst nach und
+     nach ins Schwingen. Mit 2000 Schritten wäre der Ausschlag noch zu klein, um von
+     Zittern unterscheidbar zu sein. Die Laufzeit des Prüfskripts steigt dadurch von
+     etwa 16 auf etwa 22 Sekunden.
+  5. *Bekannte, gewollte Erscheinung im Druckbild:* Über die Kanallänge fällt der Druck
+     gleichmäßig ab, weil der Auslass ihn festhält und die Reibung davor ein Gefälle
+     erzeugt. Im Textbild erscheint deshalb fast der ganze Kanal als leichter Überdruck;
+     Stau vor dem Körper und Sog dahinter heben sich davon ab, liegen aber auf dieser
+     schiefen Ebene. Kein Rechenfehler, sondern die Randbedingung aus Etappe 1.1.
+  6. *Nebenbefund:* Der Kreis wirft die Wirbel im Takt von 637 Schritten ab (bei
+     Durchmesser 16 und Windgeschwindigkeit 0,1). Das entspricht einer Strouhal-Zahl
+     von etwa 0,25 — der Wert, den man bei dieser Anströmung erwartet. Ein Prüfpunkt
+     auf die Zahl selbst ist bewusst nicht gesetzt: geprüft wird, dass der Takt
+     *gleichmäßig* ist, nicht wie schnell er ist, weil die Kanalwände ihn beeinflussen.

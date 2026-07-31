@@ -1,45 +1,42 @@
-v0.4
-Alle vier Formen stehen bereit — anstellbar und in der Höhe verstellbar, noch ohne Bild.
+v0.5
+Geschwindigkeit, Druck und Wirbelstärke sind aus dem Gitter ablesbar — die
+Wirbelablösung hinter dem Kreis erscheint als Zahl.
 
-Etappe 1.3 (abgenommen):
-- Neben Kreis und Rechteck gibt es jetzt die stumpfe Platte und das
-  Tragflächenprofil. Das Profil ist vorn rund und läuft hinten spitz aus, die
-  Platte ist vorn und hinten abgeschnitten
-- Jede Form lässt sich anstellen: ein positiver Winkel hebt die Anströmkante,
-  so wie ein Flugzeug im Steigflug die Nase hebt. Beim Kreis bleibt der Winkel
-  wirkungslos — das wird eigens nachgemessen
-- Die Höhe über dem Boden ist wahlweise als Mittelpunkt oder als Bodenabstand
-  anzugeben. Bodenabstand 0 heißt: die Form sitzt auf dem Boden auf und wird
-  nicht unterströmt; angehoben strömt die Luft durch den Spalt, dort sogar
-  schneller als der Wind (165 %)
-- Prüfbar über `node werkzeug/pruefe-kern.js`: sechs Teile — die drei bisherigen,
-  dazu alle vier Formen als Textbild (waagerecht und angestellt), Platte und
-  Profil in der Strömung sowie die Gegenprobe zur Bodenfreiheit; 35 Prüfpunkte
-  insgesamt
+Etappe 1.4 (abgenommen):
+- Aus der Rechnung lassen sich jetzt die drei Größen ablesen, die später die
+  drei Farbfelder auf dem Bildschirm ergeben: wie schnell und wohin die Luft
+  strömt, wie hoch der Druck ist und wie stark sie sich dreht
+- Der Druck wird als Unterschied zum Ruhezustand angegeben: positiv heißt Stau
+  (vor dem Körper), negativ heißt Sog (dahinter)
+- Die Wirbelstärke macht sichtbar, was man sonst nur ahnt. Ein umströmter Kreis
+  wirft abwechselnd links- und rechtsdrehende Wirbel ab, immer im selben Takt —
+  hier alle 637 Schritte eine volle Runde. Dieselbe Erscheinung lässt eine
+  Fahnenstange im Wind singen
+- Prüfbar über `node werkzeug/pruefe-kern.js`: sieben Teile, 40 Prüfpunkte,
+  etwa 22 Sekunden. Der neue Teil 7 zeigt das Druck- und das Wirbelstärkebild
+  als Textbild und schreibt die Wirbelstärke hinter dem Kreis über 2600
+  Schritte mit; sie kehrt sich alle 318 Schritte im Vorzeichen um, mit einer
+  Schwankung von 8 Prozent
 
 Unterwegs festgelegt:
-- Platte und Profil bekommen dieselbe voreingestellte Dicke, 12 % der Länge.
-  Grund: Beim späteren Vergleich der beiden soll sich allein die Form
-  unterscheiden, nicht die Größe
-- Das Profil folgt der üblichen NACA-Formel für symmetrische Vierziffern-Profile:
-  vorn rund, dickste Stelle bei knapp einem Drittel der Länge, hinten spitz
-- Gedreht wird nicht die Form, sondern der abgefragte Punkt entgegengesetzt.
-  Dadurch bleibt jede Form in ihrem eigenen Koordinatensystem einfach
-  beschreibbar, und der Anstellwinkel steht an einer einzigen Stelle im Code
-- Ein Hindernis, das bis an die Decke reicht, wird jetzt abgewiesen statt
-  abgeschnitten. Bisher waren nur Einlass und Auslass geschützt; mit
-  einstellbarer Höhe ist das Überschreiten nach oben der naheliegende Fehlgriff.
-  Am Boden bleibt das Aufsitzen ausdrücklich gewollt
+- Druck als Unterschied zum Ruhedruck statt absolut. Absolut schwankt der Wert
+  nur in der dritten Nachkommastelle und wäre als Farbskala nicht lesbar
+- An der Haftwand zählt die Wand für die Wirbelstärke als stehende Luft — genau
+  diese Scherung soll sie ja messen. An der reibungsfreien Decke wird sie
+  dagegen mitgezogen, sonst sähe die Decke im Bild aus wie ein zweiter Boden
+- Zwei Wege zum Ablesen: eine einzelne Zelle abfragen oder das ganze Gitter auf
+  einmal in Felder schreiben, die sich wiederverwenden lassen. Der zweite Weg
+  ist für die spätere Darstellung gedacht, die sechzigmal je Sekunde alles
+  braucht
+- Teil 7 rechnet 6600 statt der sonst üblichen 2000 Schritte, davon die ersten
+  4000 zum Einschwingen. Die Wirbelablösung setzt nicht sofort ein: die
+  Strömung hinter dem Kreis ist zunächst spiegelbildlich und kippt erst nach
+  und nach ins Schwingen
 
-Erster Hinweis auf das Erfolgskriterium des Projekts: Hinter der stumpfen Platte
-strömt die Luft mit 52 % der Windgeschwindigkeit rückwärts, hinter dem Profil bei
-gleicher Länge, Dicke und Anstellung nur mit 29 %. Das ist bisher eine
-Beobachtung, kein Prüffall — als solcher kommt es in Etappe 5.2.
+Bekannte, gewollte Erscheinung: Im Druckbild erscheint fast der ganze Kanal als
+leichter Überdruck. Das ist richtig so — der Auslass hält den Druck hinten fest,
+die Reibung erzeugt ein Gefälle nach vorn. Stau und Sog am Körper heben sich
+davon ab, liegen aber auf dieser schiefen Ebene.
 
-Bekannte Grenze: Bei weniger als etwa drei Zellen Dicke kann eine gedrehte Form
-zu einer Treppe aus einzeln stehenden Zellen zerfallen, durch die die Luft
-diagonal hindurchschlüpft. Die voreingestellte Mindestdicke liegt deshalb bei
-drei Zellen; wer von Hand weniger angibt, bekommt keine Warnung.
-
-Noch keine Bildschirmausgabe. Als Nächstes Etappe 1.4: Geschwindigkeit, Druck und
-Wirbelstärke aus dem Rechengitter ablesen.
+Noch keine Bildschirmausgabe. Als Nächstes Etappe 1.5: Auflösung und
+Windgeschwindigkeit als einstellbare Größen, in allen Stufen stabil.

@@ -17,11 +17,13 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
 - Kernlogik: `src/kern/` — reine Zahlenrechnung, kein Zugriff auf `document`, `window`, `canvas`
 - Oberfläche: `src/ui/` — alles Bildschirmbezogene; ruft den Kern auf, nie umgekehrt
 - Einstiegspunkt: `index.html`
-- Prüfskripte für die Kommandozeile: `werkzeug/` — dort dürfen Maße von den
-  Voreinstellungen abweichen, wenn es allein der Erkennbarkeit im groben Textbild dient
-  (Etappe 1.2: kürzerer Kanal, Etappe 1.3: dickere Platte und dickeres Profil). Die
-  Abweichung gehört mit Begründung in den Änderungsverlauf von `SPEC.md`, sonst liest
-  sie sich später wie eine stille Änderung der Voreinstellungen.
+- Prüfskripte für die Kommandozeile: `werkzeug/` — dort dürfen **Maße und Rechenzeiten**
+  von den Voreinstellungen abweichen, wenn es allein der Erkennbarkeit dient: im groben
+  Textbild (Etappe 1.2: kürzerer Kanal, Etappe 1.3: dickere Platte und dickeres Profil)
+  oder weil eine Erscheinung Zeit braucht, bis sie sich zeigt (Etappe 1.4: 6600 statt
+  2000 Schritte, damit die Wirbelablösung eingeschwungen ist). Die Abweichung gehört mit
+  Begründung in den Änderungsverlauf von `SPEC.md`, sonst liest sie sich später wie eine
+  stille Änderung der Voreinstellungen.
 - Tests: `tests/`
 - Versionsstand: `VERSION.md` — daraus setzt `.github/workflows/tag.yml` den Tag
 
