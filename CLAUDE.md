@@ -173,6 +173,24 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   wird, nicht eine aufgehübschte Fassung. Ihm jedes Mal dazusagen, was die Vorschau
   **nicht** belegt: dass die echte Modulaufteilung im Browser lädt und dass der
   Pages-Link trägt (beides Abnahmekriterium von Etappe 2.3).
+- **Die Vorschau zeigt nicht, ob die echte Dateiaufteilung lädt.** Sie legt alle Module zu
+  einer Datei zusammen — genau das, was bei einer Etappe zu prüfen wäre, die Dateien
+  hinzufügt, verschiebt oder die `<script>`-Zeilen in `index.html` anfasst. Dafür gibt es
+  einen zweiten Weg, der die **unveränderten Dateien vom Branch** ausliefert:
+
+  ```
+  https://raw.githack.com/silberfisch24-cpu/Windkanal/<voller-commit-schluessel>/index.html
+  ```
+
+  Der Dienst reicht Repo-Dateien mit den richtigen Dateitypen durch; GitHub selbst schickt
+  rohe Dateien als reinen Text, und der Browser führt sie dann nicht als Programm aus. Es
+  wird nichts installiert und nichts am Repo geändert, und weil das Repo öffentlich ist,
+  wird nichts sichtbar, was es nicht ohnehin wäre. Am 2026-07-31 vom Nutzer erprobt.
+  **Den vollen Commit-Schlüssel einsetzen, nicht den Branchnamen** — die Branchnamen der
+  Cloud-Sessions enthalten einen Schrägstrich, an dem sich der Dienst verschluckt, und ein
+  fester Stand ist bei einer Abnahme ohnehin das Richtige. Diesen Link **zusätzlich** zur
+  Vorschau vorlegen, wenn die Etappe an der Dateiaufteilung rührt; sonst genügt die
+  Vorschau. Der Pages-Link selbst zeigt immer `main` und ist vor dem Merge nicht prüfbar.
 - **Vor dem Veröffentlichen im eigenen Browser gegenprüfen.** Chromium liegt unter
   `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`; mit `--headless --no-sandbox
   --disable-gpu --screenshot=… --virtual-time-budget=…` gegen einen lokalen Server im

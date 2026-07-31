@@ -7,19 +7,23 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 2.2 abgenommen (`v0.8`) — die Seite ist bedienbar.**
-  `index.html` zeigt die laufende Strömung als Farbfeld der Geschwindigkeit; über dem Bild
-  lässt sich zwischen Kreis, Rechteck, Platte und Profil wechseln, die Strömung anhalten und
-  zurücksetzen — ohne Neuladen. Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik:
-  Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden,
-  Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei Auflösungsstufen bei einstellbarer
-  Windgeschwindigkeit. Prüfbar über `node werkzeug/pruefe-kern.js` (acht Teile, 47
-  Prüfpunkte, etwa 60 Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im
-  leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete
-  Größen, `v0.6` Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm.
+- **Aktueller Stand:** **Etappe 2.3 abgenommen (`v0.9`) — Abschnitt 2 ist abgeschlossen,
+  die Seite ist öffentlich erreichbar und läuft auf dem Handy.**
+  Unter <https://silberfisch24-cpu.github.io/Windkanal/> zeigt die Seite die laufende
+  Strömung als Farbfeld der Geschwindigkeit; über dem Bild lässt sich zwischen Kreis,
+  Rechteck, Platte und Profil wechseln, die Strömung anhalten und zurücksetzen — ohne
+  Neuladen, auf dem Rechner wie mit dem Finger. Darunter liegt die in Abschnitt 1
+  fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel
+  und Höhe über dem Boden, Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei
+  Auflösungsstufen bei einstellbarer Windgeschwindigkeit. Prüfbar über
+  `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden). Frühere
+  Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im
+  Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6` Auflösung und
+  Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite bedienbar.
   Noch nicht: keine Regler (die Maße der Formen sind fest eingebaut), nur eine der vier
-  Darstellungsarten, noch nicht öffentlich erreichbar. Als Nächstes **Etappe 2.3** — die
-  Seite unter dem GitHub-Pages-Link veröffentlichen und auf iPhone und iPad prüfen.
+  Darstellungsarten, keine Legende, im Querformat muss man scrollen. Als Nächstes
+  **Etappe 3.1** — Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und Höhe über dem
+  Boden über Regler einstellbar machen.
 
 ---
 
@@ -144,9 +148,14 @@ Commit-Nachrichten verweisen auf diese Nummern.*
     10° Anstellwinkel) vorhanden, aber schwach: das Totwasser hinter der Platte ist etwa ein
     Drittel breiter. Deutlich wird er erst mit dem Winkelregler aus 3.1, als fester Prüffall
     gehört er in 5.2.
-- [ ] **2.3** Die Seite ist unter <https://silberfisch24-cpu.github.io/Windkanal/> öffentlich erreichbar und läuft auf iPhone und iPad.
+- [x] **2.3** *(abgenommen 2026-07-31, v0.9)* Die Seite ist unter <https://silberfisch24-cpu.github.io/Windkanal/> öffentlich erreichbar und läuft auf iPhone und iPad.
   - Abnahme: Den Link auf dem eigenen Handy öffnen; die Strömung läuft, die Schaltflächen sind mit dem Finger bedienbar.
   - Voraussetzung, die nur der Nutzer selbst erledigen kann: in den Repository-Einstellungen unter *Pages* die Quelle auf „Deploy from a branch → main → / (root)" stellen.
+  - Noch nicht: Im Querformat des iPhones muss man scrollen, um Bild und Laufanzeige ganz zu
+    sehen — abgeschnitten ist nichts. Das Sitzen im Hoch- und Querformat ist Abnahmekriterium
+    von 4.2 und wurde hier nicht vorweggenommen.
+
+**Abschnitt 2 ist damit abgeschlossen.** Die Seite ist öffentlich erreichbar und bedienbar.
 
 ### Abschnitt 3 — Erweiterungen und Sonderfälle
 
