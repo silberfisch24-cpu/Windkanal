@@ -1,52 +1,46 @@
-v0.8
-Die Seite ist bedienbar: Form wählen, anhalten, zurücksetzen — ohne Neuladen.
+v0.9
+Die Seite ist öffentlich erreichbar und läuft auf iPhone und iPad.
+Damit ist Abschnitt 2 abgeschlossen.
 
-Etappe 2.2 (abgenommen):
-- Über dem Bild steht eine Leiste. Unter **Form** stehen Kreis, Rechteck,
-  Platte und Profil zur Wahl; ein Klick wechselt den Körper im Kanal, die
-  Seite muss dafür nicht neu geladen werden
-- Unter **Ablauf** hält eine Schaltfläche die Strömung an und lässt sie
-  weiterlaufen, eine zweite setzt sie auf den Anfangszustand zurück
-- Form wechseln und Zurücksetzen gehen auch im angehaltenen Zustand; das Bild
-  zeigt dann sofort den neuen Zustand, bleibt aber stehen
-- Der Text über dem Bild und die Bildbeschreibung nennen die gewählte Form
-- Eine neue Datei in der Oberfläche (`src/ui/bedienung.js`); an der Kernlogik
-  ist keine Zeile geändert, `pruefe-kern.js` läuft unverändert durch
+Etappe 2.3 (abgenommen):
+- Unter <https://silberfisch24-cpu.github.io/Windkanal/> ist die Seite ohne
+  Installation zu öffnen — auf dem Rechner, auf dem iPhone und auf dem iPad
+- Die Schaltflächen sind mit dem Finger bedienbar: Form wechseln, anhalten,
+  weiterlaufen lassen und zurücksetzen gehen alle am Telefon
+- `.nojekyll` in der Wurzel: GitHub liefert die Dateien unverändert aus, ohne
+  einen Umbauschritt dazwischen. Am heutigen Bestand ändert das nichts — es
+  nimmt den Schritt heraus, bevor er später an einer neuen Datei scheitern oder
+  sie stillschweigend weglassen kann
+- Die Hervorhebung beim Überfahren einer Schaltfläche gilt nur noch für Maus und
+  Trackpad. Auf dem Touchscreen blieb sie nach dem Antippen hängen und sah aus,
+  als wäre die Schaltfläche gewählt
+- An `src/` keine Zeile geändert; `pruefe-kern.js` läuft unverändert durch
 
 Unterwegs festgelegt:
-- Starten und Anhalten teilen sich **eine** Schaltfläche, beschriftet mit dem,
-  was sie als Nächstes tut („Anhalten" / „Weiter"). Zwei getrennte wären immer
-  zur Hälfte wirkungslos, und eine Beschriftung mit dem Zustand („Angehalten")
-  ließe offen, ob sie ihn meldet oder ihn herstellt
-- Angehalten wird die Bildschleife wirklich abgestellt, statt sie leer
-  weiterlaufen zu lassen — das ist auf dem Handy der Unterschied beim
-  Stromverbrauch
-- Die vier Formschaltflächen entstehen aus einer Liste im Programm, nicht aus
-  `index.html`. Sonst stünden die Formen an zwei Stellen und eine fünfte
-  später nur an einer davon
-- Platte und Profil haben dieselbe Länge (30 Zellen) und denselben
-  Anstellwinkel (10°), damit sich allein die Form unterscheidet — genau darauf
-  zielt das Erfolgskriterium des Projekts
-- Die angefangene Messung „Bilder je Sekunde" wird nach jedem Anhalten und
-  jedem Formwechsel verworfen, sonst mittelt sie über die Pause hinweg und
-  meldet eine Bildfolge, die es nie gab
+- Handybreiten lassen sich im kopflosen Browser **nicht** über `--window-size`
+  prüfen: Chrome erzwingt eine Mindestfensterbreite von 500 Punkten und
+  beschneidet das Bild bloß auf den verlangten Wert. Die Seite sieht dann aus,
+  als liefe sie über den Rand, obwohl sie es nicht tut. Gemessen wird stattdessen
+  in einem Rahmen fester Breite
+- Nachgemessen bei 393 (iPhone hochkant), 852 (iPhone quer) und 820 Punkten
+  (iPad): nichts läuft seitlich über, alle sechs Schaltflächen sind mindestens
+  44 Punkte groß
+- Ein Branch lässt sich vor dem Merge auf dem Handy prüfen, indem die Dateien
+  über einen fremden Ausliefer-Dienst von einem festen Commit geholt werden.
+  Nötig, weil die Artifact-Vorschau alle Module zu einer Datei zusammenlegt und
+  damit gerade das Laden der echten Dateiaufteilung nicht zeigt
 
 Bekannte Grenzen dieses Standes:
-- Der Unterschied zwischen Platte und Profil ist bei der Voreinstellung noch
-  schwach: gemessen ist das Totwasser hinter der Platte etwa ein Drittel
-  breiter als hinter dem Profil (13 gegen 10 Zellen). Deutlich wird er erst,
-  wenn sich der Anstellwinkel in Etappe 3.1 aufdrehen lässt
-- Jeder Formwechsel setzt die Rechnung zurück — das verlangt das
-  Rechenverfahren. Wer schnell hin- und herklickt, sieht beide Formen nur im
-  Anfangszustand und muss jedes Mal einige Sekunden auf die Wirbel warten
-- Die Maße der Formen sind fest eingebaut. Größe, Anstellwinkel, Höhe über dem
-  Boden und Windgeschwindigkeit werden erst in Etappe 3.1 einstellbar
+- Im Querformat des iPhones muss man scrollen, um das Strömungsbild ganz und die
+  Laufanzeige darunter zu sehen. Abgeschnitten ist nichts; das Sitzen im Hoch-
+  und Querformat ist Abnahmekriterium von Etappe 4.2
+- Die Maße der Formen sind weiterhin fest eingebaut. Größe, Anstellwinkel, Höhe
+  über dem Boden und Windgeschwindigkeit werden erst in Etappe 3.1 einstellbar
 - Nur eine der vier Darstellungsarten, weiterhin ohne Legende (Etappen 3.3
-  und 4.1). Kein Dunkelmodus, keine Anpassung an Hoch- und Querformat, keine
-  Reaktion auf Fenstergrößen oder Tabwechsel (Etappen 3.4 und 4.2)
-- Auf iPhone und iPad ungeprüft — ob die Schaltflächen dort mit dem Finger gut
-  zu treffen sind und ob 60 Bilder je Sekunde gehalten werden, zeigt erst
-  Etappe 2.3
+  und 4.1). Kein Dunkelmodus, keine Reaktion auf Fenstergrößen oder Tabwechsel
+  (Etappen 3.4 und 4.2)
+- Wie flüssig die Rechnung auf dem iPhone läuft, ist nicht gemessen. Der Regler
+  für die Auflösung kommt in Etappe 3.2
 
-Als Nächstes Etappe 2.3: die Seite unter dem GitHub-Pages-Link öffentlich
-erreichbar machen und auf iPhone und iPad prüfen.
+Als Nächstes Etappe 3.1: Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und
+Höhe über dem Boden über Regler einstellbar machen.

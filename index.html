@@ -78,8 +78,13 @@
         touch-action: manipulation;
       }
 
-      .schaltflaeche:hover {
-        border-color: var(--schrift-leise);
+      /* Nur für Geräte mit echtem Zeiger. Auf dem Touchscreen kennt der Browser
+         kein Verlassen der Fläche: die Hervorhebung bliebe nach dem Antippen
+         hängen, und es sähe aus, als wäre die Schaltfläche noch gewählt. */
+      @media (hover: hover) {
+        .schaltflaeche:hover {
+          border-color: var(--schrift-leise);
+        }
       }
 
       .schaltflaeche[aria-pressed="true"] {

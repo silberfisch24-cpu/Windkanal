@@ -7,19 +7,23 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 2.2 abgenommen (`v0.8`) — die Seite ist bedienbar.**
-  `index.html` zeigt die laufende Strömung als Farbfeld der Geschwindigkeit; über dem Bild
-  lässt sich zwischen Kreis, Rechteck, Platte und Profil wechseln, die Strömung anhalten und
-  zurücksetzen — ohne Neuladen. Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik:
-  Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden,
-  Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei Auflösungsstufen bei einstellbarer
-  Windgeschwindigkeit. Prüfbar über `node werkzeug/pruefe-kern.js` (acht Teile, 47
-  Prüfpunkte, etwa 60 Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im
-  leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete
-  Größen, `v0.6` Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm.
+- **Aktueller Stand:** **Etappe 2.3 abgenommen (`v0.9`) — Abschnitt 2 ist abgeschlossen,
+  die Seite ist öffentlich erreichbar und läuft auf dem Handy.**
+  Unter <https://silberfisch24-cpu.github.io/Windkanal/> zeigt die Seite die laufende
+  Strömung als Farbfeld der Geschwindigkeit; über dem Bild lässt sich zwischen Kreis,
+  Rechteck, Platte und Profil wechseln, die Strömung anhalten und zurücksetzen — ohne
+  Neuladen, auf dem Rechner wie mit dem Finger. Darunter liegt die in Abschnitt 1
+  fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel
+  und Höhe über dem Boden, Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei
+  Auflösungsstufen bei einstellbarer Windgeschwindigkeit. Prüfbar über
+  `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden). Frühere
+  Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im
+  Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6` Auflösung und
+  Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite bedienbar.
   Noch nicht: keine Regler (die Maße der Formen sind fest eingebaut), nur eine der vier
-  Darstellungsarten, noch nicht öffentlich erreichbar. Als Nächstes **Etappe 2.3** — die
-  Seite unter dem GitHub-Pages-Link veröffentlichen und auf iPhone und iPad prüfen.
+  Darstellungsarten, keine Legende, im Querformat muss man scrollen. Als Nächstes
+  **Etappe 3.1** — Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und Höhe über dem
+  Boden über Regler einstellbar machen.
 
 ---
 
@@ -144,9 +148,14 @@ Commit-Nachrichten verweisen auf diese Nummern.*
     10° Anstellwinkel) vorhanden, aber schwach: das Totwasser hinter der Platte ist etwa ein
     Drittel breiter. Deutlich wird er erst mit dem Winkelregler aus 3.1, als fester Prüffall
     gehört er in 5.2.
-- [ ] **2.3** Die Seite ist unter <https://silberfisch24-cpu.github.io/Windkanal/> öffentlich erreichbar und läuft auf iPhone und iPad.
+- [x] **2.3** *(abgenommen 2026-07-31, v0.9)* Die Seite ist unter <https://silberfisch24-cpu.github.io/Windkanal/> öffentlich erreichbar und läuft auf iPhone und iPad.
   - Abnahme: Den Link auf dem eigenen Handy öffnen; die Strömung läuft, die Schaltflächen sind mit dem Finger bedienbar.
   - Voraussetzung, die nur der Nutzer selbst erledigen kann: in den Repository-Einstellungen unter *Pages* die Quelle auf „Deploy from a branch → main → / (root)" stellen.
+  - Noch nicht: Im Querformat des iPhones muss man scrollen, um Bild und Laufanzeige ganz zu
+    sehen — abgeschnitten ist nichts. Das Sitzen im Hoch- und Querformat ist Abnahmekriterium
+    von 4.2 und wurde hier nicht vorweggenommen.
+
+**Abschnitt 2 ist damit abgeschlossen.** Die Seite ist öffentlich erreichbar und bedienbar.
 
 ### Abschnitt 3 — Erweiterungen und Sonderfälle
 
@@ -429,3 +438,30 @@ Fehler.*
   4. *An der Kernlogik keine Zeile geändert.* `node werkzeug/pruefe-kern.js` läuft
      unverändert durch (47 Prüfpunkte). Die Oberfläche kommt mit `setzeHindernis` und
      `setzeAufAnfangszustand` aus, die seit Abschnitt 1 bereitstehen.
+- **2026-07-31:** Etappe 2.3 umgesetzt (öffentlich erreichbar, auf Handy und Tablet
+  geprüft). Dabei festgelegt:
+  1. *`.nojekyll` in der Wurzel.* GitHub Pages schiebt bei „Deploy from a branch"
+     sonst einen Jekyll-Lauf zwischen Repo und Auslieferung. Für den heutigen
+     Dateibestand ändert das nichts — kein Verzeichnis beginnt mit `_`, keine Datei
+     hat einen Kopfteil, den Jekyll verarbeiten würde. Die Datei ist Vorsorge, kein
+     Fehlerbehebung: Sie nimmt den Bauschritt ganz heraus, der sonst irgendwann an
+     einer neuen Datei scheitern oder sie stillschweigend weglassen könnte. Die
+     Zusage „bloße Dateisammlung ohne Build-Schritt" wird dadurch stärker, nicht
+     schwächer.
+  2. *`:hover` nur noch bei echtem Zeiger* (`@media (hover: hover)`). Auf einem
+     Touchscreen kennt der Browser kein Verlassen der Fläche: die Hervorhebung bliebe
+     nach dem Antippen hängen und sähe aus wie „diese Schaltfläche ist gewählt" —
+     genau die Bedeutung, die bei der Formauswahl schon die blaue Füllung trägt.
+  3. *Gemessen vor dem Vorlegen*, in einem Rahmen fester Breite statt am Fenster:
+     bei 393 (iPhone hochkant), 852 (iPhone quer) und 820 Punkten (iPad hochkant)
+     ist `scrollWidth` gleich `clientWidth` — nichts läuft seitlich über. Alle sechs
+     Schaltflächen messen mindestens 44 Punkte in beiden Richtungen. Formwechsel,
+     Anhalten und Zurücksetzen wurden bei 393 Punkten tatsächlich angeklickt und
+     führen zu denselben Zuständen wie am großen Bildschirm.
+  4. *Bekannte Grenze, bewusst offen gelassen:* Im Querformat des iPhones (393 Punkte
+     hoch) reicht die Seite über den Bildschirm hinaus — man muss scrollen, um das
+     Strömungsbild ganz und die Laufanzeige darunter zu sehen. Abgeschnitten ist
+     nichts. Das Sitzen im Hoch- und Querformat ist Abnahmekriterium von Etappe 4.2
+     und wird hier nicht vorweggenommen.
+  5. *An der Kernlogik und an allen Dateien unter `src/` keine Zeile geändert.*
+     `node werkzeug/pruefe-kern.js` läuft unverändert durch (47 Prüfpunkte).

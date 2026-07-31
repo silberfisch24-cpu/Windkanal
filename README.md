@@ -5,7 +5,7 @@ durchströmten Kanal und sieht sofort, wie die Luft darum herumströmt — Staup
 vorn, Wirbel dahinter.
 
 Läuft ohne Installation auf PC, Mac, iPad und iPhone. Es genügt, den Link zu öffnen:
-<https://silberfisch24-cpu.github.io/Windkanal/> (sobald Etappe 2.3 erreicht ist).
+<https://silberfisch24-cpu.github.io/Windkanal/>
 
 **Stand:** im Aufbau. Was geplant ist und wie weit es ist, steht in [SPEC.md](SPEC.md).
 
