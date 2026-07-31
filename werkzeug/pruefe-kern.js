@@ -12,6 +12,11 @@
  * einem Rechteck darin. Geprüft wird, dass im Hindernis nichts strömt, dass die
  * Luft davor aufstaut, daneben schneller wird und dahinter ein langsamer
  * Bereich stehen bleibt.
+ *
+ * Teil 4 bis 6 (Etappe 1.3): alle vier Formen als Textbild, waagerecht und
+ * angestellt; Platte und Profil zusätzlich in der Strömung; und die Gegenprobe
+ * zur Höhe über dem Boden — ein aufsitzendes Rechteck gegen dasselbe Rechteck
+ * angehoben.
  */
 
 import {
@@ -31,20 +36,28 @@ console.log('=================================');
 
 const bestandenTeile = [
   pruefeLeerenKanal(),
-  pruefeHindernis('Teil 2 — Kreis im Kanal', { art: 'kreis', x: 40, y: 30, durchmesser: 16 }),
-  pruefeHindernis('Teil 3 — Rechteck im Kanal', {
+  pruefeHindernis('Teil 2 — Kreis im Kanal (Etappe 1.2)', {
+    art: 'kreis',
+    x: 40,
+    y: 30,
+    durchmesser: 16,
+  }),
+  pruefeHindernis('Teil 3 — Rechteck im Kanal (Etappe 1.2)', {
     art: 'rechteck',
     x: 40,
     y: 30,
     breite: 16,
     hoehe: 16,
   }),
+  zeigeFormenschau(),
+  pruefeNeueFormenInStroemung(),
+  pruefeBodenfreiheit(),
 ];
 
 const allesBestanden = bestandenTeile.every(Boolean);
 console.log('\n=================================');
 if (allesBestanden) {
-  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 und 1.2 erfüllt.');
+  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.3 erfüllt.');
 } else {
   console.log('Ergebnis: Mindestens ein Prüfpunkt nicht bestanden.');
 }
@@ -185,32 +198,65 @@ function pruefeHindernis(titel, hindernis) {
     hindernis,
   });
 
-  console.log(`\n${titel} (Etappe 1.2)`);
-  console.log('-'.repeat(titel.length + 14));
+  console.log(`\n${titel}`);
+  console.log('-'.repeat(titel.length));
   beschreibeKanal(kanal);
-  console.log(`Hindernis: ${beschreibeHindernis(hindernis)}\n`);
+  console.log(`Hindernis: ${beschreibeHindernis(kanal.hindernis)}\n`);
 
   schritte(kanal, SCHRITTE_GESAMT);
 
   console.log(`Strömungsbild nach ${kanal.schrittzahl} Schritten`);
   zeichneStroemungsbild(kanal);
 
+  const form = kanal.hindernis;
   const stand = messeGesamtzustand(kanal);
-  const innen = messeImHindernis(kanal);
-  const kanten = ausdehnung(hindernis);
+  const kanten = ausdehnung(form);
 
   // Messstellen entlang der Mittellinie des Hindernisses
   const vorne = kanten.links - 2;
   const hinten = kanten.rechts + 3;
-  const davor = geschwindigkeitBei(kanal, vorne, hindernis.y);
-  const dahinter = geschwindigkeitBei(kanal, hinten, hindernis.y);
-  const dichteDavor = dichteBei(kanal, vorne, hindernis.y);
+  const davor = geschwindigkeitBei(kanal, vorne, form.y);
+  const dahinter = geschwindigkeitBei(kanal, hinten, form.y);
+  const dichteDavor = dichteBei(kanal, vorne, form.y);
 
   // Schnellste Stelle in der Spalte durch die Hindernismitte — dort muss die
   // Luft am Hindernis vorbei, also durch einen engeren Querschnitt.
-  const daneben = hoechsteGeschwindigkeitInSpalte(kanal, hindernis.x);
+  const daneben = hoechsteGeschwindigkeitInSpalte(kanal, form.x);
 
   return melde([
+    ...grundpruefungen(kanal, stand),
+    {
+      name: 'Die Strömung prallt ab: davor staut sich die Luft',
+      bestanden: davor.ux < 0.6 * kanal.windgeschwindigkeit && dichteDavor > stand.dichteMittel,
+      befund:
+        `zwei Zellen vor dem Hindernis noch ${(100 * davor.ux / kanal.windgeschwindigkeit).toFixed(1)} %` +
+        ` der Windgeschwindigkeit, Dichte dort ${dichteDavor.toFixed(6)} gegen ${stand.dichteMittel.toFixed(6)} im Mittel`,
+    },
+    {
+      name: 'Daneben nimmt die Geschwindigkeit zu',
+      bestanden: daneben.ux > 1.2 * kanal.windgeschwindigkeit,
+      befund:
+        `neben dem Hindernis (x = ${form.x}, y = ${daneben.y})` +
+        ` ${(100 * daneben.ux / kanal.windgeschwindigkeit).toFixed(1)} % der Windgeschwindigkeit`,
+    },
+    {
+      name: 'Dahinter bleibt ein langsamer Bereich (Totwasser)',
+      bestanden: dahinter.ux < 0.5 * kanal.windgeschwindigkeit,
+      befund:
+        `drei Zellen hinter dem Hindernis ${(100 * dahinter.ux / kanal.windgeschwindigkeit).toFixed(1)} %` +
+        ` der Windgeschwindigkeit`,
+    },
+  ]);
+}
+
+/**
+ * Die drei Prüfpunkte, die für jedes Hindernis gelten, gleich welcher Form:
+ * die Rechnung steht, die Luftmenge bleibt erhalten, und im Körper selbst
+ * bewegt sich nichts.
+ */
+function grundpruefungen(kanal, stand) {
+  const innen = messeImHindernis(kanal);
+  return [
     {
       name: 'Rechnung steht (keine ungültigen Werte)',
       bestanden: stand.ungueltige === 0,
@@ -229,26 +275,242 @@ function pruefeHindernis(titel, hindernis) {
         ` höchste Geschwindigkeit darin ${innen.hoechsteGeschwindigkeit.toFixed(5)}` +
         ` (Windgeschwindigkeit ${kanal.windgeschwindigkeit})`,
     },
+  ];
+}
+
+// --- Teil 4: alle vier Formen als Textbild (Etappe 1.3) --------------------
+
+/**
+ * Zeigt jede der vier Formen einmal waagerecht und einmal angestellt. Hier
+ * wird nicht gerechnet — es geht allein darum, welche Zellen die Form belegt.
+ *
+ * Platte und Profil sind hier dicker angegeben als voreingestellt (10 statt 4
+ * Zellen bei 30 Zellen Länge). Grund ist allein das grobe Textbild: mit der
+ * schlanken Voreinstellung wären beide nur ein Strich, und der Unterschied —
+ * vorn rund und hinten spitz gegen vorn und hinten abgeschnitten — ginge
+ * verloren. In der Strömung (Teil 5) gilt wieder die Voreinstellung.
+ */
+function zeigeFormenschau() {
+  const titel = 'Teil 4 — Alle vier Formen, waagerecht und angestellt (Etappe 1.3)';
+  console.log(`\n${titel}`);
+  console.log('-'.repeat(titel.length));
+  console.log('Gitter 60 × 32 Zellen, ein Zeichen je Zelle in der Breite, je zwei in der Höhe');
+  console.log('(ein Schriftzeichen ist etwa doppelt so hoch wie breit — sonst wäre der Kreis flach).');
+  console.log('Es wird nicht gerechnet, gezeigt wird nur die Belegung des Gitters.');
+
+  const mitte = { x: 30, y: 16 };
+  const schau = [
+    ['Kreis', { art: 'kreis', durchmesser: 16 }],
+    ['Kreis, 30 Grad gedreht', { art: 'kreis', durchmesser: 16, winkel: 30 }],
+    // Länglich statt quadratisch: an einem Quadrat wäre eine Drehung um 30 Grad
+    // zwar zu sehen, aber nicht zu messen — es liegt vorn so hoch wie hinten.
+    ['Rechteck', { art: 'rechteck', breite: 20, hoehe: 10 }],
+    ['Rechteck, 30 Grad angestellt', { art: 'rechteck', breite: 20, hoehe: 10, winkel: 30 }],
+    ['Stumpfe Platte', { art: 'platte', laenge: 30, dicke: 10 }],
+    ['Stumpfe Platte, 20 Grad angestellt', { art: 'platte', laenge: 30, dicke: 10, winkel: 20 }],
+    ['Tragflächenprofil', { art: 'profil', laenge: 30, dicke: 10 }],
+    ['Tragflächenprofil, 20 Grad angestellt', { art: 'profil', laenge: 30, dicke: 10, winkel: 20 }],
+  ];
+
+  const kanaele = new Map();
+  for (const [name, form] of schau) {
+    const kanal = erzeugeKanal({ breite: 60, hoehe: 32, hindernis: { ...form, ...mitte } });
+    kanaele.set(name, kanal);
+    console.log(`\n  ${name} — ${zaehleFormzellen(kanal)} Zellen`);
+    zeichneFormbild(kanal);
+  }
+
+  const leer = [...kanaele].filter(([, kanal]) => zaehleFormzellen(kanal) === 0).map(([name]) => name);
+
+  // Der Kreis ist die einzige Form, an der ein Anstellwinkel nichts ändern darf.
+  const kreisGleich = belegungGleich(kanaele.get('Kreis'), kanaele.get('Kreis, 30 Grad gedreht'));
+
+  // Bei positivem Anstellwinkel muss die Anströmkante (vorn, links) höher
+  // liegen als die Hinterkante. Das prüft nicht nur, dass gedreht wird,
+  // sondern auch, in welche Richtung.
+  const angestellt = [
+    'Rechteck, 30 Grad angestellt',
+    'Stumpfe Platte, 20 Grad angestellt',
+    'Tragflächenprofil, 20 Grad angestellt',
+  ].map((name) => ({ name, ...vergleicheVorderUndHinterkante(kanaele.get(name)) }));
+
+  // Der Unterschied zwischen den beiden neuen Formen in Zahlen: das Profil
+  // läuft nach hinten spitz aus, die Platte ist hinten so dick wie vorn.
+  const platte = messeDickenverlauf(kanaele.get('Stumpfe Platte'));
+  const profil = messeDickenverlauf(kanaele.get('Tragflächenprofil'));
+
+  return melde([
     {
-      name: 'Die Strömung prallt ab: davor staut sich die Luft',
-      bestanden: davor.ux < 0.6 * kanal.windgeschwindigkeit && dichteDavor > stand.dichteMittel,
+      name: 'Jede der vier Formen belegt Zellen im Gitter',
+      bestanden: leer.length === 0,
       befund:
-        `zwei Zellen vor dem Hindernis noch ${(100 * davor.ux / kanal.windgeschwindigkeit).toFixed(1)} %` +
-        ` der Windgeschwindigkeit, Dichte dort ${dichteDavor.toFixed(6)} gegen ${stand.dichteMittel.toFixed(6)} im Mittel`,
+        leer.length === 0
+          ? [...kanaele].map(([name, kanal]) => `${name}: ${zaehleFormzellen(kanal)}`).join(', ')
+          : `ohne eine einzige Zelle: ${leer.join(', ')}`,
     },
     {
-      name: 'Daneben nimmt die Geschwindigkeit zu',
-      bestanden: daneben.ux > 1.2 * kanal.windgeschwindigkeit,
-      befund:
-        `neben dem Hindernis (x = ${hindernis.x}, y = ${daneben.y})` +
-        ` ${(100 * daneben.ux / kanal.windgeschwindigkeit).toFixed(1)} % der Windgeschwindigkeit`,
+      name: 'Der Kreis bleibt beim Drehen unverändert',
+      bestanden: kreisGleich,
+      befund: kreisGleich
+        ? 'gedreht und ungedreht belegen genau dieselben Zellen — beim Kreis ist der Anstellwinkel ohne Wirkung'
+        : 'die Belegung hat sich geändert, obwohl ein Kreis in jeder Lage gleich aussieht',
     },
     {
-      name: 'Dahinter bleibt ein langsamer Bereich (Totwasser)',
-      bestanden: dahinter.ux < 0.5 * kanal.windgeschwindigkeit,
+      name: 'Der Anstellwinkel hebt die Anströmkante',
+      bestanden: angestellt.every((eintrag) => eintrag.unterschied > 1),
+      befund: angestellt
+        .map(
+          (eintrag) =>
+            `${eintrag.name}: vorn im Mittel y = ${eintrag.vorn.toFixed(1)},` +
+            ` hinten y = ${eintrag.hinten.toFixed(1)}`
+        )
+        .join('; '),
+    },
+    {
+      name: 'Das Profil läuft nach hinten spitz aus, die Platte nicht',
+      bestanden: profil.hinten < 0.5 * profil.vorn && platte.hinten === platte.vorn,
       befund:
-        `drei Zellen hinter dem Hindernis ${(100 * dahinter.ux / kanal.windgeschwindigkeit).toFixed(1)} %` +
-        ` der Windgeschwindigkeit`,
+        `Profil: ${profil.vorn} Zellen dick auf einem Viertel der Länge, hinten nur noch ${profil.hinten};` +
+        ` Platte: ${platte.vorn} gegen ${platte.hinten}`,
+    },
+  ]);
+}
+
+// --- Teil 5: Platte und Profil in der Strömung (Etappe 1.3) ----------------
+
+/**
+ * Beide neuen Formen einmal wirklich anströmen — eine Form „steht bereit",
+ * wenn die Rechnung mit ihr auch nach 2000 Schritten noch steht.
+ *
+ * Länge, Dicke und Anstellwinkel sind für beide gleich; unterschiedlich ist
+ * allein die Form. Was das im Strömungsbild ausmacht, ist der eigentliche
+ * Zweck des Projekts — als harter Prüffall kommt es in Etappe 5.2, hier wird
+ * es nur nebenbei ausgewiesen.
+ */
+function pruefeNeueFormenInStroemung() {
+  const titel = 'Teil 5 — Stumpfe Platte und Tragflächenprofil in der Strömung (Etappe 1.3)';
+  console.log(`\n${titel}`);
+  console.log('-'.repeat(titel.length));
+
+  const gemeinsam = { x: 40, y: 30, laenge: 30, winkel: 20 };
+  const ergebnisse = [];
+
+  for (const art of ['platte', 'profil']) {
+    const kanal = erzeugeKanal({
+      breite: 120,
+      hoehe: 60,
+      windgeschwindigkeit: 0.1,
+      zaehigkeit: 0.01,
+      hindernis: { art, ...gemeinsam },
+    });
+    console.log(`\n${beschreibeHindernis(kanal.hindernis)}`);
+    schritte(kanal, SCHRITTE_GESAMT);
+    console.log(`Strömungsbild nach ${kanal.schrittzahl} Schritten`);
+    zeichneStroemungsbild(kanal);
+
+    const stand = messeGesamtzustand(kanal);
+    const kanten = ausdehnung(kanal.hindernis);
+    ergebnisse.push({
+      art,
+      pruefungen: grundpruefungen(kanal, stand),
+      rueckstroemung: staerksteRueckstroemung(kanal, kanten.rechts + 1, kanten.rechts + 20),
+    });
+  }
+
+  console.log(
+    '\nNebenbefund zum Erfolgskriterium (harter Prüffall erst in Etappe 5.2): stärkste' +
+      ' Rückströmung im Nachlauf, gemessen über 20 Zellen hinter dem Körper —'
+  );
+  for (const { art, rueckstroemung } of ergebnisse) {
+    console.log(
+      `  ${art === 'platte' ? 'Stumpfe Platte    ' : 'Tragflächenprofil '}` +
+        ` ${(100 * rueckstroemung / 0.1).toFixed(1)} % der Windgeschwindigkeit rückwärts`
+    );
+  }
+
+  return melde(
+    ergebnisse.flatMap(({ art, pruefungen }) =>
+      pruefungen.map((pruefung) => ({
+        ...pruefung,
+        name: `${art === 'platte' ? 'Platte' : 'Profil'}: ${pruefung.name}`,
+      }))
+    )
+  );
+}
+
+// --- Teil 6: Höhe über dem Boden (Etappe 1.3) ------------------------------
+
+/**
+ * Die Gegenprobe zur Bodenfreiheit: dasselbe Rechteck einmal aufsitzend und
+ * einmal um acht Zellen angehoben. Gemessen wird in beiden Fällen derselbe
+ * Streifen unmittelbar über dem Boden — beim aufsitzenden Rechteck gehört er
+ * zum Körper und steht still, beim angehobenen ist er freie Strömung.
+ */
+function pruefeBodenfreiheit() {
+  const titel = 'Teil 6 — Höhe über dem Boden: aufsitzend gegen angehoben (Etappe 1.3)';
+  console.log(`\n${titel}`);
+  console.log('-'.repeat(titel.length));
+
+  const BODENABSTAND = 8;
+  const rechteck = { art: 'rechteck', x: 40, breite: 16, hoehe: 16 };
+  const faelle = [];
+
+  for (const bodenabstand of [0, BODENABSTAND]) {
+    const kanal = erzeugeKanal({
+      breite: 120,
+      hoehe: 60,
+      windgeschwindigkeit: 0.1,
+      zaehigkeit: 0.01,
+      hindernis: { ...rechteck, bodenabstand },
+    });
+    console.log(
+      `\n${bodenabstand === 0 ? 'Aufsitzend (bodenabstand 0)' : `Angehoben (bodenabstand ${bodenabstand})`}:` +
+        ` ${beschreibeHindernis(kanal.hindernis)}`
+    );
+    schritte(kanal, SCHRITTE_GESAMT);
+    console.log(`Strömungsbild nach ${kanal.schrittzahl} Schritten`);
+    zeichneStroemungsbild(kanal);
+
+    faelle.push({
+      bodenabstand,
+      unterkante: ausdehnung(kanal.hindernis).unten,
+      spalt: messeStreifen(kanal, rechteck.x, 1, BODENABSTAND),
+      stand: messeGesamtzustand(kanal),
+    });
+  }
+
+  const [aufsitzend, angehoben] = faelle;
+
+  return melde([
+    {
+      name: 'Beide Rechnungen stehen (keine ungültigen Werte)',
+      bestanden: aufsitzend.stand.ungueltige === 0 && angehoben.stand.ungueltige === 0,
+      befund: `aufsitzend ${aufsitzend.stand.ungueltige}, angehoben ${angehoben.stand.ungueltige} ungültige Werte`,
+    },
+    {
+      name: 'Die eingestellte Höhe über dem Boden kommt im Gitter an',
+      bestanden: aufsitzend.unterkante === 1 && angehoben.unterkante === 1 + BODENABSTAND,
+      befund:
+        `Unterkante aufsitzend bei y = ${aufsitzend.unterkante} (unterste Luftzelle des Kanals),` +
+        ` angehoben bei y = ${angehoben.unterkante} — also ${BODENABSTAND} Zellen Luft darunter`,
+    },
+    {
+      name: 'Das aufsitzende Rechteck lässt darunter nichts durch',
+      bestanden: aufsitzend.spalt.luftzellen === 0 && aufsitzend.spalt.hoechsteGeschwindigkeit === 0,
+      befund:
+        `im Streifen y = 1 bis ${BODENABSTAND} über dem Boden ${aufsitzend.spalt.luftzellen} Luftzellen,` +
+        ` Geschwindigkeit dort ${aufsitzend.spalt.hoechsteGeschwindigkeit.toFixed(5)}` +
+        ` — der Streifen gehört ganz zum Körper`,
+    },
+    {
+      name: 'Dasselbe Rechteck angehoben wird sichtbar unterströmt',
+      bestanden:
+        angehoben.spalt.luftzellen === BODENABSTAND &&
+        angehoben.spalt.hoechsteGeschwindigkeit > 0.5 * 0.1,
+      befund:
+        `im selben Streifen ${angehoben.spalt.luftzellen} Luftzellen,` +
+        ` bis zu ${(100 * angehoben.spalt.hoechsteGeschwindigkeit / 0.1).toFixed(1)} % der Windgeschwindigkeit` +
+        ` — durch den Spalt wird die Luft sogar schneller als der Wind`,
     },
   ]);
 }
@@ -260,11 +522,22 @@ function beschreibeKanal(kanal) {
   console.log(`Zähigkeit ${kanal.zaehigkeit} (Angleichzeit ${kanal.angleichzeit.toFixed(3)}), Boden haftend, Decke gleitend`);
 }
 
-function beschreibeHindernis(hindernis) {
-  if (hindernis.art === 'kreis') {
-    return `Kreis, Durchmesser ${hindernis.durchmesser} Zellen, Mitte bei x = ${hindernis.x}, y = ${hindernis.y}`;
-  }
-  return `Rechteck, ${hindernis.breite} × ${hindernis.hoehe} Zellen, Mitte bei x = ${hindernis.x}, y = ${hindernis.y}`;
+/** Beschreibt eine vervollständigte Form in einem Satz. */
+function beschreibeHindernis(form) {
+  const masse = {
+    kreis: () => `Kreis, Durchmesser ${form.durchmesser} Zellen`,
+    rechteck: () => `Rechteck, ${form.breite} × ${form.hoehe} Zellen`,
+    platte: () => `Stumpfe Platte, ${form.laenge} Zellen lang und ${form.dicke} dick`,
+    profil: () => `Tragflächenprofil, ${form.laenge} Zellen lang und ${form.dicke} dick`,
+  };
+  const anstellung =
+    form.winkel === 0 ? 'nicht angestellt' : `Anstellwinkel ${form.winkel}° (Anströmkante angehoben)`;
+  return `${masse[form.art]()}, Mitte bei x = ${form.x}, y = ${zahl(form.y)}, ${anstellung}`;
+}
+
+/** Ganze Zahlen ohne Nachkommastellen, halbe Zellen mit einer. */
+function zahl(wert) {
+  return Number.isInteger(wert) ? String(wert) : wert.toFixed(1);
 }
 
 /** Meldet eine Liste von Prüfpunkten und sagt, ob alle bestanden sind. */
@@ -327,6 +600,25 @@ function zeichneStroemungsbild(kanal) {
     console.log(`  |${zeile}|`);
   }
   console.log(`  ${'-'.repeat(Math.ceil(kanal.breite / blockBreite) + 2)}  Boden`);
+}
+
+/**
+ * Reines Formbild ohne Strömung: eine Zelle je Zeichen in der Breite, zwei in
+ * der Höhe. Boden und Decke bleiben weg — zu sehen sein soll allein der Körper.
+ */
+function zeichneFormbild(kanal) {
+  for (let yOben = kanal.hoehe - 2; yOben >= 1; yOben -= 2) {
+    let zeile = '';
+    for (let x = 0; x < kanal.breite; x++) {
+      let wand = false;
+      for (let y = Math.max(1, yOben - 1); y <= yOben; y++) {
+        if (!istFluid(kanal, x, y)) wand = true;
+      }
+      zeile += wand ? '#' : ' ';
+    }
+    console.log(`  |${zeile}|`);
+  }
+  console.log(`  ${'-'.repeat(kanal.breite + 2)}  Boden`);
 }
 
 // --- Messungen -------------------------------------------------------------
@@ -408,6 +700,104 @@ function messeImHindernis(kanal) {
     }
   }
   return { zellen, hoechsteGeschwindigkeit };
+}
+
+/** Zellen, die zum Hindernis gehören — Boden und Decke zählen nicht mit. */
+function zaehleFormzellen(kanal) {
+  let zellen = 0;
+  for (let y = 1; y < kanal.hoehe - 1; y++) {
+    for (let x = 0; x < kanal.breite; x++) {
+      if (!istFluid(kanal, x, y)) zellen++;
+    }
+  }
+  return zellen;
+}
+
+/** Belegen zwei Kanäle genau dieselben Zellen? */
+function belegungGleich(einer, anderer) {
+  if (einer.zellart.length !== anderer.zellart.length) return false;
+  for (let zelle = 0; zelle < einer.zellart.length; zelle++) {
+    if (einer.zellart[zelle] !== anderer.zellart[zelle]) return false;
+  }
+  return true;
+}
+
+/** Wie viele Zellen der Form liegen in der Spalte x? */
+function formhoeheInSpalte(kanal, x) {
+  let zellen = 0;
+  for (let y = 1; y < kanal.hoehe - 1; y++) {
+    if (!istFluid(kanal, x, y)) zellen++;
+  }
+  return zellen;
+}
+
+/**
+ * Mittlere Höhe der Formzellen im vorderen und im hinteren Drittel. Bei einem
+ * angestellten Körper muss vorn höher liegen als hinten.
+ */
+function vergleicheVorderUndHinterkante(kanal) {
+  const kanten = ausdehnung(kanal.hindernis);
+  const drittel = (kanten.rechts - kanten.links) / 3;
+  const vorn = mittlereHoehe(kanal, kanten.links, kanten.links + drittel);
+  const hinten = mittlereHoehe(kanal, kanten.rechts - drittel, kanten.rechts);
+  return { vorn, hinten, unterschied: vorn - hinten };
+}
+
+/** Mittlere Höhe aller Formzellen zwischen zwei Spalten. */
+function mittlereHoehe(kanal, xVon, xBis) {
+  let summe = 0;
+  let zellen = 0;
+  for (let y = 1; y < kanal.hoehe - 1; y++) {
+    for (let x = Math.ceil(xVon); x <= Math.floor(xBis); x++) {
+      if (istFluid(kanal, x, y)) continue;
+      summe += y;
+      zellen++;
+    }
+  }
+  return zellen === 0 ? NaN : summe / zellen;
+}
+
+/**
+ * Dicke der Form auf einem Viertel und auf neun Zehnteln ihrer Länge — daran
+ * zeigt sich, ob eine Form nach hinten ausläuft oder abgeschnitten ist.
+ */
+function messeDickenverlauf(kanal) {
+  const kanten = ausdehnung(kanal.hindernis);
+  const laenge = kanten.rechts - kanten.links;
+  return {
+    vorn: formhoeheInSpalte(kanal, Math.round(kanten.links + 0.25 * laenge)),
+    hinten: formhoeheInSpalte(kanal, Math.round(kanten.links + 0.9 * laenge)),
+  };
+}
+
+/** Stärkste Rückströmung (negatives ux) im Bereich zwischen zwei Spalten. */
+function staerksteRueckstroemung(kanal, xVon, xBis) {
+  let staerkste = 0;
+  for (let y = 1; y < kanal.hoehe - 1; y++) {
+    for (let x = Math.max(1, xVon); x <= Math.min(kanal.breite - 2, xBis); x++) {
+      if (!istFluid(kanal, x, y)) continue;
+      const { ux } = geschwindigkeitBei(kanal, x, y);
+      if (-ux > staerkste) staerkste = -ux;
+    }
+  }
+  return staerkste;
+}
+
+/**
+ * Misst einen senkrechten Streifen in der Spalte x, von `yVon` bis `yBis`
+ * einschließlich: wie viele Luftzellen darin liegen und wie schnell es dort
+ * höchstens strömt. Wandzellen zählen mit Geschwindigkeit null.
+ */
+function messeStreifen(kanal, x, yVon, yBis) {
+  let luftzellen = 0;
+  let hoechsteGeschwindigkeit = 0;
+  for (let y = yVon; y <= yBis; y++) {
+    if (istFluid(kanal, x, y)) luftzellen++;
+    const { ux, uy } = geschwindigkeitBei(kanal, x, y);
+    const tempo = Math.hypot(ux, uy);
+    if (!(tempo <= hoechsteGeschwindigkeit)) hoechsteGeschwindigkeit = tempo;
+  }
+  return { luftzellen, hoechsteGeschwindigkeit };
 }
 
 /** Schnellste Luftzelle in einer senkrechten Spalte. */

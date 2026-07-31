@@ -16,7 +16,7 @@
  * Alle Größen in Gittereinheiten (eine Zelle, ein Zeitschritt).
  */
 
-import { liegtInForm, ausdehnung, pruefeForm } from './formen.js';
+import { liegtInForm, ausdehnung, normalisiereForm } from './formen.js';
 
 // Die neun Richtungen: 0 ruhend, 1–4 gerade, 5–8 diagonal.
 const RICHTUNG_X = [0, 1, 0, -1, 0, 1, -1, -1, 1];
@@ -103,7 +103,10 @@ export function erzeugeKanal({
  * strömt also nicht hindurch, sondern prallt zurück und haftet an der Form.
  */
 export function setzeHindernis(kanal, hindernis = null) {
-  kanal.hindernis = hindernis;
+  // Vervollständigt abgelegt: mit Anstellwinkel, voreingestellter Dicke und
+  // ausgerechnetem Mittelpunkt. Wer später wissen will, wo das Hindernis
+  // tatsächlich steht, liest `kanal.hindernis` und muss nichts nachrechnen.
+  kanal.hindernis = hindernis === null ? null : normalisiereForm(hindernis);
   baueZellarten(kanal);
   setzeAufAnfangszustand(kanal);
 }
@@ -119,13 +122,18 @@ function baueZellarten(kanal) {
   }
 
   if (hindernis === null) return;
-  pruefeForm(hindernis);
 
   // Ein- und Auslass werden in jedem Schritt neu gesetzt; ein Hindernis, das
   // bis dorthin reicht, würde stillschweigend überschrieben. Lieber melden.
   const kanten = ausdehnung(hindernis);
   if (kanten.links < 1 || kanten.rechts > breite - 2) {
     throw new Error('Das Hindernis reicht bis an den Einlass oder den Auslass.');
+  }
+  // Nach oben genauso: die Decke ist Kanalwand, kein Teil des Körpers. Wäre
+  // eine zu hoch gesetzte Form nur abgeschnitten worden, sähe es aus, als
+  // hinge sie an der Decke. Am Boden ist das Aufsitzen dagegen gewollt.
+  if (kanten.oben > hoehe - 2) {
+    throw new Error('Das Hindernis reicht bis an die Decke — Höhe über dem Boden oder Größe verringern.');
   }
 
   let zellenImHindernis = 0;
