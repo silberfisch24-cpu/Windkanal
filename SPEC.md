@@ -7,18 +7,19 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 2.1 abgenommen (`v0.7`) — das erste Bild steht auf dem
-  Bildschirm.** `index.html` zeigt die laufende Strömung um einen fest eingebauten Kreis
-  als Farbfeld der Geschwindigkeit; nach etwa fünf Sekunden lösen sich sichtbar Wirbel ab.
-  Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik: Strömung im Kanal, alle vier
-  Formen mit Größe, Anstellwinkel und Höhe über dem Boden, Geschwindigkeit, Druck und
-  Wirbelstärke ablesbar, drei Auflösungsstufen bei einstellbarer Windgeschwindigkeit.
-  Prüfbar über `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden).
-  Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis
-  im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6` Auflösung und
-  Windgeschwindigkeit. Noch nichts bedienbar: keine Schaltflächen, keine Regler, nur eine
-  der vier Darstellungsarten. Als Nächstes **Etappe 2.2** — Form auswählen sowie Starten,
-  Anhalten und Zurücksetzen über Schaltflächen.
+- **Aktueller Stand:** **Etappe 2.2 abgenommen (`v0.8`) — die Seite ist bedienbar.**
+  `index.html` zeigt die laufende Strömung als Farbfeld der Geschwindigkeit; über dem Bild
+  lässt sich zwischen Kreis, Rechteck, Platte und Profil wechseln, die Strömung anhalten und
+  zurücksetzen — ohne Neuladen. Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik:
+  Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden,
+  Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei Auflösungsstufen bei einstellbarer
+  Windgeschwindigkeit. Prüfbar über `node werkzeug/pruefe-kern.js` (acht Teile, 47
+  Prüfpunkte, etwa 60 Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im
+  leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete
+  Größen, `v0.6` Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm.
+  Noch nicht: keine Regler (die Maße der Formen sind fest eingebaut), nur eine der vier
+  Darstellungsarten, noch nicht öffentlich erreichbar. Als Nächstes **Etappe 2.3** — die
+  Seite unter dem GitHub-Pages-Link veröffentlichen und auf iPhone und iPad prüfen.
 
 ---
 
@@ -99,6 +100,7 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Der Körper im Bild ist eckig** (festgestellt in Etappe 2.1): Der Kreis erscheint auf dem Bildschirm nicht rund, sondern treppig, mit je einer einzelnen vorstehenden Zelle links, rechts, oben und unten. Das ist die Rasterung, und zwar aus zwei getrennten Gründen. **Erstens** ist ein Kreis von 16 Zellen Durchmesser nicht runder darstellbar als das Gitter — 16 Zellen sind 16 Stufen. **Zweitens** zählt `liegtInForm` eine Zelle zum Kreis, wenn ihr Mittelpunkt höchstens einen Radius entfernt liegt (`<=`); genau auf den vier Hauptrichtungen liegt der Mittelpunkt exakt auf dem Rand und wird mitgezählt. Daraus entsteht die einzelne Nase, die auffälliger wirkt als die Treppe selbst — und sie bleibt in jeder Auflösung bestehen, weil sie nicht von der Feinheit abhängt, sondern von der Vergleichsrichtung. Wesentlich dabei: **die Rechnung sieht dieselbe Treppe.** Das ist kein Zeichenfehler, sondern die Form, an der die Luft tatsächlich zurückprallt — beim gewählten Verfahren ist ein Körper nichts anderes als eine Gruppe von Wandzellen. Dass das die Strömung nicht verfälscht, ist gemessen: der Wirbeltakt aus Etappe 1.4 entspricht einer Strouhal-Zahl von etwa 0,25, dem für diese Anströmung erwarteten Wert. Drei Wege, das Bild zu glätten, in aufsteigender Eingriffstiefe: eine feinere Auflösung (Etappe 3.2) macht die Stufen im Verhältnis kleiner; ein über das Farbfeld gezeichneter **glatter Umriss** der wahren Form macht den Körper rund, ohne die Rechnung anzufassen (in `formen.js` von Anfang an vorgesehen — „der Löser macht daraus Wandzellen, die Oberfläche später einen Umriss") und wäre der Kandidat für Etappe 4.1, allerdings um den Preis, dass das Bild einen glatten Körper zeigt, an dem die Luft in Wahrheit treppig abprallt; die Vergleichsrichtung im Kern von `<=` auf `<` zu ändern nähme die vier Nasen weg, verschöbe aber die wirksame Größe jedes Kreises um eine Zelle und damit sämtliche 47 Prüfpunkte aus Abschnitt 1 — deshalb **nicht** ohne eigenen Anlass.
 - **Takt der Bildschleife** (festgelegt in Etappe 2.1): Je Einzelbild wird nicht eine feste Zahl von Rechenschritten gerechnet, sondern so viele, wie in ein **Zeitbudget von 12 ms** passen (höchstens 20). Eine feste Zahl wäre einfacher, aber falsch: auf einem schnellen Rechner bliebe Leistung liegen, auf dem Handy käme das Bild nicht mehr nach und es ruckelte. Über das Budget bleibt die Bildfolge auf jedem Gerät gleichmäßig; auf schwächeren Geräten läuft dafür die Strömung langsamer ab. Das ist die bewusste Wahl: lieber langsamer als ruckelig.
 - **Vorschau für die Abnahme** (festgelegt in Etappe 2.1, nachgereicht): `werkzeug/baue-vorschau.js` legt `index.html` und alle Module zu **einer** Datei zusammen, damit sich die laufende Seite veröffentlichen lässt. Nötig wurde das, weil die Arbeit in Cloud-Sessions stattfindet: Die Seite läuft dort in einem Container, `localhost` ist für den Nutzer nicht erreichbar — und ab Abschnitt 2 hängt jede Abnahme daran, dass er das Bild sieht. **Das ist kein Build-Schritt und hebt den entsprechenden Grundsatz nicht auf:** Ausgeliefert wird weiterhin die unveränderte Dateisammlung aus dem Repo; die zusammengelegte Datei entsteht außerhalb, dient allein der Abnahme und wird nie eingecheckt. Damit das nicht am Gedächtnis der jeweiligen Session hängt, **weigert sich das Skript, in das Repo zu schreiben**. Drei Entscheidungen darin: Die Dateiliste wird **aus den `import`-Zeilen hergeleitet** statt hinterlegt — sonst vergäße die nächste Etappe, die eine Datei hinzufügt, den Eintrag, und die Vorschau wäre stillschweigend unvollständig statt abzubrechen. Doppelte Namen auf oberster Ebene brechen den Lauf ab, weil sie getrennt in Ordnung und zusammengelegt ein Fehler sind. Und am Quelltext wird nichts geändert außer den `import`-Zeilen und dem Wort `export`, auch nicht die Gestaltung — der Nutzer soll abnehmen, was ausgeliefert wird.
+- **Bedienung über Schaltflächen** (festgelegt in Etappe 2.2): Die Bedienleiste steht in `src/ui/bedienung.js`; sie kennt weder Kanal noch Rechnung, sondern meldet nur Klicks und beschriftet sich, während `start.js` entscheidet, was daraufhin geschieht. Die vier **Formschaltflächen werden aus einer Liste in `start.js` erzeugt** statt in `index.html` hinterlegt — sonst stünden die Formen an zwei Stellen und eine fünfte später nur an einer davon. Die Auswahl ist ein Entweder-oder und wird über `aria-pressed` ausgewiesen, nicht nur über die Farbe. **Starten und Anhalten teilen sich eine Schaltfläche**, die mit dem beschriftet ist, was sie als Nächstes tut („Anhalten" / „Weiter"); zwei getrennte Schaltflächen wären immer zur Hälfte wirkungslos, und eine Beschriftung mit dem Zustand („Angehalten") ließe offen, ob sie ihn meldet oder herstellt. Im angehaltenen Zustand wird die Bildschleife wirklich abgestellt (`cancelAnimationFrame`), nicht nur um die Rechnung gebracht — eine leer weiterlaufende Schleife kostet auf dem Handy Strom. Form wechseln und Zurücksetzen bleiben dort trotzdem bedienbar und **zeichnen einmalig nach**, sonst stünde noch die alte Form auf dem Schirm und die Schaltfläche sähe wirkungslos aus. Nach jedem Anhalten oder Formwechsel wird die **angefangene Messung der Bildfolge verworfen**, weil sie sonst über die Pause hinweg mittelt und eine Bildfolge meldet, die es nie gab. Die Maße der vier Formen sind noch fest eingebaut (Regler kommen in Etappe 3.1); **Platte und Profil bekommen dabei dieselbe Länge und denselben Anstellwinkel** (30 Zellen, 10°), damit sich zwischen ihnen allein die Form unterscheidet — genau darauf zielt das Erfolgskriterium. Der Kreis behält Durchmesser 16 bei x = 40, y = 30, also die Anordnung, an der Etappe 1.4 die Wirbelablösung in Zahlen nachgemessen hat.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -135,8 +137,13 @@ Commit-Nachrichten verweisen auf diese Nummern.*
   - Noch nicht: nur eine der vier Darstellungsarten (Geschwindigkeit), keine Legende zur
     Farbskala, keine Bedienung. Die Ecken und Kanten des Kreises sind die Rasterung des
     Rechengitters — siehe „Der Körper im Bild ist eckig" unter *Architektur*.
-- [ ] **2.2** Form auswählen sowie Starten, Anhalten und Zurücksetzen sind über Schaltflächen bedienbar.
+- [x] **2.2** *(abgenommen 2026-07-31, v0.8)* Form auswählen sowie Starten, Anhalten und Zurücksetzen sind über Schaltflächen bedienbar.
   - Abnahme: Ohne Neuladen der Seite zwischen allen vier Formen wechseln und die Simulation zurücksetzen.
+  - Noch nicht: Die Maße der Formen sind fest eingebaut — Regler dafür kommen in 3.1. Der
+    Unterschied zwischen Platte und Profil ist bei der Voreinstellung (beide 30 Zellen lang,
+    10° Anstellwinkel) vorhanden, aber schwach: das Totwasser hinter der Platte ist etwa ein
+    Drittel breiter. Deutlich wird er erst mit dem Winkelregler aus 3.1, als fester Prüffall
+    gehört er in 5.2.
 - [ ] **2.3** Die Seite ist unter <https://silberfisch24-cpu.github.io/Windkanal/> öffentlich erreichbar und läuft auf iPhone und iPad.
   - Abnahme: Den Link auf dem eigenen Handy öffnen; die Strömung läuft, die Schaltflächen sind mit dem Finger bedienbar.
   - Voraussetzung, die nur der Nutzer selbst erledigen kann: in den Repository-Einstellungen unter *Pages* die Quelle auf „Deploy from a branch → main → / (root)" stellen.
@@ -403,3 +410,22 @@ Fehler.*
      ab. Das Ergebnis wurde im eigenen Browser gegengeprüft, bevor es veröffentlicht
      wurde — beim ersten Versuch am selben Tag fehlte `<meta charset="utf-8">`, wodurch
      alle Umlaute zerlegt waren.
+- **2026-07-31:** Etappe 2.2 umgesetzt (Form auswählen, Anhalten, Zurücksetzen). Dabei
+  festgelegt:
+  1. *Bedienleiste in `src/ui/bedienung.js`*, die Formliste in `start.js`: siehe „Bedienung
+     über Schaltflächen" unter Architektur. Kein Umfangszuwachs — die Datei war in der
+     Dateistruktur von Anfang an vorgesehen.
+  2. *Eine Schaltfläche für Starten und Anhalten* statt zweier, beschriftet mit dem, was sie
+     als Nächstes tut. Zwei getrennte wären immer zur Hälfte wirkungslos.
+  3. *Voreingestellte Maße der vier Formen* (Kreis 16 Durchmesser; Rechteck 16 × 16; Platte
+     und Profil je 30 lang bei 10° Anstellwinkel, Dicke 4 aus der Voreinstellung), alle
+     mittig bei x = 40, y = 30 in der groben Auflösung. Gemessen bei 6000 Schritten: das
+     Totwasser hinter der Platte ist bei diesem Winkel etwa ein Drittel breiter als hinter
+     dem Profil (13 gegen 10 Zellen bei x = 60). Der Unterschied ist damit da, aber nicht
+     auffällig — er wird deutlich, sobald sich der Anstellwinkel in Etappe 3.1 aufdrehen
+     lässt; als fester Prüffall gehört er ohnehin erst in Etappe 5.2. Ein größerer
+     Voreinstellungswinkel wurde bewusst nicht gewählt: bei 30° zeigt die Rechnung das
+     Profil noch anliegend, was der Anschauung widerspräche, die Etappe 3.1 abnehmen soll.
+  4. *An der Kernlogik keine Zeile geändert.* `node werkzeug/pruefe-kern.js` läuft
+     unverändert durch (47 Prüfpunkte). Die Oberfläche kommt mit `setzeHindernis` und
+     `setzeAufAnfangszustand` aus, die seit Abschnitt 1 bereitstehen.
