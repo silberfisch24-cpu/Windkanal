@@ -7,11 +7,12 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 2.3 abgenommen (`v0.9`) — Abschnitt 2 ist abgeschlossen,
-  die Seite ist öffentlich erreichbar und läuft auf dem Handy.**
+- **Aktueller Stand:** **Etappe 3.1 abgenommen (`v1.0`) — die Szene lässt sich
+  einstellen.**
   Unter <https://silberfisch24-cpu.github.io/Windkanal/> zeigt die Seite die laufende
   Strömung als Farbfeld der Geschwindigkeit; über dem Bild lässt sich zwischen Kreis,
-  Rechteck, Platte und Profil wechseln, die Strömung anhalten und zurücksetzen — ohne
+  Rechteck, Platte und Profil wechseln, die Strömung anhalten und zurücksetzen, unter dem
+  Bild stellen vier Regler Wind, Größe, Anstellwinkel und Höhe über dem Boden ein — ohne
   Neuladen, auf dem Rechner wie mit dem Finger. Darunter liegt die in Abschnitt 1
   fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel
   und Höhe über dem Boden, Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei
@@ -19,11 +20,11 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
   `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden). Frühere
   Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im
   Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6` Auflösung und
-  Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite bedienbar.
-  Noch nicht: keine Regler (die Maße der Formen sind fest eingebaut), nur eine der vier
-  Darstellungsarten, keine Legende, im Querformat muss man scrollen. Als Nächstes
-  **Etappe 3.1** — Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und Höhe über dem
-  Boden über Regler einstellbar machen.
+  Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite bedienbar,
+  `v0.9` öffentlich erreichbar und auf dem Handy lauffähig. Noch nicht: kein Regler für
+  die Auflösung, nur eine der vier Darstellungsarten, keine Legende, im Querformat muss
+  man scrollen. Als Nächstes **Etappe 3.2** — Regler für die Rechenauflösung, mit einer
+  Voreinstellung passend zum Gerät.
 
 ---
 
@@ -105,6 +106,8 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Takt der Bildschleife** (festgelegt in Etappe 2.1): Je Einzelbild wird nicht eine feste Zahl von Rechenschritten gerechnet, sondern so viele, wie in ein **Zeitbudget von 12 ms** passen (höchstens 20). Eine feste Zahl wäre einfacher, aber falsch: auf einem schnellen Rechner bliebe Leistung liegen, auf dem Handy käme das Bild nicht mehr nach und es ruckelte. Über das Budget bleibt die Bildfolge auf jedem Gerät gleichmäßig; auf schwächeren Geräten läuft dafür die Strömung langsamer ab. Das ist die bewusste Wahl: lieber langsamer als ruckelig.
 - **Vorschau für die Abnahme** (festgelegt in Etappe 2.1, nachgereicht): `werkzeug/baue-vorschau.js` legt `index.html` und alle Module zu **einer** Datei zusammen, damit sich die laufende Seite veröffentlichen lässt. Nötig wurde das, weil die Arbeit in Cloud-Sessions stattfindet: Die Seite läuft dort in einem Container, `localhost` ist für den Nutzer nicht erreichbar — und ab Abschnitt 2 hängt jede Abnahme daran, dass er das Bild sieht. **Das ist kein Build-Schritt und hebt den entsprechenden Grundsatz nicht auf:** Ausgeliefert wird weiterhin die unveränderte Dateisammlung aus dem Repo; die zusammengelegte Datei entsteht außerhalb, dient allein der Abnahme und wird nie eingecheckt. Damit das nicht am Gedächtnis der jeweiligen Session hängt, **weigert sich das Skript, in das Repo zu schreiben**. Drei Entscheidungen darin: Die Dateiliste wird **aus den `import`-Zeilen hergeleitet** statt hinterlegt — sonst vergäße die nächste Etappe, die eine Datei hinzufügt, den Eintrag, und die Vorschau wäre stillschweigend unvollständig statt abzubrechen. Doppelte Namen auf oberster Ebene brechen den Lauf ab, weil sie getrennt in Ordnung und zusammengelegt ein Fehler sind. Und am Quelltext wird nichts geändert außer den `import`-Zeilen und dem Wort `export`, auch nicht die Gestaltung — der Nutzer soll abnehmen, was ausgeliefert wird.
 - **Bedienung über Schaltflächen** (festgelegt in Etappe 2.2): Die Bedienleiste steht in `src/ui/bedienung.js`; sie kennt weder Kanal noch Rechnung, sondern meldet nur Klicks und beschriftet sich, während `start.js` entscheidet, was daraufhin geschieht. Die vier **Formschaltflächen werden aus einer Liste in `start.js` erzeugt** statt in `index.html` hinterlegt — sonst stünden die Formen an zwei Stellen und eine fünfte später nur an einer davon. Die Auswahl ist ein Entweder-oder und wird über `aria-pressed` ausgewiesen, nicht nur über die Farbe. **Starten und Anhalten teilen sich eine Schaltfläche**, die mit dem beschriftet ist, was sie als Nächstes tut („Anhalten" / „Weiter"); zwei getrennte Schaltflächen wären immer zur Hälfte wirkungslos, und eine Beschriftung mit dem Zustand („Angehalten") ließe offen, ob sie ihn meldet oder herstellt. Im angehaltenen Zustand wird die Bildschleife wirklich abgestellt (`cancelAnimationFrame`), nicht nur um die Rechnung gebracht — eine leer weiterlaufende Schleife kostet auf dem Handy Strom. Form wechseln und Zurücksetzen bleiben dort trotzdem bedienbar und **zeichnen einmalig nach**, sonst stünde noch die alte Form auf dem Schirm und die Schaltfläche sähe wirkungslos aus. Nach jedem Anhalten oder Formwechsel wird die **angefangene Messung der Bildfolge verworfen**, weil sie sonst über die Pause hinweg mittelt und eine Bildfolge meldet, die es nie gab. Die Maße der vier Formen sind noch fest eingebaut (Regler kommen in Etappe 3.1); **Platte und Profil bekommen dabei dieselbe Länge und denselben Anstellwinkel** (30 Zellen, 10°), damit sich zwischen ihnen allein die Form unterscheidet — genau darauf zielt das Erfolgskriterium. Der Kreis behält Durchmesser 16 bei x = 40, y = 30, also die Anordnung, an der Etappe 1.4 die Wirbelablösung in Zahlen nachgemessen hat.
+- **Regler für Wind, Größe, Anstellung und Höhe** (festgelegt in Etappe 3.1): Die vier Regler entstehen wie die Formschaltflächen aus einer Liste in `start.js`; `bedienung.js` baut sie und meldet nur, was gezogen wurde. Sie wirken beim Ziehen, nicht erst beim Loslassen. **Ihre Stellungen gelten für alle Formen gemeinsam und bleiben beim Formwechsel stehen** — nur so lassen sich Platte und Profil bei gleicher Größe und gleichem Anstellwinkel gegeneinanderhalten, worauf das Erfolgskriterium zielt. Der **Wind** wird als Anteil der bisherigen festen Windgeschwindigkeit (0,1) angegeben, die **Größe** als Anteil des Grundmaßes der jeweiligen Form (Kreis 16, Rechteck 16, Platte und Profil 30 Zellen) — beides, damit 100 % genau der Stand ist, der in Abschnitt 2 abgenommen wurde, und damit eine Reglerstellung beim Formwechsel weiterhin etwas bedeutet. Die **Höhe** wird als Bodenabstand eingestellt, nicht als Mittelpunkt: „wie viel Luft bleibt unter dem Körper" ist die Frage, um die es geht, und sie bleibt beim Drehen und Vergrößern dieselbe. Ihre Obergrenze wandert deshalb mit Form, Größe und Anstellung mit und wird nach jeder Änderung neu ausgerechnet; sonst wiese der Kern die Form an der Decke zurück und die Seite bliebe mit einem Fehler stehen. Beim Kreis ist der Winkelregler **gesperrt** statt wirkungslos. Die Reglerbereiche sind gemessen und enger als das, was der Kern zuließe — siehe Änderungsverlauf zum 2026-08-01.
+- **Die Farbskala folgt dem Wind** (nachgezogen in Etappe 3.1): Ihre Obergrenze ist ein Vielfaches der Windgeschwindigkeit und wird deshalb je Bild neu gelesen, statt einmal beim Einrichten. Seit der Wind im Lauf verstellbar ist, wäre eine stehengebliebene Grenze nach jeder Änderung falsch — das Bild würde durchweg hell oder durchweg dunkel. Dass die Grenze nicht am größten Wert des Einzelbildes hängt, bleibt unverändert (siehe „Bild auf dem Bildschirm").
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -159,8 +162,13 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 
 ### Abschnitt 3 — Erweiterungen und Sonderfälle
 
-- [ ] **3.1** Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und Höhe über dem Boden sind über Regler einstellbar und wirken sofort.
+- [x] **3.1** *(abgenommen 2026-08-01, v1.0)* Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und Höhe über dem Boden sind über Regler einstellbar und wirken sofort.
   - Abnahme: Anstellwinkel des Profils langsam vergrößern; ab einem gewissen Winkel reißt die Strömung sichtbar ab.
+  - Noch nicht: Die Bereiche der Regler sind enger, als es die reine Anschauung hergäbe —
+    weiter gespannt zerfällt das Bild, weil sich die Rechnung aufschaukelt (gemessen, siehe
+    Änderungsverlauf). Ein weiterer Bereich braucht entweder eine unempfindlichere Rechnung
+    oder das Auffangnetz aus Etappe 3.4. Die Regler stehen unter dem Bild; ob sie im
+    Querformat mit dem Bild zusammen ins Sichtfeld passen, ist Abnahmekriterium von 4.2.
 - [ ] **3.2** Ein Regler stellt die Rechenauflösung ein; die Voreinstellung richtet sich nach dem Gerät.
   - Abnahme: Auf dem Handy ist die Voreinstellung gröber als auf dem Rechner; die feinste Stufe zeigt schärfere Wirbel.
 - [ ] **3.3** Zwischen den vier Darstellungsarten lässt sich umschalten, die Teilchen lassen sich zuschalten.
@@ -465,3 +473,57 @@ Fehler.*
      und wird hier nicht vorweggenommen.
   5. *An der Kernlogik und an allen Dateien unter `src/` keine Zeile geändert.*
      `node werkzeug/pruefe-kern.js` läuft unverändert durch (47 Prüfpunkte).
+- **2026-08-01:** Etappe 3.1 umgesetzt (Regler für Wind, Größe, Anstellwinkel und Höhe
+  über dem Boden). Dabei festgelegt:
+  1. *Die Reglerstellungen gelten für alle Formen gemeinsam und bleiben beim Formwechsel
+     stehen* — siehe „Regler für Wind, Größe, Anstellung und Höhe" unter Architektur.
+     Andernfalls ließen sich Platte und Profil nicht bei gleicher Einstellung
+     gegeneinanderhalten, und genau darauf zielt das Erfolgskriterium. **Zwei Folgen für
+     den Anfangszustand:** Das Rechteck steht jetzt um 10° angestellt statt aufrecht (der
+     Anstellwinkel gilt eben für alle Formen), und Platte und Profil sitzen etwas tiefer
+     als zuvor — ihre Höhe wird als Bodenabstand von 21 Zellen angegeben, was bei ihnen
+     einen Mittelpunkt um 26 statt um 30 ergibt. Der Kreis steht unverändert bei
+     Durchmesser 16, x = 40, y = 30: die Anordnung, an der Etappe 1.4 gemessen hat.
+  2. *Die Reglerbereiche sind gemessen, nicht geschätzt* — und sie sind **enger, als der
+     Kern zuließe**. Maßgeblich ist nicht jeder Regler für sich, sondern ihr Zusammenspiel:
+     Ein großer, quer angestellter Körper dicht über dem Boden beschleunigt die Luft an
+     seiner Kante auf über das Dreifache des Windes; kommt sie damit der
+     Schallgeschwindigkeit des Gitters (0,577) zu nahe, schaukelt sich die Rechnung auf
+     und das Bild zerfällt. Gemessen wurde jeweils über 3000 Schritte:
+     - **Wind höchstens 100 % (= 0,10).** Bei 0,11 bricht ein aufsitzendes Rechteck bei
+       30° nach 1600 Schritten zusammen, bei 0,12 schon nach 200. Das ist ein Befund auch
+       über den Kern: Die dort hinterlegte Obergrenze 0,12 wurde in Etappe 1.5 an einer
+       **freistehenden** Platte gemessen und trägt für aufsitzende stumpfe Körper nicht.
+       `WIND_HOECHSTENS` bleibt trotzdem bei 0,12 — für die Prüfskripte und den schlanken
+       Fall stimmt der Wert; die Oberfläche bleibt von sich aus darunter.
+     - **Größe höchstens 115 % des Grundmaßes.** Bei 125 % bricht eine aufsitzende Platte
+       (38 Zellen, 30°) auch bei Wind 0,10 zusammen; bei 120 % steigt die
+       Spitzengeschwindigkeit auf das 3,8-fache des Windes und die Reserve ist aufgezehrt.
+     - **Anstellwinkel höchstens ±30°.** Bei 45° beschleunigt eine Platte die Luft auf das
+       3,5-fache; ab da bricht es bereits bei 0,11 zusammen.
+     - *Bestätigt* an 31 Fällen — alle vier Formen, −30°/0°/+30°, aufsitzend, 8, 21 und
+       dicht unter der Decke, dazu Größe 115 % bei Wind 100 %: alle stabil, höchste
+       Spitze das 3,0-fache des Windes.
+     Ein weiterer Bereich braucht entweder eine unempfindlichere Rechnung (andere
+     Zähigkeit oder anderes Stoßverfahren — beides eine eigene Entscheidung) oder das
+     Auffangnetz aus Etappe 3.4, das eine zerfallende Rechnung erkennt und zurücksetzt.
+  3. *Der Wind setzt die Strömung nicht zurück, die übrigen drei schon.* Das folgt aus
+     „Auflösung und Windgeschwindigkeit" und „Hindernisse im Kanal" und ist keine neue
+     Festlegung — es steht als Satz unter den Reglern auf der Seite, weil es sonst
+     aussähe, als wirkte der Windregler nicht.
+  4. *Die Farbskala folgt jetzt dem Wind* statt einmalig beim Einrichten gesetzt zu
+     werden — siehe „Die Farbskala folgt dem Wind" unter Architektur.
+  5. *Die Regler stehen unter dem Bild, nicht über ihm.* Gemessen im Rahmen von 393
+     Punkten Breite: über dem Bild stehend schieben sie es auf 758 Punkte hinunter, es
+     wäre auf dem Handy also außer Sicht, sobald man einen Regler anfasst. Unter dem Bild
+     beginnt es bei 315. Nichts läuft seitlich über, jeder Schieber ist 44 Punkte hoch.
+     Die Anordnung der schon abgenommenen Schaltflächen wurde dabei nicht angetastet.
+  6. *Die Obergrenze des Höhenreglers wandert mit* Form, Größe und Anstellung, und die
+     eingestellte Höhe wird nötigenfalls zurückgestutzt. Ohne das wiese der Kern eine an
+     die Decke stoßende Form zurück (Etappe 1.3) — die Seite bliebe mitten im Ziehen mit
+     einem Fehler stehen, statt einfach nicht weiter zu steigen.
+  7. *An `src/kern/` keine Zeile geändert.* `node werkzeug/pruefe-kern.js` läuft
+     unverändert durch (47 Prüfpunkte). **Nebenbefund zum Prüfskript:** Sein Teil zur
+     Rechenzeit misst die Geschwindigkeit des Rechners mit und schlägt fehl, wenn
+     nebenher etwas anderes läuft — allein ausgeführt ist er grün. Kein Fehler im
+     Programm, aber ein Prüfpunkt, der bei Gelegenheit unempfindlicher werden sollte.

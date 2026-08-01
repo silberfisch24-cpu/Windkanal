@@ -7,7 +7,11 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
 
 - Starten: `python3 -m http.server 8000`, dann <http://localhost:8000> im Browser öffnen
   (nötig, weil ES-Module aus einer lokalen Datei heraus vom Browser blockiert werden)
-- Kernlogik prüfen (Abschnitt 1, ohne Oberfläche): `node werkzeug/pruefe-kern.js`
+- Kernlogik prüfen (Abschnitt 1, ohne Oberfläche): `node werkzeug/pruefe-kern.js` —
+  **allein laufen lassen.** Ein Teil misst die Rechenzeit je Auflösungsstufe und schlägt
+  fehl, wenn nebenher etwas anderes rechnet (am 2026-08-01 passiert, weil parallel ein
+  kopfloser Browser lief). Ein Fehlschlag genau dieses Punktes ist deshalb erst ein
+  Befund, wenn der Lauf ohne Nebenlast wiederholt wurde.
 - Vorschau für die Abnahme bauen: `node werkzeug/baue-vorschau.js <ziel.html>` — legt die
   Seite zu einer einzigen Datei zusammen, damit sie sich als Artifact veröffentlichen
   lässt. Nur für Cloud-Sessions nötig, siehe dort. **Kein Build-Schritt:** Das Ergebnis
@@ -208,6 +212,13 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   **nie ins Repo**, aus demselben Grund, aus dem sich `baue-vorschau.js` weigert, dorthin
   zu schreiben. Zu prüfen ist dabei auch der angehaltene oder umgeschaltete Zustand,
   nicht nur der eingeschwungene.
+- **Ein Regler lässt sich nicht anklicken.** Für Schieber (`input type="range"`) im
+  Prüfskript stattdessen `wert` setzen und `dispatchEvent(new Event('input', { bubbles:
+  true }))` auslösen — sonst passiert nichts, und es sähe aus, als wirkte der Regler
+  nicht. Am 2026-08-01 (Etappe 3.1) so gemacht. Lohnend ist außerdem, das Skript am Ende
+  den **Zustand als Text** in einen Kasten schreiben zu lassen (Reglerwerte, Grenzen,
+  Beschriftungen) und die Seite mit `--dump-dom` abzurufen: Das liest sich zuverlässiger
+  als aus Bildpunkten, und Fehler fallen auf, statt in einem hübschen Bild unterzugehen.
 - **`--window-size` stellt keine Handybreite ein.** Chrome erzwingt eine
   Mindestfensterbreite von 500 Punkten: `--window-size=393,852` ergibt ein Sichtfeld von
   500, das Bild wird aber auf 393 beschnitten — die Seite sieht dann aus, als liefe sie

@@ -75,7 +75,6 @@ export function erzeugeDarstellung(zeichenflaeche, kanal) {
   const bildpunkte = bild.data;
 
   const skala = baueSkala();
-  const obergrenze = TEMPO_OBERGRENZE * kanal.windgeschwindigkeit;
 
   return {
     /**
@@ -85,6 +84,13 @@ export function erzeugeDarstellung(zeichenflaeche, kanal) {
     zeichne(felder) {
       const { tempo } = felder;
       const { zellart } = kanal;
+
+      // Die Obergrenze wird je Bild neu aus dem Wind gelesen, nicht einmalig
+      // beim Einrichten: Seit Etappe 3.1 lässt sich der Wind im Lauf verstellen,
+      // und eine stehengebliebene Grenze machte das Bild danach durchweg hell
+      // oder durchweg dunkel. Sie ist ein Vielfaches des Windes — mitwandern
+      // soll sie mit ihm, nicht mit dem größten Wert des Einzelbildes.
+      const obergrenze = TEMPO_OBERGRENZE * kanal.windgeschwindigkeit;
 
       for (let y = 0; y < hoehe; y++) {
         // Kern zählt y vom Boden nach oben, die Zeichenfläche von oben nach unten.
