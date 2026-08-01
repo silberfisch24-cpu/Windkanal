@@ -25,6 +25,10 @@
  * Vor der Benutzung geht eine Form durch `normalisiereForm`: dort werden die
  * Angaben geprüft, Fehlendes ergänzt und ein Bodenabstand in ein y umgerechnet.
  * `liegtInForm` und `ausdehnung` erwarten eine so vervollständigte Form.
+ *
+ * Maße sind immer Zellen — also von der Auflösungsstufe abhängig. Wer eine in
+ * groben Zellen beschriebene Szene in einer feineren Stufe zeigen will, rechnet
+ * sie vorher mit `skaliereForm` um.
  */
 
 const GRAD_IN_BOGENMASS = Math.PI / 180;
@@ -96,6 +100,50 @@ export function normalisiereForm(form) {
 
   return vollstaendig;
 }
+
+/**
+ * Rechnet eine in groben Zellen beschriebene Form auf eine feinere Stufe um:
+ * jedes Maß wird mit dem `faktor` der Stufe multipliziert (siehe `AUFLOESUNGEN`
+ * in `loeser.js`).
+ *
+ * Ohne das zeigte die feine Stufe nicht dieselbe Szene schärfer, sondern einen
+ * kleineren Körper in einem größeren Kanal — und der Vergleich zwischen den
+ * Stufen sagte nichts aus.
+ *
+ * Der **Anstellwinkel wird nicht mitskaliert**: er ist ein Winkel, kein Maß.
+ * Ebenso bleibt `art` unberührt.
+ */
+export function skaliereForm(form, faktor) {
+  if (form === null || typeof form !== 'object') {
+    throw new Error('Die zu skalierende Form muss als Objekt beschrieben werden.');
+  }
+  if (!Number.isFinite(faktor) || faktor <= 0) {
+    throw new Error('Der Faktor muss eine Zahl größer als null sein.');
+  }
+
+  const umgerechnet = { ...form };
+  for (const mass of SKALIERBARE_MASSE) {
+    if (umgerechnet[mass] !== undefined) {
+      umgerechnet[mass] = Math.round(umgerechnet[mass] * faktor);
+    }
+  }
+  return umgerechnet;
+}
+
+/**
+ * Welche Angaben einer Form Maße in Zellen sind. Alles andere — `art` und
+ * `winkel` — bleibt beim Umrechnen stehen.
+ */
+const SKALIERBARE_MASSE = [
+  'x',
+  'y',
+  'durchmesser',
+  'breite',
+  'hoehe',
+  'laenge',
+  'dicke',
+  'bodenabstand',
+];
 
 /** Liegt die Gitterzelle (x, y) innerhalb der Form? */
 export function liegtInForm(form, x, y) {

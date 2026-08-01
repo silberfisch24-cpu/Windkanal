@@ -233,7 +233,18 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   Angaben aus `performance.now()` nicht mit der Wanduhr überein; die angezeigte Bildfolge
   („0 Bilder je Sekunde") und der Fortschritt der Strömung sind dort nicht aussagekräftig.
   Für Fragen nach Geschwindigkeit oder Einschwingen die Rechnung stattdessen ohne Browser
-  über ein kleines Node-Skript gegen `src/kern/` laufen lassen.
+  über ein kleines Node-Skript gegen `src/kern/` laufen lassen. **Misst das Programm selbst
+  die Zeit** — seit Etappe 3.2 tut es das beim Start —, ist auch das Ergebnis dieser
+  Messung unter virtueller Zeit wertlos. Dann ohne `--virtual-time-budget` prüfen: das
+  Prüfskript schreibt seinen Zustand im `load`-Handler statt in einem `setTimeout`, und
+  `--dump-dom` allein wartet auf `load`. So läuft die Wanduhr echt. Am 2026-08-01 (Etappe
+  3.2) so gemacht; mit virtueller Zeit kam dieselbe Messung einmal auf 3,4 und einmal auf
+  288 Millionen Zellen je Sekunde.
+- **Das Prüfgerüst darf die Seitenbreite nicht verfälschen.** Ein eingesetzter Kasten mit
+  `white-space: pre` und langen Zeilen macht das Dokument breiter als die Seite und meldet
+  einen Überlauf, den es ohne ihn nicht gibt — am 2026-08-01 zunächst als Befund
+  missverstanden. Solche Kästen bekommen `overflow: hidden; max-width: 100%`, bevor
+  `scrollWidth` gegen `clientWidth` gemessen wird.
 
 ## Umfangsänderungen
 
