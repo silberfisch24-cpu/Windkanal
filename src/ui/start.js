@@ -5,9 +5,14 @@
  * gibt sie an `darstellung.js` weiter und nimmt von `bedienung.js` entgegen,
  * was angeklickt oder gezogen wurde. Der Kern erfährt davon nichts.
  *
- * Stand Etappe 3.1: Form wählen, anhalten, zurücksetzen, und über vier Regler
- * Wind, Größe, Anstellwinkel und Höhe über dem Boden einstellen. Die übrigen
- * Darstellungsarten kommen in 3.3.
+ * Stand Etappe 3.2: Form wählen, anhalten, zurücksetzen, und über fünf Regler
+ * Wind, Größe, Anstellwinkel, Höhe über dem Boden und die Rechenauflösung
+ * einstellen. Die übrigen Darstellungsarten kommen in 3.3.
+ *
+ * **Alle Maße dieser Datei sind grobe Zellen** — die der Stufe `grob`. Erst
+ * `baueForm` rechnet sie mit dem `faktor` der eingestellten Stufe auf deren
+ * Gitter hoch. Dadurch bedeutet eine Reglerstellung in jeder Auflösung dieselbe
+ * Szene, und ein Stufenwechsel zeigt sie schärfer statt anders.
  */
 
 import {
@@ -16,8 +21,9 @@ import {
   setzeHindernis,
   setzeWindgeschwindigkeit,
   setzeAufAnfangszustand,
+  AUFLOESUNGEN,
 } from '../kern/loeser.js';
-import { normalisiereForm, ausdehnung } from '../kern/formen.js';
+import { normalisiereForm, ausdehnung, skaliereForm } from '../kern/formen.js';
 import { erzeugeFelder, leseFelder } from '../kern/felder.js';
 import { erzeugeDarstellung } from './darstellung.js';
 import { erzeugeBedienung } from './bedienung.js';
@@ -74,8 +80,15 @@ const SZENEN = [
 /** Womit die Seite aufgeht. */
 const ANFANGSFORM = 'kreis';
 
-/** Wo das Hindernis im Kanal steht, in Zellen vom Einlass aus gezählt. */
+/** Wo das Hindernis im Kanal steht, in groben Zellen vom Einlass aus gezählt. */
 const LAGE_X = 40;
+
+/**
+ * Die Auflösungsstufen in der Reihenfolge, in der der Regler sie durchfährt —
+ * von grob nach fein. Der Reglerwert ist die Nummer in dieser Liste, nicht der
+ * Name der Stufe: ein Schieber führt Zahlen.
+ */
+const STUFEN = Object.keys(AUFLOESUNGEN);
 
 /**
  * Die Windgeschwindigkeit, auf die sich der Windregler als 100 % bezieht — der
@@ -84,7 +97,7 @@ const LAGE_X = 40;
 const WIND_VOREINSTELLUNG = 0.1;
 
 /**
- * Die vier Regler mit ihren Bereichen.
+ * Die fünf Regler mit ihren Bereichen.
  *
  * Die Grenzen sind **gemessen, nicht geschätzt** (siehe Änderungsverlauf in
  * `SPEC.md` zum 2026-08-01). Entscheidend ist dabei nicht jeder Regler für
@@ -99,6 +112,11 @@ const WIND_VOREINSTELLUNG = 0.1;
  * Größe bis 115 % und Anstellung bis ±30° sind an denselben ungünstigsten
  * Fällen abgesichert. Ein weiterer Bereich bräuchte entweder eine
  * unempfindlichere Rechnung oder das Auffangnetz aus Etappe 3.4.
+ *
+ * Die Grenzen gelten in **allen drei Auflösungsstufen** — nachgemessen in
+ * Etappe 3.2 (siehe Änderungsverlauf zum 2026-08-01): über 3000 Schritte
+ * entsteht in keiner Stufe ein ungültiger Wert. Sie müssen deshalb nicht je
+ * Stufe verengt werden.
  */
 const REGLER = [
   { schluessel: 'wind', name: 'Wind', mindestens: 10, hoechstens: 100, schritt: 5, wert: 100 },
@@ -115,7 +133,53 @@ const REGLER = [
     schritt: 1,
     wert: 21,
   },
+  {
+    schluessel: 'aufloesung',
+    name: 'Rechenauflösung',
+    mindestens: 0,
+    hoechstens: STUFEN.length - 1,
+    schritt: 1,
+    // Vorläufig: Womit die Seite aufgeht, hängt vom Gerät ab und wird beim
+    // Start durch `waehleVoreinstellung` ersetzt.
+    wert: 0,
+  },
 ];
+
+/**
+ * Wie viele Rechenschritte je Bild eine Stufe mindestens schaffen muss, damit
+ * sie als Voreinstellung in Frage kommt.
+ *
+ * Nicht die Bildfolge ist hier das Maß — die bleibt über das Zeitbudget in
+ * jeder Stufe gleichmäßig —, sondern wie schnell die Strömung vorankommt. Bis
+ * sich hinter dem Körper eine Wirbelstraße eingeschwungen hat, vergehen einige
+ * tausend Rechenschritte (in Etappe 1.4 nachgemessen). Bei vier Schritten je
+ * Bild ist das eine gute halbe Minute; bei einem wäre es das Vierfache, und der
+ * Erstbesucher sähe nur ein zähes Bild. Wer die feinste Stufe trotzdem will,
+ * stellt sie von Hand ein — voreingestellt wird sie nur, wo sie vorankommt.
+ */
+const SCHRITTE_JE_BILD_MINDESTENS = 4;
+
+/**
+ * Der Probelauf, mit dem die Rechenleistung des Geräts gemessen wird: erst
+ * aufwärmen, dann in mehreren Blöcken messen.
+ *
+ * Die ersten Schritte sind nicht aussagekräftig — der Browser übersetzt den
+ * Code erst während der Ausführung in Maschinensprache und wird dabei
+ * schneller. Ohne Aufwärmen fiele jedes Gerät zu langsam aus.
+ *
+ * Gemessen wird in Blöcken, weil eine einzelne Messung nach oben ausreißen
+ * kann: Kommt dem Browser mitten im Block etwas dazwischen, sieht das Gerät
+ * langsamer aus, als es ist. Beim Nachmessen am 2026-08-01 lag zwischen dem
+ * schnellsten und dem langsamsten Lauf desselben Codes das 2,4-fache. Ein
+ * Ausreißer nach *unten* ist dagegen nicht möglich — schneller als sie kann
+ * die Maschine nicht rechnen. Deshalb zählt der schnellste Block.
+ *
+ * Zusammen sind es 58 Schritte auf dem groben Gitter: auf einem langsamen Gerät
+ * gut eine Zehntelsekunde beim Laden, auf einem schnellen kaum messbar.
+ */
+const AUFWAERMSCHRITTE = 10;
+const MESSBLOECKE = 4;
+const SCHRITTE_JE_BLOCK = 12;
 
 /**
  * Wie viel Zeit je Einzelbild gerechnet werden darf, in Millisekunden.
@@ -150,13 +214,16 @@ function starte() {
 
   let gewaehlteForm = ANFANGSFORM;
 
-  const kanal = erzeugeKanal({
-    aufloesung: 'grob',
-    windgeschwindigkeit: windAus(einstellungen.wind),
-    hindernis: baueForm(szene(gewaehlteForm), einstellungen),
-  });
-  const felder = erzeugeFelder(kanal);
-  const darstellung = erzeugeDarstellung(zeichenflaeche, kanal);
+  // Womit die Seite aufgeht, hängt vom Gerät ab — siehe `waehleVoreinstellung`.
+  einstellungen.aufloesung = waehleVoreinstellung(zeichenflaeche);
+
+  // Kanal, Felder und Zeichenfläche hängen an der Auflösung und werden bei
+  // jedem Stufenwechsel neu angelegt — das Gitter ändert dabei seine Größe.
+  // Angelegt wird erst, wenn die Bedienleiste steht: `legeKanalAn` beschriftet
+  // sie mit.
+  let kanal;
+  let felder;
+  let darstellung;
 
   let laeuft = true;
   // Die laufende Bildanforderung, oder null im angehaltenen Zustand. Angehalten
@@ -185,8 +252,7 @@ function starte() {
 
   bedienung.zeigeForm(gewaehlteForm);
   bedienung.zeigeLauf(laeuft);
-  beschrifteRegler();
-  beschrifte();
+  legeKanalAn();
   starteSchleife();
 
   /**
@@ -223,6 +289,14 @@ function starte() {
       return;
     }
 
+    // Eine andere Auflösung ist ein anderes Gitter: Kanal, Felder und
+    // Zeichenfläche müssen neu angelegt werden, ein bloßes Umsetzen des
+    // Hindernisses genügt nicht.
+    if (schluessel === 'aufloesung') {
+      legeKanalAn();
+      return;
+    }
+
     baueHindernisNeu();
   }
 
@@ -230,6 +304,31 @@ function starte() {
   function setzeZurueck() {
     setzeAufAnfangszustand(kanal);
     vergissMessung();
+    zeichneStand();
+  }
+
+  /**
+   * Legt den Kanal in der eingestellten Auflösung an — beim Start und nach
+   * jedem Stufenwechsel.
+   *
+   * Die Reglerstellungen bleiben dabei stehen; sie sind in groben Zellen
+   * angegeben und werden von `baueForm` auf das neue Gitter hochgerechnet. Was
+   * man eingestellt hat, bedeutet nach dem Wechsel also dasselbe — nur feiner
+   * aufgelöst. Die Strömung setzt neu an: ein Gitter lässt sich nicht mitten im
+   * Lauf austauschen.
+   */
+  function legeKanalAn() {
+    begrenzeHoehe();
+    kanal = erzeugeKanal({
+      aufloesung: stufe(einstellungen).name,
+      windgeschwindigkeit: windAus(einstellungen.wind),
+      hindernis: baueForm(szene(gewaehlteForm), einstellungen),
+    });
+    felder = erzeugeFelder(kanal);
+    darstellung = erzeugeDarstellung(zeichenflaeche, kanal);
+    vergissMessung();
+    beschrifteRegler();
+    beschrifte();
     zeichneStand();
   }
 
@@ -258,18 +357,26 @@ function starte() {
   }
 
   /**
-   * Wie viele Zellen Luft höchstens unter der Form bleiben dürfen.
+   * Wie viele grobe Zellen Luft höchstens unter der Form bleiben dürfen.
    *
    * Der Mittelpunkt steigt mit dem Bodenabstand um genau denselben Betrag. Es
    * genügt deshalb, die Form einmal aufsitzend zu vermessen und zu sehen, wie
    * viel bis zur Decke übrig bleibt. Die oberste Zeile ist die Decke selbst,
    * die vorletzte muss frei bleiben — dieselbe Bedingung, die `loeser.js` prüft.
+   *
+   * Gemessen wird auf dem Gitter der eingestellten Stufe, geantwortet in groben
+   * Zellen — das ist die Einheit, in der der Regler steht. Die Maße der Stufe
+   * kommen dabei aus `AUFLOESUNGEN` und nicht aus `kanal`, damit die Grenze
+   * auch dann schon feststeht, wenn der Kanal für die neue Stufe erst noch
+   * angelegt wird.
    */
   function hoechsteHoehe() {
+    const { hoehe, faktor } = stufe(einstellungen);
     const aufsitzend = normalisiereForm(
       baueForm(szene(gewaehlteForm), { ...einstellungen, bodenabstand: 0 })
     );
-    return Math.max(0, kanal.hoehe - 2 - ausdehnung(aufsitzend).oben);
+    const frei = hoehe - 2 - ausdehnung(aufsitzend).oben;
+    return Math.max(0, Math.floor(frei / faktor));
   }
 
   /** Schreibt neben jeden Regler, was seine Stellung bedeutet. */
@@ -302,6 +409,14 @@ function starte() {
         einstellungen.bodenabstand === 0
           ? 'sitzt auf dem Boden'
           : `${einstellungen.bodenabstand} Zellen frei`,
+    });
+
+    const gewaehlteStufe = stufe(einstellungen);
+    bedienung.zeigeRegler('aufloesung', {
+      wert: einstellungen.aufloesung,
+      // Der Name allein („mittel") sagt nicht, wovon er die Mitte ist. Mit den
+      // Gittermaßen daneben ist zu sehen, was die Stufe kostet und einbringt.
+      text: `${gewaehlteStufe.name} · ${gewaehlteStufe.breite} × ${gewaehlteStufe.hoehe} Zellen`,
     });
   }
 
@@ -425,7 +540,13 @@ function windAus(prozent) {
   return Number(((WIND_VOREINSTELLUNG * prozent) / 100).toFixed(4));
 }
 
-/** Das Leitmaß der Form in Zellen bei der eingestellten Größe. */
+/** Die eingestellte Auflösungsstufe samt ihrem Namen. */
+function stufe(einstellungen) {
+  const name = STUFEN[einstellungen.aufloesung];
+  return { name, ...AUFLOESUNGEN[name] };
+}
+
+/** Das Leitmaß der Form in **groben** Zellen bei der eingestellten Größe. */
 function leitmass(aktuell, einstellungen) {
   return Math.max(3, Math.round((aktuell.grundmass * einstellungen.groesse) / 100));
 }
@@ -438,6 +559,11 @@ function leitmass(aktuell, einstellungen) {
  * viel Luft bleibt unter dem Körper" ist das, was man einstellen will, und es
  * bleibt beim Drehen und Vergrößern gleich, statt sich stillschweigend mit zu
  * verschieben.
+ *
+ * Zusammengesetzt wird in groben Zellen, herausgegeben auf dem Gitter der
+ * eingestellten Stufe: `skaliereForm` rechnet zum Schluss um. Deshalb bleibt
+ * eine Reglerstellung beim Auflösungswechsel dieselbe Szene und wird nicht zu
+ * einem kleineren Körper in einem größeren Kanal.
  */
 function baueForm(aktuell, einstellungen) {
   const mass = leitmass(aktuell, einstellungen);
@@ -447,12 +573,81 @@ function baueForm(aktuell, einstellungen) {
     winkel: einstellungen.winkel,
   };
 
-  switch (aktuell.schluessel) {
-    case 'kreis':
-      return { art: 'kreis', ...lage, durchmesser: mass };
-    case 'rechteck':
-      return { art: 'rechteck', ...lage, breite: mass, hoehe: mass };
-    default:
-      return { art: aktuell.schluessel, ...lage, laenge: mass };
+  const inGrobenZellen = (() => {
+    switch (aktuell.schluessel) {
+      case 'kreis':
+        return { art: 'kreis', ...lage, durchmesser: mass };
+      case 'rechteck':
+        return { art: 'rechteck', ...lage, breite: mass, hoehe: mass };
+      default:
+        return { art: aktuell.schluessel, ...lage, laenge: mass };
+    }
+  })();
+
+  return skaliereForm(inGrobenZellen, stufe(einstellungen).faktor);
+}
+
+/**
+ * Wählt die Auflösungsstufe, mit der die Seite auf diesem Gerät aufgeht.
+ *
+ * Zwei Fragen begrenzen sie, und es gilt die gröbere der beiden Antworten:
+ *
+ * 1. **Bringt die Stufe überhaupt sichtbares Detail?** Das Bild wird auf die
+ *    verfügbare Breite gezogen, ein Bildpunkt je Zelle. Rechnet der Kanal mehr
+ *    Zellen, als das Bild Punkte breit ist, kostet das Rechenzeit, ohne dass
+ *    mehr zu erkennen wäre. Auf dem Handy sind das rund 360 Punkte — die feine
+ *    Stufe mit 400 Zellen fällt dort schon aus diesem Grund heraus.
+ * 2. **Läuft die Stufe flüssig?** Ein kurzer Probelauf misst, wie schnell
+ *    dieses Gerät rechnet, statt es aus Bildschirmgröße oder Kernzahl zu
+ *    erraten. Eine Messung altert nicht: ein schnelleres Gerät bekommt von
+ *    selbst eine feinere Voreinstellung, ohne dass hier etwas nachgezogen
+ *    werden müsste.
+ *
+ * Beides zusammen ergibt das, was Etappe 3.2 verlangt: auf dem Handy gröber als
+ * auf dem Rechner. Von Hand bleibt jede Stufe überall wählbar — die Messung
+ * bestimmt nur, womit die Seite aufgeht.
+ */
+function waehleVoreinstellung(zeichenflaeche) {
+  const breiteInPunkten = zeichenflaeche.clientWidth || document.documentElement.clientWidth;
+  const zellenJeSekunde = messeRechenleistung();
+  const zellenJeBild = (RECHENZEIT_JE_BILD / 1000) * zellenJeSekunde;
+
+  // Die feinste Stufe, die beide Bedingungen erfüllt. Erfüllt schon die gröbste
+  // sie nicht, bleibt es bei ihr — gröber geht nicht.
+  let gewaehlt = 0;
+  STUFEN.forEach((name, nummer) => {
+    const { breite, hoehe } = AUFLOESUNGEN[name];
+    const passtInsBild = breite <= breiteInPunkten;
+    const bleibtFluessig = zellenJeBild >= SCHRITTE_JE_BILD_MINDESTENS * breite * hoehe;
+    if (passtInsBild && bleibtFluessig) gewaehlt = nummer;
+  });
+  return gewaehlt;
+}
+
+/**
+ * Misst, wie viele Gitterzellen dieses Gerät in einer Sekunde rechnet.
+ *
+ * Der Probekanal ist leer und wird gleich wieder weggeworfen; gemessen wird nur
+ * die Rechnung selbst, ohne Zeichnen. Die Zellenzahl je Sekunde ist dabei das
+ * brauchbare Maß, weil die Rechenzeit mit der Zellenzahl wächst und nicht
+ * schneller — in Etappe 1.5 über alle drei Stufen nachgemessen.
+ */
+function messeRechenleistung() {
+  const probe = erzeugeKanal({ aufloesung: STUFEN[0] });
+  const zellen = probe.breite * probe.hoehe;
+
+  for (let n = 0; n < AUFWAERMSCHRITTE; n++) schritt(probe);
+
+  let kuerzeste = Infinity;
+  for (let block = 0; block < MESSBLOECKE; block++) {
+    const beginn = performance.now();
+    for (let n = 0; n < SCHRITTE_JE_BLOCK; n++) schritt(probe);
+    const gebraucht = performance.now() - beginn;
+    if (gebraucht < kuerzeste) kuerzeste = gebraucht;
   }
+
+  // Safari rundet `performance.now()` auf ganze Millisekunden. Auf einem sehr
+  // schnellen Gerät kann ein Block deshalb bei null landen; ohne die
+  // Untergrenze käme dort eine unendliche Rechenleistung heraus.
+  return (zellen * SCHRITTE_JE_BLOCK * 1000) / Math.max(kuerzeste, 0.5);
 }

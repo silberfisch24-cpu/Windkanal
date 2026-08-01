@@ -136,9 +136,10 @@
         color: var(--schrift-leise);
       }
 
-      /* Die Zeichenfläche ist nur 200 × 60 Bildpunkte groß — ein Punkt je
-         Rechenzelle. Der Browser vergrößert sie hier auf Bildschirmbreite und
-         glättet dabei; das spart eigenen Vergrößerungscode. */
+      /* Die Zeichenfläche ist so groß wie das Rechengitter — ein Bildpunkt je
+         Zelle, je nach Auflösungsstufe 200 × 60 bis 400 × 120. Der Browser
+         vergrößert sie hier auf Bildschirmbreite und glättet dabei; das spart
+         eigenen Vergrößerungscode. */
       #stroemungsbild {
         display: block;
         width: 100%;
@@ -184,12 +185,15 @@
       <!-- Die Regler stehen bewusst **unter** dem Bild: übereinander gestellt
            brauchen sie auf dem Handy so viel Platz, dass das Bild sonst aus dem
            Sichtfeld rutscht — und gerade beim Ziehen soll man es sehen.
-           Die vier entstehen in bedienung.js aus der Liste in start.js; Bereiche
+           Die fünf entstehen in bedienung.js aus der Liste in start.js; Bereiche
            und Voreinstellungen stehen dadurch nur an einer Stelle. -->
       <div class="reglerleiste" id="reglerleiste" role="group" aria-label="Einstellungen"></div>
       <p class="reglerhinweis">
         Der Wind wirkt ohne Neustart — er wandert vom Einlass durch den Kanal.
-        Größe, Anstellwinkel und Höhe setzen die Strömung neu an.
+        Größe, Anstellwinkel, Höhe und Rechenauflösung setzen die Strömung neu an.
+        Eine feinere Auflösung zeigt schärfere Wirbel, braucht dafür aber mehr
+        Rechenzeit je Bild; voreingestellt ist die Stufe, die auf diesem Gerät
+        zügig vorankommt.
       </p>
     </main>
 

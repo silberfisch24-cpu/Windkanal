@@ -43,7 +43,7 @@ import {
   ZAEHIGKEIT_MINDESTENS,
 } from '../src/kern/loeser.js';
 import { leseFelder, druckBei, wirbelstaerkeBei } from '../src/kern/felder.js';
-import { ausdehnung } from '../src/kern/formen.js';
+import { ausdehnung, skaliereForm } from '../src/kern/formen.js';
 
 const SCHRITTE_GESAMT = 2000;
 const ZWISCHENSTAND_ALLE = 500;
@@ -761,7 +761,7 @@ function pruefeAufloesungUndWind() {
     '  Stufe     Kanal        Zellen   Kreis   ungültig   Dichte kleinste..größte   höchste Geschw.   ms/Schritt   Mio Zellen je s'
   );
   for (const [name, stufe] of Object.entries(AUFLOESUNGEN)) {
-    const hindernis = aufStufe(VERGLEICHSSZENE, stufe.faktor);
+    const hindernis = skaliereForm(VERGLEICHSSZENE, stufe.faktor);
     const kanal = erzeugeKanal({
       aufloesung: name,
       windgeschwindigkeit: WIND_VERGLEICH,
@@ -976,21 +976,6 @@ function rechneUndBeobachte(kanal, schrittzahl) {
     msJeSchritt,
     zellenJeSekunde: (kanal.breite * kanal.hoehe * 1000) / msJeSchritt,
   };
-}
-
-/**
- * Rechnet eine in groben Zellen beschriebene Form auf eine feinere Stufe um.
- * Ohne das zeigte die feine Stufe nicht dieselbe Szene schärfer, sondern einen
- * kleineren Körper in einem größeren Kanal — und der Vergleich sagte nichts aus.
- *
- * Der Anstellwinkel wird nicht mitskaliert: er ist ein Winkel, kein Maß.
- */
-function aufStufe(form, faktor) {
-  const umgerechnet = { ...form };
-  for (const mass of ['x', 'y', 'durchmesser', 'breite', 'hoehe', 'laenge', 'dicke', 'bodenabstand']) {
-    if (umgerechnet[mass] !== undefined) umgerechnet[mass] = Math.round(umgerechnet[mass] * faktor);
-  }
-  return umgerechnet;
 }
 
 /** Hat der Versuch einen Fehler geworfen? Für die Prüfung der Grenzfälle. */
