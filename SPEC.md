@@ -91,7 +91,7 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Dateistruktur:**
   - `index.html` — Einstiegspunkt, lädt die Module direkt
   - `src/kern/` — Fachlogik, kennt weder Browser noch Bildschirm: `loeser.js` (Strömungsrechnung), `formen.js` (Hindernisse als Gitterbelegung), `felder.js` (abgeleitete Größen: Geschwindigkeit, Druck, Wirbelstärke)
-  - `src/ui/` — Oberfläche: `darstellung.js` (Zeichnen), `bedienung.js` (Regler, Maus, Finger), `start.js` (verbindet beides)
+  - `src/ui/` — Oberfläche: `darstellung.js` (Zeichnen), `teilchen.js` (mitströmende Teilchen), `bedienung.js` (Regler, Maus, Finger), `start.js` (verbindet beides)
   - `werkzeug/` — Skripte für die Kommandozeile: `pruefe-kern.js` nimmt Abschnitt 1 ohne Oberfläche ab, `baue-vorschau.js` legt die Seite für die Abnahme zu einer einzigen Datei zusammen (siehe „Vorschau für die Abnahme" unten)
   - `tests/` — automatische Tests (Abschnitt 5)
   - `VERSION.md` — aktuelle Versionsnummer und die Stichpunkte dazu; Grundlage des Tags
@@ -111,6 +111,10 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Regler für die Rechenauflösung** (festgelegt in Etappe 3.2): Der fünfte Regler fährt die drei Stufen aus `AUFLOESUNGEN` durch; sein Wert ist die Nummer der Stufe, weil ein Schieber Zahlen führt. **Die Oberfläche rechnet durchgängig in groben Zellen** — alle Reglerstellungen, `LAGE_X` und die Grundmaße der Formen sind Maße der Stufe `grob`, und erst `baueForm` rechnet sie mit `skaliereForm` auf das Gitter der eingestellten Stufe hoch. Nur so bedeutet eine Reglerstellung nach dem Stufenwechsel dieselbe Szene; ohne diese Umrechnung zeigte die feine Stufe einen kleineren Körper in einem größeren Kanal. Ein Stufenwechsel legt **Kanal, Felder und Zeichenfläche neu an** und setzt die Strömung damit neu an — ein Gitter lässt sich nicht mitten im Lauf austauschen. Die Obergrenze des Höhenreglers wird deshalb aus `AUFLOESUNGEN` gelesen und nicht aus `kanal`: sie muss schon feststehen, während der Kanal für die neue Stufe erst gebaut wird. Die in Etappe 3.1 gemessenen Reglergrenzen gelten unverändert in allen drei Stufen (nachgemessen, siehe Änderungsverlauf).
 - **Die Voreinstellung wird gemessen, nicht geraten** (festgelegt in Etappe 3.2): Womit die Seite aufgeht, begrenzen zwei voneinander unabhängige Fragen, und es gilt die gröbere Antwort. **Bringt die Stufe sichtbares Detail?** Das Bild wird auf die verfügbare Breite gezogen, ein Bildpunkt je Zelle; mehr Zellen als Bildpunkte kosten Rechenzeit, ohne dass mehr zu erkennen wäre. Auf dem Handy stehen rund 350 Punkte zur Verfügung — die feine Stufe mit 400 Zellen fällt dort schon deshalb heraus. **Läuft die Stufe flüssig?** Ein Probelauf von 58 Schritten auf dem groben Gitter misst beim Laden, wie schnell dieses Gerät rechnet; verlangt werden mindestens vier Rechenschritte je Bild. Gemessen statt geraten, weil weder Bildschirmgröße noch Kernzahl verlässlich sagen, wie schnell ein Gerät rechnet, und weil eine Messung nicht altert: ein schnelleres Gerät bekommt von selbst eine feinere Voreinstellung. Gemessen wird in vier Blöcken, von denen der **schnellste** zählt — ein Ausreißer nach unten ist unmöglich, einer nach oben (etwas kam dem Browser dazwischen) dagegen häufig.
 - **Die Farbskala folgt dem Wind** (nachgezogen in Etappe 3.1): Ihre Obergrenze ist ein Vielfaches der Windgeschwindigkeit und wird deshalb je Bild neu gelesen, statt einmal beim Einrichten. Seit der Wind im Lauf verstellbar ist, wäre eine stehengebliebene Grenze nach jeder Änderung falsch — das Bild würde durchweg hell oder durchweg dunkel. Dass die Grenze nicht am größten Wert des Einzelbildes hängt, bleibt unverändert (siehe „Bild auf dem Bildschirm").
+- **Die vier Darstellungsarten** (festgelegt in Etappe 3.3): Drei davon sind **Farbfelder** und schließen einander aus — Geschwindigkeit, Druck, Wirbelstärke; die vierte, die **Teilchen**, liegt als Auflage darüber und hat deshalb einen eigenen Schalter statt einer vierten Schaltfläche in derselben Reihe. Das folgt aus „Darstellung" oben („Teilchen als kurze Striche darüber") und ist die einzige Aufteilung, die alle Kombinationen erreichbar lässt: „welche Größe wird eingefärbt" und „liegen Teilchen darüber" sind zwei Fragen, und zusammen sind Farbfeld und Teilchen am aufschlussreichsten. Ein Wechsel der Ansicht **setzt die Rechnung nicht zurück** — `leseFelder` rechnet ohnehin in jedem Bild alle drei Größen aus, eingefärbt wird nur eine andere davon. Die Namen der drei Größen sind in Kern, Feldern und Oberfläche dieselben (`tempo`, `druck`, `wirbelstaerke`), damit die Zuordnung nirgends nachgeschlagen werden muss.
+- **Einseitige und zweiseitige Farbskalen** (festgelegt in Etappe 3.3): Die Geschwindigkeit kennt kein Vorzeichen und behält ihre **einseitige** Skala (ein Farbton, hell nach dunkel). Druck und Wirbelstärke haben eins, und die Null ist ihre natürliche Mitte — Ruhedruck und drehungsfreie Strömung. Sie bekommen deshalb **zweiseitige** Skalen: von einer hellen Mitte aus in beide Richtungen dunkler werdend, Druck blau → hell → rot, Wirbelstärke violett → hell → orange. Damit liegt die Stärke weiterhin in der Helligkeit und die Richtung im Farbton; eine einseitige Skala müsste das Vorzeichen unterschlagen oder in die Helligkeit stecken, wo es nicht hingehört. **Zwei verschiedene Farbpaare**, obwohl beide Skalen gleich gebaut sind: sonst sähen Druck und Wirbelstärke auf den ersten Blick gleich aus. Beide Paare bleiben bei Rot- und Grünblindheit unterscheidbar, ein Rot-Grün-Paar täte das nicht.
+- **Woran die Skalengrenzen hängen** (festgelegt in Etappe 3.3): Alle drei bleiben **fest je Bild** statt am größten Wert des Einzelbildes zu hängen (Begründung unter „Bild auf dem Bildschirm"), wachsen aber mit dem Wind, weil der sich seit Etappe 3.1 im Lauf verstellen lässt. **Womit** sie wachsen, ist je Größe verschieden und aus dem Verfahren abgeleitet: Geschwindigkeit geradewegs mit dem Wind (Grenze 2 · u), Druck mit dessen **Quadrat**, weil Staudruck ½·ρ·u² ist (Grenze 2 · u²), Wirbelstärke mit dem Wind **je Zelle**, also geteilt durch den Faktor der Auflösungsstufe (Grenze 0,5 · u/f) — auf einem feineren Gitter verteilt sich dieselbe Scherung auf mehr Zellen. Alle drei Zahlen sind gemessen, nicht geschätzt; siehe Änderungsverlauf zum 2026-08-01.
+- **Vier Bildpunkte je Zelle statt einem** (geändert in Etappe 3.3): Das Farbfeld entsteht unverändert mit **einem Bildpunkt je Zelle** — daran ändert sich nichts, es wird nur auf einer unsichtbaren Fläche gemalt und in einem Zug auf die sichtbare gezogen. Die sichtbare Zeichenfläche ist seither **viermal so fein**, weil die Teilchenstriche Linien sind und keine Zellen: Auf 200 Punkten Breite, die der Browser auf gut 900 zieht, ist der dünnste zeichenbare Strich fünf Bildschirmpunkte breit und verwischt — aus Strichen wurden Flecken. Der Umweg über die zweite Fläche ist nötig, weil `putImageData` weder vergrößert noch glättet.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -577,3 +581,62 @@ Fehler.*
      Rechenzeit misst die Geschwindigkeit des Rechners mit und schlägt fehl, wenn
      nebenher etwas anderes läuft — allein ausgeführt ist er grün. Kein Fehler im
      Programm, aber ein Prüfpunkt, der bei Gelegenheit unempfindlicher werden sollte.
+- **2026-08-01:** Etappe 3.3 umgesetzt (zwischen den Darstellungsarten umschalten,
+  Teilchen zuschalten). Dabei festgelegt:
+  1. *Drei Farbfelder als Entweder-oder, die Teilchen als eigener Schalter daneben* —
+     siehe „Die vier Darstellungsarten" unter Architektur. Kein Umfangszuwachs: alle
+     vier stehen von Anfang an in den Anforderungen. Die **Aufteilung** musste
+     entschieden werden, weil der Etappentext beide Lesarten zulässt („zwischen den
+     vier umschalten" gegen „Teilchen zuschalten"); den Ausschlag gab „Darstellung"
+     unter Architektur, wo die Teilchen seit dem ersten Tag „als kurze Striche
+     **darüber**" beschrieben sind.
+  2. *Zweiseitige Skalen für Druck und Wirbelstärke*, mit zwei verschiedenen
+     Farbpaaren — siehe „Einseitige und zweiseitige Farbskalen".
+  3. *Die Skalengrenzen sind gemessen, nicht geschätzt.* Gemessen wurde über
+     4000 Schritte an vier Szenen (Kreis, Platte 30°, Profil, aufsitzendes Rechteck)
+     in allen drei Auflösungsstufen bei Wind 30 % und 100 %, ausgewertet über das
+     99,5-%-Band der Werte im Kanalinneren:
+     - **Druck:** das Band liegt bei 0,29 bis 2,08 · u², die Grenze deckt es mit
+       **2 · u²** ab. Der stärkste Sog (aufsitzendes Rechteck, −4,3 · u²) läuft
+       bewusst ins Skalenende — ihm zuliebe die Skala aufzuziehen machte den ganzen
+       Rest des Bildes farblos.
+     - **Wirbelstärke:** das Band liegt bei 0,15 bis 0,51 · u/f, die Grenze bei
+       **0,5 · u/f**. Dass der Faktor der Stufe hineingehört, ist der eigentliche
+       Befund: mit ihm liegt dasselbe Band in allen drei Stufen bei 0,26 / 0,27 /
+       0,28, ohne ihn liefe es um das Doppelte auseinander.
+     - **Nebenbefund zum Druckbild:** Der über die Kanallänge gleichmäßig abfallende
+       Druck aus Etappe 1.4 ist jetzt zum ersten Mal *im Bild* zu sehen — er liegt
+       bei 0,17 bis 1,55 · u² und damit in derselben Größenordnung wie der Stau vor
+       dem Körper. Das Bild zeigt deshalb eine durchgehende Schräge, auf der sich
+       Stau und Sog abheben. Das ist die Randbedingung aus Etappe 1.1 und kein
+       Fehler; herausgerechnet wird sie nicht, weil das eine Beschönigung wäre. Der
+       Untertitel sagt es dazu.
+  4. *Die Zeichenfläche ist viermal so fein geworden* — siehe „Vier Bildpunkte je
+     Zelle statt einem". Das war **nicht geplant, sondern Folge eines Befunds**: Im
+     ersten Versuch waren die Teilchen auf dem Bildschirm Flecken statt Striche, und
+     die Richtung der Strömung ging darin verloren. Am Farbfeld ändert sich dadurch
+     nichts Sichtbares (im Browser gegengeprüft), an der Rechnung nichts.
+  5. *Was ein Teilchen kostet:* gemessen im Browser, ohne virtuelle Zeit (Wanduhr):
+     Zeichnen in grober Auflösung 0,32 ms ohne und 0,44 ms mit Teilchen, in feiner
+     1,7 ms mit wie ohne. Gegen ein Zeitbudget von 12 ms je Bild und 1,55 bzw.
+     6,29 ms je Rechenschritt fällt das nicht ins Gewicht; die Voreinstellung der
+     Auflösung bleibt davon unberührt.
+  6. *Ungefragt hinzugekommen:* Das Erzeugen der Formschaltflächen und der neuen
+     Ansichtsschaltflächen ist in `bedienung.js` zu **einer** Funktion
+     zusammengezogen — es ist derselbe Fall („eine Reihe, von der immer genau eine
+     gilt"), und zweimal derselbe Code wäre die Art Doppelung, die später an einer
+     Stelle nachgezogen wird und an der anderen nicht.
+  7. *Vom Prüfnetz gefangen:* `baue-vorschau.js` brach ab, weil `ANSICHTEN` nach dem
+     Zusammenlegen doppelt vorgekommen wäre — einmal in `darstellung.js`, einmal in
+     `start.js`. Die in `darstellung.js` heißt jetzt `FARBFELDER`, nach dem, was sie
+     ist. Genau dafür ist die Gegenprobe da (siehe „Vorschau für die Abnahme").
+  8. *An `src/kern/` keine Zeile geändert.* `node werkzeug/pruefe-kern.js` läuft
+     allein ausgeführt mit allen 47 Prüfpunkten durch.
+  9. *Bekannte Folge für die Aufteilung der Seite:* Auf 393 Punkten Breite rückt die
+     Unterkante des Bildes von 498 auf 696 Punkte hinunter — die Bedienleiste hat
+     zwei Gruppen mehr, und „Geschwindigkeit / Druck / Wirbelstärke" bricht dort auf
+     zwei Zeilen um. Im Hochformat des iPhones (852 Punkte) bleibt das Bild ohne
+     Scrollen sichtbar, im Querformat nicht — die schon in Etappe 2.3 ausgewiesene
+     Grenze wird dadurch deutlicher. Seitlich läuft bei 393, 430 und 820 Punkten
+     nichts über, und alle zehn Schaltflächen messen 44 Punkte in der Höhe. Das
+     Sitzen im Hoch- und Querformat bleibt Abnahmekriterium von Etappe 4.2.

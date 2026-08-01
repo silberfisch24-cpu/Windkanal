@@ -171,6 +171,23 @@
           <div class="knopfreihe" id="formauswahl" role="group" aria-labelledby="formtitel"></div>
         </div>
         <div>
+          <span class="gruppentitel" id="ansichttitel">Ansicht</span>
+          <!-- Die drei Farbfelder entstehen ebenfalls in bedienung.js, aus der
+               Liste ANSICHTEN in start.js. -->
+          <div class="knopfreihe" id="ansichtauswahl" role="group" aria-labelledby="ansichttitel"></div>
+        </div>
+        <div>
+          <span class="gruppentitel" id="zusatztitel">Zusätzlich</span>
+          <!-- Die Teilchen liegen über dem Farbfeld und schließen keines davon
+               aus — deshalb ein eigener Schalter statt einer vierten
+               Schaltfläche in der Reihe darüber. -->
+          <div class="knopfreihe" role="group" aria-labelledby="zusatztitel">
+            <button type="button" class="schaltflaeche" id="teilchenschalter" aria-pressed="false">
+              Teilchen
+            </button>
+          </div>
+        </div>
+        <div>
           <span class="gruppentitel" id="lauftitel">Ablauf</span>
           <div class="knopfreihe" role="group" aria-labelledby="lauftitel">
             <button type="button" class="schaltflaeche" id="laufschalter">Anhalten</button>
@@ -193,7 +210,8 @@
         Größe, Anstellwinkel, Höhe und Rechenauflösung setzen die Strömung neu an.
         Eine feinere Auflösung zeigt schärfere Wirbel, braucht dafür aber mehr
         Rechenzeit je Bild; voreingestellt ist die Stufe, die auf diesem Gerät
-        zügig vorankommt.
+        zügig vorankommt. Die Ansicht zu wechseln und die Teilchen zu- oder
+        abzuschalten ändert nichts an der Rechnung — sie läuft dabei weiter.
       </p>
     </main>
 

@@ -5,9 +5,9 @@
  * gibt sie an `darstellung.js` weiter und nimmt von `bedienung.js` entgegen,
  * was angeklickt oder gezogen wurde. Der Kern erfährt davon nichts.
  *
- * Stand Etappe 3.2: Form wählen, anhalten, zurücksetzen, und über fünf Regler
- * Wind, Größe, Anstellwinkel, Höhe über dem Boden und die Rechenauflösung
- * einstellen. Die übrigen Darstellungsarten kommen in 3.3.
+ * Stand Etappe 3.3: Form wählen, anhalten, zurücksetzen, über fünf Regler Wind,
+ * Größe, Anstellwinkel, Höhe über dem Boden und die Rechenauflösung einstellen,
+ * zwischen drei Farbfeldern umschalten und die Teilchen darüberlegen.
  *
  * **Alle Maße dieser Datei sind grobe Zellen** — die der Stufe `grob`. Erst
  * `baueForm` rechnet sie mit dem `faktor` der eingestellten Stufe auf deren
@@ -25,7 +25,7 @@ import {
 } from '../kern/loeser.js';
 import { normalisiereForm, ausdehnung, skaliereForm } from '../kern/formen.js';
 import { erzeugeFelder, leseFelder } from '../kern/felder.js';
-import { erzeugeDarstellung } from './darstellung.js';
+import { erzeugeDarstellung, ANFANGSANSICHT } from './darstellung.js';
 import { erzeugeBedienung } from './bedienung.js';
 
 /**
@@ -77,8 +77,61 @@ const SZENEN = [
   },
 ];
 
+/**
+ * Die drei Farbfelder, zwischen denen sich umschalten lässt.
+ *
+ * Der Schlüssel ist zugleich der Name des Feldes in `leseFelder` und der der
+ * Ansicht in `darstellung.js` — dieselbe Größe heißt überall gleich.
+ *
+ * Die **Teilchen sind keine vierte Schaltfläche in dieser Reihe**, sondern ein
+ * eigener Schalter daneben. Sie liegen als kurze Striche über dem Farbfeld
+ * (siehe „Darstellung" in SPEC.md) und schließen keines der drei aus: „welche
+ * Größe wird eingefärbt" und „liegen Teilchen darüber" sind zwei Fragen. Als
+ * vierte Schaltfläche in derselben Reihe müsste man sich zwischen den Teilchen
+ * und jedem Farbfeld entscheiden — und zusammen sind sie am aufschlussreichsten.
+ *
+ * `deutung` erklärt die Farben. Ohne diesen Satz sieht man beim Druck und bei
+ * der Wirbelstärke zwar, *dass* sich etwas ändert, aber nicht, in welche
+ * Richtung — die Legende dazu kommt erst in Etappe 4.1.
+ */
+const ANSICHTEN = [
+  {
+    schluessel: 'tempo',
+    name: 'Geschwindigkeit',
+    groesse: 'Geschwindigkeit der Luft',
+    deutung: 'hell ist langsam, dunkel ist schnell',
+  },
+  {
+    schluessel: 'druck',
+    name: 'Druck',
+    groesse: 'Druck der Luft',
+    // Der leichte Abfall über die ganze Kanallänge ist keine Erscheinung am
+    // Körper, sondern die Randbedingung: hinten hält der Auslass den Druck
+    // fest, davor staut die Reibung. Ohne diesen Hinweis liest man das
+    // durchgehende Gefälle als Fehler (siehe Änderungsverlauf zu Etappe 1.4).
+    deutung:
+      'rot ist Überdruck, blau ist Unterdruck, hell ist der Ruhedruck; über die ganze Kanallänge fällt er zusätzlich leicht ab, das ist die Reibung',
+  },
+  {
+    schluessel: 'wirbelstaerke',
+    name: 'Wirbelstärke',
+    groesse: 'Drehung der Luft',
+    deutung:
+      'orange dreht gegen den Uhrzeigersinn, violett mit ihm, hell heißt drehungsfrei',
+  },
+];
+
 /** Womit die Seite aufgeht. */
 const ANFANGSFORM = 'kreis';
+
+/**
+ * Ob die Teilchen von Anfang an liegen.
+ *
+ * Aus: Der erste Blick soll das Farbfeld sein, das Etappe 2.1 abgenommen hat.
+ * Die Teilchen sind eine Zutat, die man dazuschaltet — und wer sie gleich
+ * mitgeliefert bekäme, könnte den Unterschied nicht sehen, den sie machen.
+ */
+const TEILCHEN_ANFANGS = false;
 
 /** Wo das Hindernis im Kanal steht, in groben Zellen vom Einlass aus gezählt. */
 const LAGE_X = 40;
@@ -213,6 +266,8 @@ function starte() {
   const einstellungen = Object.fromEntries(REGLER.map((regler) => [regler.schluessel, regler.wert]));
 
   let gewaehlteForm = ANFANGSFORM;
+  let gewaehlteAnsicht = ANFANGSANSICHT;
+  let teilchenAn = TEILCHEN_ANFANGS;
 
   // Womit die Seite aufgeht, hängt vom Gerät ab — siehe `waehleVoreinstellung`.
   einstellungen.aufloesung = waehleVoreinstellung(zeichenflaeche);
@@ -239,19 +294,26 @@ function starte() {
 
   const bedienung = erzeugeBedienung({
     auswahlfeld: document.querySelector('#formauswahl'),
+    ansichtfeld: document.querySelector('#ansichtauswahl'),
     laufschalter: document.querySelector('#laufschalter'),
     ruecksetzer: document.querySelector('#ruecksetzer'),
+    teilchenschalter: document.querySelector('#teilchenschalter'),
     reglerfeld: document.querySelector('#reglerleiste'),
     formen: SZENEN,
+    ansichten: ANSICHTEN,
     regler: REGLER,
     beiFormwahl: waehleForm,
+    beiAnsichtwahl: waehleAnsicht,
     beiLaufwechsel: wechsleLauf,
     beiRuecksetzen: setzeZurueck,
+    beiTeilchenwechsel: wechsleTeilchen,
     beiReglerwechsel: stelleEin,
   });
 
   bedienung.zeigeForm(gewaehlteForm);
+  bedienung.zeigeAnsicht(gewaehlteAnsicht);
   bedienung.zeigeLauf(laeuft);
+  bedienung.zeigeTeilchen(teilchenAn);
   legeKanalAn();
   starteSchleife();
 
@@ -265,6 +327,36 @@ function starte() {
     gewaehlteForm = schluessel;
     bedienung.zeigeForm(schluessel);
     baueHindernisNeu();
+  }
+
+  /**
+   * Wechselt das Farbfeld.
+   *
+   * Die Strömung läuft dabei weiter: Es wird nur eine andere der Größen
+   * eingefärbt, die `leseFelder` ohnehin in jedem Bild alle drei ausrechnet.
+   * Genau darauf zielt das Abnahmekriterium — „alle vier Ansichten am **selben**
+   * Strömungsbild durchschalten".
+   */
+  function waehleAnsicht(schluessel) {
+    if (schluessel === gewaehlteAnsicht) return;
+    gewaehlteAnsicht = schluessel;
+    bedienung.zeigeAnsicht(schluessel);
+    beschrifte();
+    // Auch im angehaltenen Zustand muss das Bild wechseln — sonst sähe die
+    // Schaltfläche wirkungslos aus.
+    zeichneStand();
+  }
+
+  /** Legt die Teilchen über das Farbfeld oder nimmt sie wieder weg. */
+  function wechsleTeilchen() {
+    teilchenAn = !teilchenAn;
+    bedienung.zeigeTeilchen(teilchenAn);
+    // Beim Einschalten frisch aussäen: Der Schwarm ist über die Zeit, in der er
+    // unsichtbar war, ohnehin nicht mitgetrieben, und stünde sonst noch dort,
+    // wo die Strömung vor dem Ausschalten war.
+    if (teilchenAn) darstellung.saeeTeilchenNeu();
+    beschrifte();
+    zeichneStand();
   }
 
   /**
@@ -303,6 +395,7 @@ function starte() {
   /** Setzt die Strömung auf den Anfangszustand zurück, ohne etwas zu verstellen. */
   function setzeZurueck() {
     setzeAufAnfangszustand(kanal);
+    darstellung.saeeTeilchenNeu();
     vergissMessung();
     zeichneStand();
   }
@@ -339,6 +432,9 @@ function starte() {
   function baueHindernisNeu() {
     begrenzeHoehe();
     setzeHindernis(kanal, baueForm(szene(gewaehlteForm), einstellungen));
+    // Die Wandzellen liegen jetzt anders; Teilchen, die eben noch frei standen,
+    // stecken sonst in der neuen Form.
+    darstellung.saeeTeilchenNeu();
     vergissMessung();
     beschrifteRegler();
     beschrifte();
@@ -453,7 +549,7 @@ function starte() {
     } while (schritte < SCHRITTE_HOECHSTENS && performance.now() < bis);
 
     leseFelder(kanal, felder);
-    darstellung.zeichne(felder);
+    darstellung.zeichne(felder, { ansicht: gewaehlteAnsicht, teilchen: teilchenAn, schritte });
 
     bilderSeitAnzeige++;
     schritteSeitAnzeige += schritte;
@@ -475,13 +571,21 @@ function starte() {
   /**
    * Malt einmalig ein Bild aus dem gegenwärtigen Zustand.
    *
-   * Nötig, weil Form wechseln, Zurücksetzen und die Regler auch im angehaltenen
-   * Zustand bedienbar sind: ohne dieses eine Bild stünde noch der alte Stand auf
-   * dem Schirm, und es sähe aus, als hätte die Bedienung nichts getan.
+   * Nötig, weil Form wechseln, Ansicht wechseln, Zurücksetzen und die Regler
+   * auch im angehaltenen Zustand bedienbar sind: ohne dieses eine Bild stünde
+   * noch der alte Stand auf dem Schirm, und es sähe aus, als hätte die Bedienung
+   * nichts getan.
+   *
+   * Ohne Schritte: Die Teilchen werden mitgezeichnet, treiben aber nicht weiter —
+   * hier ist ja keine Zeit vergangen.
    */
   function zeichneStand() {
     leseFelder(kanal, felder);
-    darstellung.zeichne(felder);
+    darstellung.zeichne(felder, {
+      ansicht: gewaehlteAnsicht,
+      teilchen: teilchenAn,
+      schritte: 0,
+    });
     zeigeAnzeige();
   }
 
@@ -512,11 +616,27 @@ function starte() {
       `${letzteBildfolge} Bilder je Sekunde · ${letzteSchritteJeBild} Rechenschritte je Bild · ${stand}`;
   }
 
+  /** Schreibt unter die Überschrift, was gerade zu sehen ist. */
   function beschrifte() {
-    const text = `Geschwindigkeit der Luft um ${szene(gewaehlteForm).beschreibung} — hell ist langsam, dunkel ist schnell.`;
-    untertitel.textContent = text;
-    zeichenflaeche.setAttribute('aria-label', `Farbfeld der Strömungsgeschwindigkeit um ${szene(gewaehlteForm).beschreibung}`);
+    const gezeigt = ansicht(gewaehlteAnsicht);
+    const koerper = szene(gewaehlteForm).beschreibung;
+    const zusatz = teilchenAn ? ' Die Teilchen treiben mit der Luft.' : '';
+
+    untertitel.textContent = `${gezeigt.groesse} um ${koerper} — ${gezeigt.deutung}.${zusatz}`;
+    zeichenflaeche.setAttribute(
+      'aria-label',
+      `Farbfeld: ${gezeigt.groesse} um ${koerper}${teilchenAn ? ', mit mittreibenden Teilchen' : ''}`
+    );
   }
+}
+
+/** Die Ansicht zu einem Schlüssel. Ein unbekannter Schlüssel ist ein Programmfehler. */
+function ansicht(schluessel) {
+  const gefunden = ANSICHTEN.find((eintrag) => eintrag.schluessel === schluessel);
+  if (gefunden === undefined) {
+    throw new Error(`Unbekannte Ansicht: ${schluessel}`);
+  }
+  return gefunden;
 }
 
 /** Die Szene zu einem Schlüssel. Ein unbekannter Schlüssel ist ein Programmfehler. */
