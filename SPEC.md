@@ -7,8 +7,8 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 3.1 umgesetzt, noch nicht abgenommen (`v1.0`) — die Szene
-  lässt sich einstellen.**
+- **Aktueller Stand:** **Etappe 3.1 abgenommen (`v1.0`) — die Szene lässt sich
+  einstellen.**
   Unter <https://silberfisch24-cpu.github.io/Windkanal/> zeigt die Seite die laufende
   Strömung als Farbfeld der Geschwindigkeit; über dem Bild lässt sich zwischen Kreis,
   Rechteck, Platte und Profil wechseln, die Strömung anhalten und zurücksetzen, unter dem
@@ -162,7 +162,7 @@ Commit-Nachrichten verweisen auf diese Nummern.*
 
 ### Abschnitt 3 — Erweiterungen und Sonderfälle
 
-- [x] **3.1** *(umgesetzt 2026-08-01, Abnahme offen, `v1.0`)* Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und Höhe über dem Boden sind über Regler einstellbar und wirken sofort.
+- [x] **3.1** *(abgenommen 2026-08-01, v1.0)* Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und Höhe über dem Boden sind über Regler einstellbar und wirken sofort.
   - Abnahme: Anstellwinkel des Profils langsam vergrößern; ab einem gewissen Winkel reißt die Strömung sichtbar ab.
   - Noch nicht: Die Bereiche der Regler sind enger, als es die reine Anschauung hergäbe —
     weiter gespannt zerfällt das Bild, weil sich die Rechnung aufschaukelt (gemessen, siehe
