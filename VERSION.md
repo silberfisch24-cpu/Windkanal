@@ -1,46 +1,44 @@
-v0.9
-Die Seite ist öffentlich erreichbar und läuft auf iPhone und iPad.
-Damit ist Abschnitt 2 abgeschlossen.
+v1.0
+Die Szene lässt sich einstellen: Wind, Größe, Anstellwinkel und Höhe über dem
+Boden liegen auf Reglern und wirken beim Ziehen.
 
-Etappe 2.3 (abgenommen):
-- Unter <https://silberfisch24-cpu.github.io/Windkanal/> ist die Seite ohne
-  Installation zu öffnen — auf dem Rechner, auf dem iPhone und auf dem iPad
-- Die Schaltflächen sind mit dem Finger bedienbar: Form wechseln, anhalten,
-  weiterlaufen lassen und zurücksetzen gehen alle am Telefon
-- `.nojekyll` in der Wurzel: GitHub liefert die Dateien unverändert aus, ohne
-  einen Umbauschritt dazwischen. Am heutigen Bestand ändert das nichts — es
-  nimmt den Schritt heraus, bevor er später an einer neuen Datei scheitern oder
-  sie stillschweigend weglassen kann
-- Die Hervorhebung beim Überfahren einer Schaltfläche gilt nur noch für Maus und
-  Trackpad. Auf dem Touchscreen blieb sie nach dem Antippen hängen und sah aus,
-  als wäre die Schaltfläche gewählt
-- An `src/` keine Zeile geändert; `pruefe-kern.js` läuft unverändert durch
+Etappe 3.1:
+- Vier Regler unter dem Bild: Wind, Größe, Anstellwinkel, Höhe über dem Boden.
+  Sie wirken beim Ziehen, nicht erst beim Loslassen
+- Die Reglerstellungen bleiben beim Formwechsel stehen. Nur so lassen sich
+  Platte und Profil bei gleicher Größe und gleichem Anstellwinkel
+  gegeneinanderhalten — genau darauf zielt das Erfolgskriterium des Projekts
+- Der Wind wirkt ohne Neustart der Strömung und wandert vom Einlass durch den
+  Kanal. Größe, Anstellwinkel und Höhe setzen die Strömung neu an, weil sie die
+  Wände im Gitter verschieben
+- Die Höhe wird als Bodenabstand eingestellt (0 heißt „sitzt auf dem Boden").
+  Ihre Obergrenze wandert mit Form, Größe und Anstellung mit, damit der Körper
+  nicht an die Decke stößt
+- Beim Kreis ist der Winkelregler gesperrt statt wirkungslos
+- Die Farbskala folgt jetzt der eingestellten Windgeschwindigkeit; sonst wäre
+  das Bild nach einer Änderung durchweg hell oder durchweg dunkel
 
-Unterwegs festgelegt:
-- Handybreiten lassen sich im kopflosen Browser **nicht** über `--window-size`
-  prüfen: Chrome erzwingt eine Mindestfensterbreite von 500 Punkten und
-  beschneidet das Bild bloß auf den verlangten Wert. Die Seite sieht dann aus,
-  als liefe sie über den Rand, obwohl sie es nicht tut. Gemessen wird stattdessen
-  in einem Rahmen fester Breite
-- Nachgemessen bei 393 (iPhone hochkant), 852 (iPhone quer) und 820 Punkten
-  (iPad): nichts läuft seitlich über, alle sechs Schaltflächen sind mindestens
-  44 Punkte groß
-- Ein Branch lässt sich vor dem Merge auf dem Handy prüfen, indem die Dateien
-  über einen fremden Ausliefer-Dienst von einem festen Commit geholt werden.
-  Nötig, weil die Artifact-Vorschau alle Module zu einer Datei zusammenlegt und
-  damit gerade das Laden der echten Dateiaufteilung nicht zeigt
+Unterwegs gemessen:
+- Die Reglerbereiche sind enger, als es die Anschauung hergäbe, und die Grenzen
+  sind gemessen: Wind höchstens 100 % der bisherigen Geschwindigkeit, Größe
+  höchstens 115 %, Anstellwinkel höchstens ±30°. Weiter gespannt zerfällt das
+  Bild, weil die Luft an der Körperkante zu schnell wird und sich die Rechnung
+  aufschaukelt
+- Dabei hat sich gezeigt, dass die im Kern hinterlegte Windgrenze 0,12 für
+  aufsitzende stumpfe Körper zu hoch ist — sie war an einer freistehenden Platte
+  gemessen. Der Kern bleibt unverändert, die Oberfläche bleibt darunter
+- 31 Grenzfälle über je 3000 Schritte durchgerechnet: alle stabil
+- Die Regler stehen unter dem Bild, weil sie es auf Handybreite sonst aus dem
+  Sichtfeld schöben (758 statt 315 Bildpunkte bis zum Bildanfang)
 
 Bekannte Grenzen dieses Standes:
-- Im Querformat des iPhones muss man scrollen, um das Strömungsbild ganz und die
-  Laufanzeige darunter zu sehen. Abgeschnitten ist nichts; das Sitzen im Hoch-
-  und Querformat ist Abnahmekriterium von Etappe 4.2
-- Die Maße der Formen sind weiterhin fest eingebaut. Größe, Anstellwinkel, Höhe
-  über dem Boden und Windgeschwindigkeit werden erst in Etappe 3.1 einstellbar
+- Kein Regler für die Rechenauflösung; die Voreinstellung richtet sich noch nicht
+  nach dem Gerät (Etappe 3.2)
 - Nur eine der vier Darstellungsarten, weiterhin ohne Legende (Etappen 3.3
-  und 4.1). Kein Dunkelmodus, keine Reaktion auf Fenstergrößen oder Tabwechsel
-  (Etappen 3.4 und 4.2)
-- Wie flüssig die Rechnung auf dem iPhone läuft, ist nicht gemessen. Der Regler
-  für die Auflösung kommt in Etappe 3.2
+  und 4.1)
+- Sehr weit aufgedrehte Einstellungen sind ausgeschlossen statt aufgefangen. Ein
+  Auffangnetz für zerfallende Rechnungen ist Etappe 3.4
+- Im Querformat muss man weiterhin scrollen (Etappe 4.2)
 
-Als Nächstes Etappe 3.1: Windgeschwindigkeit, Hindernisgröße, Anstellwinkel und
-Höhe über dem Boden über Regler einstellbar machen.
+Als Nächstes Etappe 3.2: ein Regler für die Rechenauflösung, mit einer
+Voreinstellung passend zum Gerät.
