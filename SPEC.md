@@ -7,24 +7,25 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 3.1 abgenommen (`v1.0`) — die Szene lässt sich
-  einstellen.**
+- **Aktueller Stand:** **Etappe 3.2 abgenommen (`v1.1`) — die Szene lässt sich
+  einstellen, die Rechenauflösung auch.**
   Unter <https://silberfisch24-cpu.github.io/Windkanal/> zeigt die Seite die laufende
   Strömung als Farbfeld der Geschwindigkeit; über dem Bild lässt sich zwischen Kreis,
   Rechteck, Platte und Profil wechseln, die Strömung anhalten und zurücksetzen, unter dem
-  Bild stellen vier Regler Wind, Größe, Anstellwinkel und Höhe über dem Boden ein — ohne
-  Neuladen, auf dem Rechner wie mit dem Finger. Darunter liegt die in Abschnitt 1
-  fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel
-  und Höhe über dem Boden, Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei
-  Auflösungsstufen bei einstellbarer Windgeschwindigkeit. Prüfbar über
-  `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60 Sekunden). Frühere
-  Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal, `v0.3` Hindernis im
-  Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6` Auflösung und
-  Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite bedienbar,
-  `v0.9` öffentlich erreichbar und auf dem Handy lauffähig. Noch nicht: kein Regler für
-  die Auflösung, nur eine der vier Darstellungsarten, keine Legende, im Querformat muss
-  man scrollen. Als Nächstes **Etappe 3.2** — Regler für die Rechenauflösung, mit einer
-  Voreinstellung passend zum Gerät.
+  Bild stellen fünf Regler Wind, Größe, Anstellwinkel, Höhe über dem Boden und die
+  Rechenauflösung ein — ohne Neuladen, auf dem Rechner wie mit dem Finger. Womit die Seite
+  aufgeht, misst sie beim Laden selbst: auf dem Handy gröber als auf dem Rechner. Darunter
+  liegt die in Abschnitt 1 fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen
+  mit Größe, Anstellwinkel und Höhe über dem Boden, Geschwindigkeit, Druck und
+  Wirbelstärke ablesbar, drei Auflösungsstufen bei einstellbarer Windgeschwindigkeit.
+  Prüfbar über `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60
+  Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal,
+  `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6`
+  Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite
+  bedienbar, `v0.9` öffentlich erreichbar und auf dem Handy lauffähig, `v1.0` Szene über
+  Regler einstellbar. Noch nicht: nur eine der vier Darstellungsarten, keine Legende, kein
+  Auffangnetz für zerfallende Rechnungen, im Querformat muss man scrollen. Als Nächstes
+  **Etappe 3.3** — zwischen den vier Darstellungsarten umschalten, Teilchen zuschalten.
 
 ---
 
@@ -171,8 +172,13 @@ Commit-Nachrichten verweisen auf diese Nummern.*
     Änderungsverlauf). Ein weiterer Bereich braucht entweder eine unempfindlichere Rechnung
     oder das Auffangnetz aus Etappe 3.4. Die Regler stehen unter dem Bild; ob sie im
     Querformat mit dem Bild zusammen ins Sichtfeld passen, ist Abnahmekriterium von 4.2.
-- [ ] **3.2** Ein Regler stellt die Rechenauflösung ein; die Voreinstellung richtet sich nach dem Gerät.
+- [x] **3.2** *(abgenommen 2026-08-01, v1.1)* Ein Regler stellt die Rechenauflösung ein; die Voreinstellung richtet sich nach dem Gerät.
   - Abnahme: Auf dem Handy ist die Voreinstellung gröber als auf dem Rechner; die feinste Stufe zeigt schärfere Wirbel.
+  - Noch nicht: Die Obergrenze des Höhenreglers unterscheidet sich zwischen den Stufen um
+    eine grobe Zelle — die Rundung der skalierten Maße, kein Fehler. Die feine Stufe kommt
+    auf schwachen Geräten langsam voran (auf dem Prüfrechner 1,6 Rechenschritte je Bild);
+    voreingestellt wird sie deshalb nur, wo sie mindestens vier schafft. Ob eine
+    zerfallende Rechnung aufgefangen wird, bleibt Etappe 3.4.
 - [ ] **3.3** Zwischen den vier Darstellungsarten lässt sich umschalten, die Teilchen lassen sich zuschalten.
   - Abnahme: Alle vier Ansichten am selben Strömungsbild durchschalten; die Teilchen treiben sichtbar mit.
 - [ ] **3.4** Ungewöhnliche Situationen führen zu vernünftigem Verhalten statt zu kaputten Bildern.
