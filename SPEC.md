@@ -804,3 +804,34 @@ Fehler.*
     auf den Schirm. Bei 375 Punkten (iPhone SE) sind es 671 statt 754; dort
     bricht die Ansichtsreihe weiterhin auf zwei Zeilen um, weil „Geschwindigkeit"
     allein 145 Punkte breit ist.
+- **2026-08-02 (Etappe 3.4):** *Drei von 288 Reglerkombinationen zerfallen
+  wirklich — die Grenzen aus 3.1 halten fast, aber nicht ganz.* Durchgerechnet
+  wurden alle Kombinationen aus vier Formen, beiden Windenden (10 % und 100 %),
+  beiden Größenenden (50 % und 115 %), drei Anstellwinkeln (−30°, 0°, +30°),
+  zwei Höhen (aufsitzend und 21 Zellen frei) und allen drei Auflösungsstufen,
+  je 3000 Schritte:
+  - `mittel`, Platte, aufsitzend, alles am Anschlag → Zerfall bei Schritt 2950
+  - `fein`, Rechteck, 21 Zellen frei, alles am Anschlag → Schritt 3000
+  - `fein`, Platte, aufsitzend, alles am Anschlag → Schritt 2600
+  Allen dreien gemeinsam: **Wind, Größe und Anstellwinkel gleichzeitig am
+  Anschlag.** Die Messungen aus 3.1 und 3.2 liefen kürzer und haben das deshalb
+  nicht gesehen — dort galt der Bereich als „an den ungünstigsten Fällen
+  abgesichert", was so nicht stimmt.
+  - **Die Reglergrenzen bleiben trotzdem stehen.** Um diese eine Ecke herum
+    verengt, wären sie für alle 285 unbedenklichen Fälle mit beschnitten. Genau
+    dafür ist das Auffangnetz da: Die Ecke bleibt erreichbar und meldet sich von
+    selbst.
+  - **Folge für das Auffangnetz:** `ERHOLUNGSSCHRITTE` muss über dem Abstand
+    liegen, in dem ein Zusammenbruch wiederkehrt, sonst wäre die Zählung jedes
+    Mal zurückgesetzt, bevor sie die drei erreicht — die Seite liefe endlos aus
+    Neuansetzen und Zerfallen. Von 1000 auf **5000** angehoben (früheste
+    Wiederkehr 2600).
+  - **Folge für die Prüfung:** Teil 9 in `pruefe-kern.js` hatte als Beleg für
+    „kein Fehlalarm" ausgerechnet eine dieser drei Szenen genommen und bestand
+    nur, weil er bei 2000 Schritten aufhört. Er nimmt jetzt dieselbe Platte
+    21 Zellen über dem Boden — die schärfste Szene, von der nachgewiesen ist,
+    dass sie hält.
+  - Der Durchlauf selbst wird **nicht** in `pruefe-kern.js` aufgenommen: 62
+    Minuten sind für ein Abnahmeskript zu lang, und ein Prüfpunkt, der
+    fehlschlägt, sobald jemand die Rechnung unempfindlicher macht, wäre ein
+    schlechter Prüfpunkt.

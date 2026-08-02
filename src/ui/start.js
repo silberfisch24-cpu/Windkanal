@@ -163,14 +163,20 @@ const WIND_VOREINSTELLUNG = 0.1;
  * Der Wind reicht deshalb nur bis 100 % (= 0,10) statt bis zu den 0,12, die
  * `loeser.js` zuließe: Diese 0,12 wurden in Etappe 1.5 an einer freistehenden
  * Platte gemessen — ein aufsitzendes Rechteck bei 30° hält sie nicht aus.
- * Größe bis 115 % und Anstellung bis ±30° sind an denselben ungünstigsten
- * Fällen abgesichert. Ein weiterer Bereich bräuchte entweder eine
- * unempfindlichere Rechnung oder das Auffangnetz aus Etappe 3.4.
  *
- * Die Grenzen gelten in **allen drei Auflösungsstufen** — nachgemessen in
- * Etappe 3.2 (siehe Änderungsverlauf zum 2026-08-01): über 3000 Schritte
- * entsteht in keiner Stufe ein ungültiger Wert. Sie müssen deshalb nicht je
- * Stufe verengt werden.
+ * **Die Grenzen halten fast, aber nicht ganz.** Etappe 3.4 hat alle 288
+ * Kombinationen aus vier Formen, beiden Windenden, beiden Größenenden, drei
+ * Anstellwinkeln, zwei Höhen und drei Auflösungsstufen über je 3000 Schritte
+ * durchgerechnet. Drei davon zerfallen — alle drei mit **Wind, Größe und
+ * Anstellwinkel gleichzeitig am Anschlag**, und alle erst nach 2600 bis 2950
+ * Schritten. Die früheren Messungen aus 3.1 und 3.2 liefen kürzer und haben sie
+ * deshalb nicht gesehen.
+ *
+ * Die Grenzen bleiben trotzdem stehen, statt um diese Ecke herum verengt zu
+ * werden: Sie würden dann für alle 285 unbedenklichen Fälle mit beschnitten, und
+ * genau dafür ist das Auffangnetz aus Etappe 3.4 da. Es setzt die Strömung neu
+ * an und hält nach dem dritten Mal an — die Ecke ist damit erreichbar und sagt
+ * von selbst Bescheid.
  */
 const REGLER = [
   { schluessel: 'wind', name: 'Wind', mindestens: 10, hoechstens: 100, schritt: 5, wert: 100 },
@@ -278,10 +284,23 @@ const PRUEFABSTAND = 10;
  *
  * Gezählt wird in Folge: Ein Auffangvorgang, nach dem die Rechnung wieder lange
  * durchhält, soll nicht ewig nachwirken. `ERHOLUNGSSCHRITTE` legt fest, ab wann
- * das gilt — mehr als das Zehnfache dessen, was ein Zerfall braucht.
+ * das gilt.
+ *
+ * **Diese Zahl muss über dem Abstand liegen, in dem ein Zusammenbruch
+ * wiederkehrt** — sonst wäre die Zählung jedes Mal schon zurückgesetzt, bevor
+ * sie die drei erreicht, und die Seite liefe genau in die endlose Folge, die
+ * verhindert werden soll. Der Durchlauf über alle 288 Reglerkombinationen am
+ * 2026-08-02 hat die drei Fälle gefunden, die überhaupt zerfallen; der früheste
+ * bei Schritt 2600 (siehe Änderungsverlauf in `SPEC.md`). 5000 liegt darüber und
+ * lässt einer einmalig gestolperten Rechnung zugleich reichlich Gelegenheit, sich
+ * als gesund zu erweisen.
+ *
+ * So lange steht dann auch die Meldung in der Laufanzeige. Das ist Absicht: Sie
+ * ist wahr, solange nicht feststeht, dass es dabei bleibt, und ein Hinweis, der
+ * nach zwei Sekunden verschwindet, wird ohnehin überlesen.
  */
 const AUFFANGVERSUCHE = 3;
-const ERHOLUNGSSCHRITTE = 1000;
+const ERHOLUNGSSCHRITTE = 5000;
 
 starte();
 
