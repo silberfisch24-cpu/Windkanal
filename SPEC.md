@@ -7,27 +7,30 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 3.3 abgenommen (`v1.2`) — alle vier Darstellungsarten
-  sind da.**
+- **Aktueller Stand:** **Etappen 3.4 und 3.5 abgenommen (`v1.3`) — Abschnitt 3 ist
+  bis auf die neu aufgenommene Etappe 3.6 abgearbeitet.**
   Unter <https://silberfisch24-cpu.github.io/Windkanal/> läuft die Strömung als Farbfeld;
   über dem Bild lässt sich zwischen Kreis, Rechteck, Platte und Profil wechseln, zwischen
   den drei Farbfeldern Geschwindigkeit, Druck und Wirbelstärke umschalten, die
-  mitströmenden Teilchen als Striche darüberlegen, anhalten und zurücksetzen; unter dem
-  Bild stellen fünf Regler Wind, Größe, Anstellwinkel, Höhe über dem Boden und die
-  Rechenauflösung ein — ohne Neuladen, auf dem Rechner wie mit dem Finger. Womit die Seite
-  aufgeht, misst sie beim Laden selbst: auf dem Handy gröber als auf dem Rechner. Darunter
-  liegt die in Abschnitt 1 fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen
-  mit Größe, Anstellwinkel und Höhe über dem Boden, Geschwindigkeit, Druck und
-  Wirbelstärke ablesbar, drei Auflösungsstufen bei einstellbarer Windgeschwindigkeit.
-  Prüfbar über `node werkzeug/pruefe-kern.js` (acht Teile, 47 Prüfpunkte, etwa 60
-  Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2` Strömung im leeren Kanal,
-  `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6`
-  Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite
-  bedienbar, `v0.9` öffentlich erreichbar und auf dem Handy lauffähig, `v1.0` Szene über
-  Regler einstellbar, `v1.1` Rechenauflösung über einen Regler. Noch nicht: keine Legende
-  zu den Skalen, kein Auffangnetz für zerfallende Rechnungen, die Bedienleiste braucht auf
-  dem Handy zu viel Höhe, das Druckbild pulsiert im Takt der Wirbelablösung (untersucht,
-  echte Erscheinung). Als Nächstes **Etappe 3.5** — die Einstellungen einklappbar machen.
+  mitströmenden Teilchen als Striche darüberlegen, anhalten und zurücksetzen; **unter dem
+  Bild klappt ein Feld die fünf Regler auf** — Wind, Größe, Anstellwinkel, Höhe über dem
+  Boden und Rechenauflösung —, auf dem Rechner offen, auf dem Handy zu. Dort passt die
+  Seite dadurch ohne Scrollen auf den Schirm. Womit sie aufgeht, misst sie beim Laden
+  selbst. **Zerfällt die Rechnung, fängt die Seite das auf**: neu ansetzen, sagen was war,
+  beim dritten Mal anhalten. Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik:
+  Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden,
+  Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei Auflösungsstufen bei
+  einstellbarer Windgeschwindigkeit. Prüfbar über `node werkzeug/pruefe-kern.js` (neun
+  Teile, 51 Prüfpunkte, etwa 60 Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2`
+  Strömung im leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5`
+  abgeleitete Größen, `v0.6` Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem
+  Bildschirm, `v0.8` Seite bedienbar, `v0.9` öffentlich erreichbar und auf dem Handy
+  lauffähig, `v1.0` Szene über Regler einstellbar, `v1.1` Rechenauflösung über einen
+  Regler, `v1.2` alle vier Darstellungsarten. Noch nicht: keine Legende zu den Skalen; die
+  obere Ecke der Regler zerfällt weiterhin und wird nur aufgefangen (Etappe 3.6); das
+  Druckbild pulsiert im Takt der Wirbelablösung (untersucht, echte Erscheinung); im
+  Querformat muss man scrollen (Etappe 4.2). Als Nächstes **Etappe 3.6** — im kritischen
+  Bereich sichtbar nachdämpfen, statt es auf den Zusammenbruch ankommen zu lassen.
 
 ---
 
@@ -196,12 +199,28 @@ Commit-Nachrichten verweisen auf diese Nummern.*
     Wer es ruhiger will, dreht den Wind herunter. Keine Legende zu den drei Skalen
     (Etappe 4.1). Die Bedienleiste ist um zwei Gruppen gewachsen und drückt das Bild
     auf dem Handy nach unten — dafür ist Etappe 3.5 aufgenommen.
-- [ ] **3.4** Ungewöhnliche Situationen führen zu vernünftigem Verhalten statt zu kaputten Bildern.
+- [x] **3.4** *(abgenommen 2026-08-02, v1.3)* Ungewöhnliche Situationen führen zu vernünftigem Verhalten statt zu kaputten Bildern.
   - Abnahme: Fenster verkleinern, Gerät drehen, Tab wegschalten und zurückkommen, extreme Reglerstellungen wählen — die Darstellung bleibt heil oder setzt sich sauber zurück.
-- [ ] **3.5** *(aufgenommen 2026-08-02)* Die Einstellungen lassen sich einklappen, damit die Seite aufgeräumt wirkt und auf dem Handy ohne Scrollen auskommt.
+  - Kern der Etappe wurde das **Auffangnetz**: `istHeil` prüft in jedem zehnten Bild, ob die Rechnung noch gültige Zahlen liefert; zerfällt sie, setzt die Seite die Strömung neu an und sagt es, beim dritten Mal hält sie an. Fenster und Drehen brauchten keine Änderung (nachgemessen).
+  - Noch nicht: Die obere Ecke der Regler zerfällt weiterhin, sie wird nur aufgefangen statt vermieden — mit Wind, Größe und Anstellwinkel gleichzeitig am Anschlag nach 2600 bis 2950 Schritten. Warum keine engere Grenze gezogen wurde, steht im Änderungsverlauf; was man stattdessen tun könnte, ist Etappe 3.6.
+- [x] **3.5** *(abgenommen 2026-08-02, v1.3)* Die Einstellungen lassen sich einklappen, damit die Seite aufgeräumt wirkt und auf dem Handy ohne Scrollen auskommt.
   - Abnahme: Auf dem Handy die Seite öffnen; Bild und die wichtigsten Schaltflächen sind ohne Scrollen zu sehen, die Regler lassen sich bei Bedarf aufklappen.
   - Anlass: Etappe 3.3 hat die Bedienleiste um zwei Gruppen erweitert; die Unterkante des Bildes rückte dadurch auf 393 Punkten Breite von 498 auf 696 Punkte hinunter.
   - Verhältnis zu **4.2**: Diese Etappe schafft die Voraussetzung (weniger Höhe), 4.2 nimmt das Sitzen im Hoch- und Querformat als Ganzes ab. Sie ersetzt 4.2 nicht.
+  - Noch nicht: Bei 320 Punkten Breite reicht es weiterhin nicht ohne Scrollen; bei 375 bricht die Ansichtsreihe auf zwei Zeilen um.
+- [ ] **3.6** *(aufgenommen 2026-08-02)* Nähert sich die Strömung der Grenze des Rechenbaren, dämpft die Seite sichtbar nach, statt es auf den Zusammenbruch ankommen zu lassen.
+  - Abnahme: Platte, Größe und Anstellwinkel am Anschlag, voller Wind. Die Seite zeigt an, dass sie nachdämpft, und **läuft weiter** — die Meldung „aus dem Tritt geraten" aus 3.4 bleibt aus. Wind zurücknehmen: Die Dämpfung schaltet sich wieder ab.
+  - Anlass: Etappe 3.4 fängt den Zusammenbruch zwar sauber ab, aber der Nutzer läuft weiterhin blind hinein. Nach der Rückmeldung vom 2026-08-02 (am iPad nachgestellt) ist das die verbleibende Unzulänglichkeit von Abschnitt 3.
+  - **Warum Dämpfung und nicht Wind:** Die Dämpfung wirkt in jeder Zelle in jedem Schritt, also sofort und genau dort, wo die Schwingung wächst. Der Windregler wirkt am Einlass, 40 bis 80 Zellen vor dem Körper; bis die Änderung dort ankommt, vergehen 400 bis 800 Schritte, während der Aufschaukelvorgang in rund 100 Schritten durch ist. Außerdem stünde dann eine Zahl auf dem Bildschirm, die nicht mehr stimmt.
+  - **Warum das erlaubt ist:** `SPEC.md` verspricht ausdrücklich keine belastbaren Messwerte. Ein Stück Genauigkeit gegen Robustheit zu tauschen bricht also kein Versprechen — solange die Seite es **sagt**. Verschwiegen wäre es Betrug am Betrachter, ausgewiesen ist es eine Lehre über die Grenzen des Verfahrens.
+  - **Zwei Größen, die es schon gibt:** Die schnellste Stelle im Kanal steckt bereits in `felder.tempo` und kostet einen Vergleichsdurchgang (rund 0,05 ms, zwanzigmal billiger als `istHeil`) — sie kann also in **jedem** Bild ermittelt werden. Die Dämpfung ist bereits eine einzelne Zahl am Kanal (`angleichzeit`), die `stossen` einmal je Schritt ausliest.
+  - **Zuschnitt, bewusst klein gehalten:** global nachdämpfen, nicht je Zelle. Örtliche Dämpfung nur an den Zellen mit hoher Scherung wäre am Bild kaum zu sehen, verlangt aber eine Rechnung in der innersten Schleife und kostet dauerhaft geschätzte 20 bis 40 % Rechenzeit — auf dem Handy ein hoher Dauerpreis für einen seltenen Ausnahmefall. Die globale Fassung ändert eine Zahl und kostet nichts.
+  - Vor der Umsetzung zu messen, in dieser Reihenfolge — jede Antwort kann die Etappe beenden: (1) Verhindert eine globale Dämpfungserhöhung den Zerfall überhaupt, oder verschiebt sie ihn nur? (2) Wie viel Zuschlag braucht es, und ab welcher Schwelle? (3) Wie stark verändert sich das Bild sichtbar? (4) Schaltet sie sauber ab oder pumpt sie?
+  - **Abbruchbedingung:** Zeigt Messung (1) oder (3), dass es nur mit einer Dämpfung geht, die das Strömungsbild erkennbar verfälscht, wird die Etappe nicht umgesetzt, sondern mit dem Messergebnis geschlossen. Es bleibt dann beim Auffangnetz aus 3.4.
+
+**Abschnitt 3 ist bis auf 3.6 abgearbeitet.** Die Seite ist über Regler
+einstellbar, zeigt alle vier Darstellungsarten, verhält sich in ungewöhnlichen
+Situationen vernünftig und kommt auf dem Handy ohne Scrollen aus.
 
 ### Abschnitt 4 — Darstellung und Politur
 
@@ -738,28 +757,84 @@ Fehler.*
   gespannt — er soll nicht anzeigen, dass die Strömung ungewöhnlich ist, sondern
   dass die Rechnung zerfallen ist, und das ist kein allmähliches Abdriften: Wo
   das Verfahren aufschaukelt, verdoppelt sich der Fehler in jedem Schritt.
-  Gemessen: Bei einer Angleichzeit von 0,5005 (unter der Stabilitätsgrenze 0,5)
-  schlägt die Prüfung nach 116 Schritten an, zu einem Zeitpunkt, an dem noch
-  weniger als ein Prozent der Zellen verdorben ist.
-  - **Warum überhaupt, wo die Regler doch eng genug gespannt sind:** Die Grenzen
-    aus Etappe 3.1 sind an ausgewählten ungünstigsten Fällen gemessen. An einer
-    Reglerkombination, die dabei nicht ausprobiert wurde, oder in einem Browser,
-    dessen Gleitkommarechnung anders rundet, kann etwas durchrutschen. Das Netz
-    kostet fast nichts und macht aus einem kaputten Bild ein neu angesetztes.
+  - **Warum überhaupt, wo die Regler doch eng gespannt sind:** weil sie es nicht
+    eng genug sind — siehe den Messeintrag unten. Das Netz kostet fast nichts
+    und wirkt auch bei Einstellungen, die niemand ausgemessen hat.
   - **Kosten und Prüfabstand:** Ein Aufruf kostet 0,22 ms in der groben und
     1,08 ms in der feinen Stufe — dort fast ein Zehntel des Zeitbudgets eines
     Bildes. Deshalb wird nur in **jedem zehnten Bild** nachgesehen. Das genügt,
     weil vom ersten Anzeichen bis zum unbrauchbaren Bild rund hundert
-    Rechenschritte vergehen. (Erste Annahme war „unter einer Zehntelmillisekunde",
-    die Messung hat sie widerlegt.)
+    Rechenschritte vergehen; bei erzwungenem Zerfall (Angleichzeit 0,5005)
+    schlägt die Prüfung nach gut 150 Schritten an, wenn erst 0,01 % der Zellen
+    verdorben sind.
   - **Was beim Zusammenbruch geschieht:** Die Strömung wird neu angesetzt, die
     Reglerstellung bleibt stehen, und die Laufanzeige sagt, was war. Die
     Einstellung zurückzudrehen wäre bevormundend, und der Nutzer sähe nicht, was
-    es ausgelöst hat. Bricht es beim dritten Mal in Folge wieder zusammen, hält
-    die Seite an und sagt, was zu tun ist — sonst liefe sie in eine endlose Folge
-    aus Neuansetzen und Zerfallen. Jeder Eingriff des Nutzers setzt die Zählung
-    zurück; hält die Rechnung 1000 Schritte durch, verschwindet die Meldung von
-    selbst.
+    es ausgelöst hat. Beim dritten Mal hält die Seite an und sagt, was zu tun
+    ist — sonst liefe sie endlos aus Neuansetzen und Zerfallen.
+  - **Die Zählung verjährt nicht mit der Zeit, sondern nur durch einen Eingriff
+    des Nutzers.** Zwei Anläufe mit einer Frist sind gescheitert (1000, dann
+    5000 Rechenschritte): Beide lagen unter dem Abstand, in dem der Zusammenbruch
+    wiederkehrt, die Zählung war jedes Mal zurückgesetzt, bevor sie die drei
+    erreichte — genau die endlose Folge, die verhindert werden soll. Eine
+    passende Zahl gibt es auch nicht, die Wiederkehrabstände reichen von 2600 bis
+    über 5700. Ohne Frist bleibt die Aussage dagegen stimmig: dreimal
+    zusammengebrochen, ohne dass jemand etwas verstellt hat, heißt „diese
+    Einstellung trägt nicht". Der **Text** in der Laufanzeige verschwindet
+    weiterhin von selbst, nach 1500 Rechenschritten; das ist eine Frage der
+    Lesbarkeit und war vorher fälschlich an die Zählung gekoppelt.
+- **2026-08-02 (Etappe 3.4):** *Wie weit die Reglergrenzen wirklich tragen —
+  gemessen, mit einem unbequemen Ergebnis.* Zwei Durchläufe:
+  1. Alle **288** Kombinationen aus vier Formen, beiden Windenden, beiden
+     Größenenden, drei Anstellwinkeln, zwei Höhen und drei Auflösungsstufen über
+     je **3000** Schritte: **drei zerfallen** — `mittel`/Platte/aufsitzend bei
+     Schritt 2950, `fein`/Rechteck/21 Zellen frei bei 3000, `fein`/Platte/
+     aufsitzend bei 2600. Allen gemeinsam: Wind, Größe und Anstellwinkel
+     gleichzeitig am Anschlag.
+  2. Dieselbe Ecke über **6000** Schritte, dabei je ein Regler zurückgenommen
+     (fein, Platte, aufsitzend):
+
+     | zurückgenommen | Zerfall bei Schritt |
+     |---|---|
+     | Größe 115 → 110 → 105 → 100 → 95 | 2600 → 3675 → 3775 → hält → hält |
+     | Winkel 30 → 28 → 26 → 24 → 22 | 2600 → 3375 → 4250 → 4325 → 5175 |
+     | Wind 100 → 95 → 90 → 85 → 80 | 2600 → 4050 → 5725 → 5425 → hält |
+
+  Daraus folgt dreierlei:
+  - **Die drei Fälle aus dem ersten Durchlauf waren nur die schnellsten.** Wer
+    länger zusieht, findet mehr. „Drei von 288" gilt allein für 3000 Schritte.
+  - **Die Grenze ist nicht scharf und nicht einmal monoton** — 85 % Wind zerfiel
+    früher als 90 %. Die Strömung ist chaotisch; ob eine Schwankung gerade über
+    die Grenze reicht, hängt an Kleinigkeiten. „Hält" heißt immer nur „hat diese
+    Strecke gehalten"; für keine Reglerstellung ist mehr bewiesen.
+  - **Die Reglergrenzen bleiben deshalb, wie sie sind.** Eine engere Grenze nähme
+    Bereich weg, ohne zu beantworten, was bei doppelter Laufzeit geschieht.
+    Zuständig ist das Auffangnetz, das ohne Vorwissen auskommt. Aus demselben
+    Grund steht in Prüfteil 9 als Bezugsszene für „kein Fehlalarm" die Platte bei
+    100 % und nicht bei 115 %: Letztere zerfällt wirklich und wäre ein Beleg
+    dafür gewesen, dass das Netz seine Arbeit tut.
+- **2026-08-02 (Etappe 3.4):** *Die Ursache, in Zahlen.* Das Verfahren trägt nur,
+  solange die Luft deutlich langsamer ist als die Schallgeschwindigkeit des
+  Gitters (0,577 Zellen je Schritt). Der Wind am Einlass liegt bei 0,1 — 17 %
+  davon. Entscheidend ist aber die **schnellste Stelle im Kanal**, und die liegt
+  weit darüber, weil das Hindernis den Kanal versperrt und die Luft an seiner
+  Kante beschleunigt:
+
+  | Szene | schnellste Stelle | Ausgang |
+  |---|---|---|
+  | Kreis, Voreinstellung, freistehend | 30–39 % der Schallgeschwindigkeit | hält |
+  | Platte 100 %, 30°, aufsitzend | 44–52 % | hält |
+  | Platte 115 %, 30°, aufsitzend | 41 % → 93 % | zerfällt |
+
+  Die letzte Zeile erklärt auch, **warum es Minuten dauert**: Erst über tausende
+  Schritte bildet sich die Wirbelstraße aus, und jeder abgelöste Wirbel treibt
+  die örtliche Spitze höher (2,4 → 3,0 → 3,6 → 5,4 · Wind). Irgendwann reißt eine
+  Schwankung über die Grenze, und ab da wächst der Fehler in jedem Schritt, statt
+  gedämpft zu werden — die Zähigkeit steht bei 0,01, die daraus abgeleitete
+  Angleichzeit bei 0,53, und unter 0,5 dämpft das Verfahren gar nicht mehr.
+  Deshalb ist auch die feine Stufe als erste dran: Bei gleichem Wind ist der
+  Körper dort doppelt so viele Zellen groß, die Wirbel werden schärfer und die
+  Spitzen höher.
 - **2026-08-02 (Etappe 3.4):** *Weggeschalteter Tab.* Die Bildschleife wird beim
   Wegschalten wirklich abgestellt und beim Zurückkommen wieder angeworfen —
   außer der Nutzer hatte selbst angehalten. Der eigentliche Grund ist nicht der
@@ -787,6 +862,9 @@ Fehler.*
     174 Bildpunkte hoch und kosten fast nichts; untereinander sind es 447, dazu
     ein Hinweistext von 195. Eine geratene Zahl wie „unter 500 Punkten zu" wäre
     schon beim nächsten Eingriff an der Gestaltung falsch, ohne dass es auffiele.
+    Gemessen wird die Breite des ersten Reglers gegen die des Feldes — Geometrie
+    und damit in jedem Browser dasselbe, anders als die Spaltenzahl aus
+    `getComputedStyle`.
   - Entschieden **nur beim Laden**, nicht beim Drehen: Ein Feld, das der Nutzer
     aufgeklappt hat und das ihm beim Drehen wieder zufällt, wäre schlimmer als
     eines, das im Querformat unnötig offen steht.
@@ -804,82 +882,3 @@ Fehler.*
     auf den Schirm. Bei 375 Punkten (iPhone SE) sind es 671 statt 754; dort
     bricht die Ansichtsreihe weiterhin auf zwei Zeilen um, weil „Geschwindigkeit"
     allein 145 Punkte breit ist.
-- **2026-08-02 (Etappe 3.4):** *Drei von 288 Reglerkombinationen zerfallen
-  wirklich — die Grenzen aus 3.1 halten fast, aber nicht ganz.* Durchgerechnet
-  wurden alle Kombinationen aus vier Formen, beiden Windenden (10 % und 100 %),
-  beiden Größenenden (50 % und 115 %), drei Anstellwinkeln (−30°, 0°, +30°),
-  zwei Höhen (aufsitzend und 21 Zellen frei) und allen drei Auflösungsstufen,
-  je 3000 Schritte:
-  - `mittel`, Platte, aufsitzend, alles am Anschlag → Zerfall bei Schritt 2950
-  - `fein`, Rechteck, 21 Zellen frei, alles am Anschlag → Schritt 3000
-  - `fein`, Platte, aufsitzend, alles am Anschlag → Schritt 2600
-  Allen dreien gemeinsam: **Wind, Größe und Anstellwinkel gleichzeitig am
-  Anschlag.** Die Messungen aus 3.1 und 3.2 liefen kürzer und haben das deshalb
-  nicht gesehen — dort galt der Bereich als „an den ungünstigsten Fällen
-  abgesichert", was so nicht stimmt.
-  - **Die Reglergrenzen bleiben trotzdem stehen.** Um diese eine Ecke herum
-    verengt, wären sie für alle 285 unbedenklichen Fälle mit beschnitten. Genau
-    dafür ist das Auffangnetz da: Die Ecke bleibt erreichbar und meldet sich von
-    selbst.
-  - **Folge für das Auffangnetz:** `ERHOLUNGSSCHRITTE` muss über dem Abstand
-    liegen, in dem ein Zusammenbruch wiederkehrt, sonst wäre die Zählung jedes
-    Mal zurückgesetzt, bevor sie die drei erreicht — die Seite liefe endlos aus
-    Neuansetzen und Zerfallen. Von 1000 auf **5000** angehoben (früheste
-    Wiederkehr 2600).
-  - **Folge für die Prüfung:** Teil 9 in `pruefe-kern.js` hatte als Beleg für
-    „kein Fehlalarm" ausgerechnet eine dieser drei Szenen genommen und bestand
-    nur, weil er bei 2000 Schritten aufhört. Er nimmt jetzt dieselbe Platte
-    21 Zellen über dem Boden — die schärfste Szene, von der nachgewiesen ist,
-    dass sie hält.
-  - Der Durchlauf selbst wird **nicht** in `pruefe-kern.js` aufgenommen: 62
-    Minuten sind für ein Abnahmeskript zu lang, und ein Prüfpunkt, der
-    fehlschlägt, sobald jemand die Rechnung unempfindlicher macht, wäre ein
-    schlechter Prüfpunkt.
-- **2026-08-02 (Etappe 3.4):** *Nachgemessen mit 6000 statt 3000 Schritten — es
-  sind weit mehr als drei Fälle, und eine engere Reglergrenze wäre
-  Scheinsicherheit.* Anlass war die Rückmeldung des Nutzers, der genau die
-  gefundene Ecke am iPad nachgestellt hat (Platte, `mittel`, alles am Anschlag,
-  Zusammenbruch nach etwa 2700 Schritten). Um beantworten zu können, was es
-  kostet, diese Ecke unerreichbar zu machen, wurde je ein Regler zurückgenommen
-  und über 6000 Schritte gerechnet — feine Stufe, Platte, aufsitzend, sonst
-  alles am Anschlag:
-  - **Größe:** 115 % → Zerfall bei 2600, 110 % → 3675, 105 % → 3775,
-    100 % → hält, 95 % → hält
-  - **Anstellwinkel:** 30° → 2600, 28° → 3375, 26° → 4250, 24° → 4325,
-    22° → 5175 (kein geprüfter Winkel hält)
-  - **Wind:** 100 % → 2600, 95 % → 4050, 90 % → 5725, 85 % → 5425,
-    80 % → hält
-  - Gegenprobe feines Rechteck, 21 Zellen frei: 115 % → 2975, 110 % → 2975,
-    105 % → 3475, 100 % → hält
-
-  Zwei Schlüsse:
-  1. **Die drei Fälle aus dem 3000-Schritte-Durchlauf waren nur die
-     schnellsten.** Wer länger zusieht, findet mehr. Die Formulierung „drei von
-     288 zerfallen" aus dem Eintrag darüber gilt nur für 3000 Schritte und ist
-     ohne diesen Zusatz irreführend.
-  2. **Keine Reglerstellung ist als stabil bewiesen** — bewiesen ist nur, dass
-     eine bestimmte Strecke gehalten hat. Eine engere Grenze nähme deshalb
-     Bereich weg, ohne die Frage zu beantworten, was bei 20 000 Schritten
-     geschieht. Die Grenzen bleiben, wie sie sind; zuständig ist das
-     Auffangnetz, das bei jeder Einstellung und jeder Laufzeit wirkt.
-- **2026-08-02 (Etappe 3.4):** *Die Zählung der Auffangvorgänge verjährt nicht
-  mehr mit der Zeit, sondern nur durch einen Eingriff des Nutzers.* Zwei Anläufe
-  mit einer Frist sind gescheitert — erst 1000, dann 5000 Schritte. Beide Male
-  lag die Frist unter dem Wiederkehrabstand des Zusammenbruchs, die Zählung war
-  jedes Mal schon zurückgesetzt, bevor sie die drei erreichte, und die Seite
-  lief in genau die endlose Folge aus Neuansetzen und Zerfallen, die verhindert
-  werden sollte. Der zweite Anlauf fiel erst durch die 6000-Schritte-Messung auf:
-  Wiederkehrabstände reichen bis über 5700. Eine passende Zahl gibt es nicht.
-  - Ohne Frist bleibt die Aussage stimmig: Dreimal zusammengebrochen, ohne dass
-    jemand etwas verstellt hat, heißt „diese Einstellung trägt nicht" —
-    gleichgültig, wie viel Zeit dazwischen lag. Ein einmaliger Ausrutscher zählt
-    nie weiter, weil er sich nicht wiederholt.
-  - Der **Text** in der Laufanzeige verschwindet weiterhin von selbst, nach 1500
-    Rechenschritten. Das ist eine Frage der Lesbarkeit und hat mit der Zählung
-    nichts zu tun; die beiden waren vorher fälschlich aneinandergekoppelt.
-- **2026-08-02 (Etappe 3.4):** *Auch die Bezugsszene in Prüfteil 9 musste
-  nachziehen.* Sie stand zunächst auf der Platte bei 115 % und 30°, 21 Zellen
-  über dem Boden — nach der 6000-Schritte-Messung ist auch die nicht als haltbar
-  ausgewiesen. Jetzt dieselbe Platte bei **100 %**, aufsitzend: über 6000
-  Schritte auf dem feinen Gitter nachgemessen heil und trotzdem scharf genug,
-  dass ein überempfindliches Auffangnetz dort anschlüge.
