@@ -775,3 +775,32 @@ Fehler.*
   Sie ist eine Voreinstellung für den Start, und ein Gitterwechsel setzt die
   Strömung neu an — das Drehen soll nichts umwerfen, was der Nutzer eingestellt
   hat.
+- **2026-08-02 (Etappe 3.5):** *Die Regler stehen in einem einklappbaren Feld.*
+  Umgesetzt mit `details` und `summary`, den eingebauten Elementen des Browsers:
+  Sie klappen ohne eine Zeile Programmcode auf und zu, sind mit der Tastatur
+  bedienbar und sagen einer Vorlesehilfe von sich aus, ob das Feld offen ist. Das
+  Dreieck davor ist aus Rahmenlinien gebaut statt aus einem Schriftzeichen — am
+  2026-07-31 ist schon einmal ein Zeichen als leeres Kästchen erschienen.
+  - **Ob es offen aufgeht, wird nicht an einer Bildschirmbreite festgemacht,
+    sondern am Reglerraster:** zugeklappt, wenn die fünf Regler untereinander
+    stehen müssten, offen, wenn sie nebeneinander passen. Nebeneinander sind sie
+    174 Bildpunkte hoch und kosten fast nichts; untereinander sind es 447, dazu
+    ein Hinweistext von 195. Eine geratene Zahl wie „unter 500 Punkten zu" wäre
+    schon beim nächsten Eingriff an der Gestaltung falsch, ohne dass es auffiele.
+  - Entschieden **nur beim Laden**, nicht beim Drehen: Ein Feld, das der Nutzer
+    aufgeklappt hat und das ihm beim Drehen wieder zufällt, wäre schlimmer als
+    eines, das im Querformat unnötig offen steht.
+- **2026-08-02 (Etappe 3.5):** *Die Bedienleiste wird auf schmalen Schirmen
+  enger.* Angefasst wurden nur Abstände — Seitenränder der Schaltflächen von 1
+  auf 0,625 rem, Abstände zwischen ihnen von 0,5 auf 0,375 rem, dazu etwas
+  weniger Luft um die Gruppen und am Seitenrand. **Die Höhe von 2,75 rem bleibt
+  unangetastet**: Das ist die Fläche, die man mit dem Finger trifft, und daran
+  wird gerade auf dem Handy nicht gespart. Alle zehn Schaltflächen bleiben
+  sichtbar; eingeklappt werden nur die Regler.
+  - Gemessen bei 393 Punkten Breite (das Maß, an dem Etappe 3.3 den Befund
+    festgemacht hat): Die Bedienleiste schrumpft von 430 auf 233 Punkte, die
+    Unterkante des Bildes rückt von **696 auf 483** Punkte hinauf, und die ganze
+    Seite ist statt 1427 nur noch 610 Punkte hoch — sie passt damit ohne Scrollen
+    auf den Schirm. Bei 375 Punkten (iPhone SE) sind es 671 statt 754; dort
+    bricht die Ansichtsreihe weiterhin auf zwei Zeilen um, weil „Geschwindigkeit"
+    allein 145 Punkte breit ist.

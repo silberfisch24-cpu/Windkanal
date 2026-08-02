@@ -352,6 +352,10 @@ function starte() {
   bedienung.zeigeLauf(laeuft);
   bedienung.zeigeTeilchen(teilchenAn);
   legeKanalAn();
+  richteEinstellungenEin(
+    document.querySelector('#einstellungen'),
+    document.querySelector('#reglerleiste')
+  );
   starteSchleife();
 
   /**
@@ -844,6 +848,37 @@ function baueForm(aktuell, einstellungen) {
   })();
 
   return skaliereForm(inGrobenZellen, stufe(einstellungen).faktor);
+}
+
+/**
+ * Entscheidet, ob das Reglerfeld offen oder zugeklappt aufgeht (Etappe 3.5).
+ *
+ * Die Regel in einem Satz: **Zugeklappt, wenn die fünf Regler untereinander
+ * stehen müssten, offen, wenn sie nebeneinander passen.**
+ *
+ * Sie trifft genau den Fall, um den es geht. Nebeneinander sind die Regler 174
+ * Bildpunkte hoch und kosten fast nichts; untereinander sind es 447, und dazu
+ * kommt ein Hinweistext, der auf schmalen Schirmen auf 195 Punkte anwächst.
+ * Erst dann drückt das Feld die Seite auf ein Vielfaches der Bildschirmhöhe.
+ *
+ * Nachgesehen wird beim Raster selbst, statt eine Bildschirmbreite zu raten. Wo
+ * das Raster umbricht, hängt an der Breite der Reglerspalten, am Seitenrand und
+ * an der Schriftgröße des Nutzers — eine Zahl wie „unter 500 Punkten zu" wäre
+ * schon beim nächsten Eingriff an der Gestaltung falsch, ohne dass es auffiele.
+ * So bleibt beides von selbst zusammen.
+ *
+ * Aufgeklappt wird dafür kurz: Ein zugeklapptes `details` rechnet seinen Inhalt
+ * nicht durch, das Raster stünde also noch auf keiner Spaltenzahl.
+ *
+ * **Nur einmal beim Laden.** Beim Drehen des Geräts wird nicht nachgerechnet:
+ * Ein Feld, das der Nutzer aufgeklappt hat und das ihm beim Drehen wieder
+ * zufällt, wäre schlimmer als eines, das im Querformat unnötig offen steht — und
+ * das Drehen soll nach Etappe 3.4 gerade nichts umwerfen, was er eingestellt hat.
+ */
+function richteEinstellungenEin(feld, reglerfeld) {
+  feld.open = true;
+  const spalten = getComputedStyle(reglerfeld).gridTemplateColumns.split(' ').length;
+  feld.open = spalten > 1;
 }
 
 /**
