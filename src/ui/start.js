@@ -21,6 +21,7 @@ import {
   setzeHindernis,
   setzeWindgeschwindigkeit,
   setzeAufAnfangszustand,
+  istHeil,
   AUFLOESUNGEN,
 } from '../kern/loeser.js';
 import { normalisiereForm, ausdehnung, skaliereForm } from '../kern/formen.js';
@@ -253,6 +254,35 @@ const SCHRITTE_HOECHSTENS = 20;
 /** Über wie viele Millisekunden die angezeigte Bildfolge gemittelt wird. */
 const MITTELUNGSZEIT = 500;
 
+/**
+ * In jedem wievielten Bild nachgesehen wird, ob die Rechnung noch heil ist.
+ *
+ * Nicht in jedem: Die Prüfung geht über alle Zellen und kostet in der feinsten
+ * Stufe rund eine Millisekunde (siehe `istHeil`). Sie muss aber auch nicht in
+ * jedem sein — vom ersten Anzeichen bis zum unbrauchbaren Bild vergehen rund
+ * hundert Rechenschritte, also mehrere Bilder. Zehn ist der Abstand, bei dem der
+ * Aufwand unter einem Prozent bleibt und trotzdem nichts zu sehen ist, bevor es
+ * aufgefangen wird.
+ */
+const PRUEFABSTAND = 10;
+
+/**
+ * Wie viele Auffangvorgänge kurz hintereinander hingenommen werden, bevor die
+ * Seite die Rechnung anhält.
+ *
+ * Ohne diese Grenze liefe die Seite bei einer Einstellung, die zuverlässig
+ * zerfällt, in eine endlose Folge aus Neuansetzen und Zerfallen — der Betrachter
+ * sähe ein Bild, das alle paar Sekunden von vorn beginnt, ohne dass ihm jemand
+ * sagt, woran es liegt. Nach dem dritten Mal wird deshalb angehalten und in der
+ * Laufanzeige gesagt, was zu tun ist.
+ *
+ * Gezählt wird in Folge: Ein Auffangvorgang, nach dem die Rechnung wieder lange
+ * durchhält, soll nicht ewig nachwirken. `ERHOLUNGSSCHRITTE` legt fest, ab wann
+ * das gilt — mehr als das Zehnfache dessen, was ein Zerfall braucht.
+ */
+const AUFFANGVERSUCHE = 3;
+const ERHOLUNGSSCHRITTE = 1000;
+
 starte();
 
 function starte() {
@@ -292,6 +322,13 @@ function starte() {
   let letzteBildfolge = null;
   let letzteSchritteJeBild = null;
 
+  // Auffangnetz: wie viele Bilder seit der letzten Prüfung vergangen sind, wie
+  // oft in Folge aufgefangen werden musste, und was darüber in der Laufanzeige
+  // steht (null, solange nichts vorgefallen ist).
+  let bilderSeitPruefung = 0;
+  let auffangzaehler = 0;
+  let meldung = null;
+
   const bedienung = erzeugeBedienung({
     auswahlfeld: document.querySelector('#formauswahl'),
     ansichtfeld: document.querySelector('#ansichtauswahl'),
@@ -318,12 +355,38 @@ function starte() {
   starteSchleife();
 
   /**
+   * Weggeschalteter Tab: die Schleife wirklich abstellen statt sie leer
+   * weiterlaufen zu lassen.
+   *
+   * Der Browser hält `requestAnimationFrame` in einem unsichtbaren Tab von
+   * selbst an — aber nicht überall gleich und nicht sofort; manche drosseln nur
+   * auf ein Bild je Sekunde. Beides kostet auf dem Handy Strom für ein Bild, das
+   * niemand sieht.
+   *
+   * Wichtiger ist, was beim Zurückkommen geschieht: `starteSchleife` wirft die
+   * angefangene Messung weg. Ohne das würde die Bildfolge über die ganze Pause
+   * hinweg gemittelt und meldete beim ersten Blick „0 Bilder je Sekunde" — eine
+   * Zahl, die es nie gab, und die aussieht, als hinge die Seite.
+   *
+   * Angehalten bleibt angehalten: Hat der Nutzer selbst auf „Anhalten" gedrückt,
+   * läuft beim Zurückkommen nichts wieder an.
+   */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      haltAn();
+    } else if (laeuft) {
+      starteSchleife();
+    }
+  });
+
+  /**
    * Wechselt die Form. Die Reglerstellungen bleiben dabei stehen; nur die Höhe
    * wird nachgezogen, falls die neue Form höher baut und sonst an die Decke
    * stieße.
    */
   function waehleForm(schluessel) {
     if (schluessel === gewaehlteForm) return;
+    nimmMeldungZurueck();
     gewaehlteForm = schluessel;
     bedienung.zeigeForm(schluessel);
     baueHindernisNeu();
@@ -370,6 +433,7 @@ function starte() {
    * „Hindernisse im Kanal" in SPEC.md).
    */
   function stelleEin(schluessel, wert) {
+    nimmMeldungZurueck();
     einstellungen[schluessel] = wert;
 
     if (schluessel === 'wind') {
@@ -394,6 +458,7 @@ function starte() {
 
   /** Setzt die Strömung auf den Anfangszustand zurück, ohne etwas zu verstellen. */
   function setzeZurueck() {
+    nimmMeldungZurueck();
     setzeAufAnfangszustand(kanal);
     darstellung.saeeTeilchenNeu();
     vergissMessung();
@@ -517,6 +582,7 @@ function starte() {
   }
 
   function wechsleLauf() {
+    nimmMeldungZurueck();
     laeuft = !laeuft;
     bedienung.zeigeLauf(laeuft);
     if (laeuft) {
@@ -525,6 +591,21 @@ function starte() {
       haltAn();
       zeigeAnzeige();
     }
+  }
+
+  /**
+   * Nimmt eine Meldung des Auffangnetzes zurück und vergisst, wie oft schon
+   * aufgefangen wurde.
+   *
+   * Aufgerufen bei jedem Eingriff des Nutzers, der die Rechnung berührt: Form,
+   * Regler, Zurücksetzen, Weiter. Er hat die Meldung gelesen und gehandelt —
+   * die alte Zählung sagt über die neue Einstellung nichts mehr aus. Ohne das
+   * bliebe die Seite nach drei Zusammenbrüchen bei jeder weiteren Einstellung
+   * gleich wieder stehen, auch bei einer harmlosen.
+   */
+  function nimmMeldungZurueck() {
+    meldung = null;
+    auffangzaehler = 0;
   }
 
   function starteSchleife() {
@@ -548,6 +629,21 @@ function starte() {
       schritte++;
     } while (schritte < SCHRITTE_HOECHSTENS && performance.now() < bis);
 
+    // Erst nachsehen, ob die Rechnung noch heil ist, dann zeichnen: ein
+    // zerfallenes Bild soll gar nicht erst auf den Schirm kommen.
+    bilderSeitPruefung++;
+    if (bilderSeitPruefung >= PRUEFABSTAND) {
+      bilderSeitPruefung = 0;
+      if (!istHeil(kanal)) {
+        fangeAuf();
+        if (!laeuft) return; // angehalten — keine neue Bildanforderung
+        bildanforderung = requestAnimationFrame(naechstesBild);
+        return;
+      }
+      // Lange durchgehalten: Das Vorgefallene ist abgehakt.
+      if (meldung !== null && kanal.schrittzahl >= ERHOLUNGSSCHRITTE) nimmMeldungZurueck();
+    }
+
     leseFelder(kanal, felder);
     darstellung.zeichne(felder, { ansicht: gewaehlteAnsicht, teilchen: teilchenAn, schritte });
 
@@ -566,6 +662,42 @@ function starte() {
     }
 
     bildanforderung = requestAnimationFrame(naechstesBild);
+  }
+
+  /**
+   * Fängt eine zerfallene Rechnung auf: Strömung neu ansetzen, sagen was war,
+   * und beim wiederholten Mal anhalten.
+   *
+   * Neu angesetzt wird, nicht angehalten — ein Zusammenbruch kann auch ein
+   * einmaliger Ausrutscher an einer ungünstigen Reglerstellung sein, durch die
+   * der Nutzer eben nur hindurchgezogen hat. Dann läuft es danach von selbst
+   * weiter, und er hat nichts weiter zu tun.
+   *
+   * Was bleibt: die Einstellung. Sie zurückzudrehen wäre bevormundend, und der
+   * Nutzer sähe nicht, was den Zusammenbruch ausgelöst hat. Bleibt sie stehen
+   * und bricht es gleich wieder zusammen, greift `AUFFANGVERSUCHE`.
+   */
+  function fangeAuf() {
+    auffangzaehler++;
+    setzeAufAnfangszustand(kanal);
+    darstellung.saeeTeilchenNeu();
+    vergissMessung();
+
+    if (auffangzaehler >= AUFFANGVERSUCHE) {
+      meldung =
+        'Bei dieser Einstellung bricht die Rechnung immer wieder zusammen — angehalten.' +
+        ' Wind, Größe oder Anstellwinkel zurücknehmen, dann auf „Weiter".';
+      laeuft = false;
+      bedienung.zeigeLauf(false);
+      // Die laufende Bildanforderung ist gerade abgearbeitet worden; es genügt,
+      // keine neue zu stellen. `haltAn` würde hier eine erledigte Nummer
+      // zurückgeben und wäre irreführend.
+      bildanforderung = null;
+    } else {
+      meldung = 'Die Rechnung war aus dem Tritt geraten — die Strömung wurde neu angesetzt.';
+    }
+
+    zeichneStand();
   }
 
   /**
@@ -604,6 +736,13 @@ function starte() {
 
   function zeigeAnzeige() {
     const stand = `${kanal.schrittzahl.toLocaleString('de-DE')} Schritte gerechnet`;
+    // Was das Auffangnetz zu sagen hat, geht der gewohnten Anzeige vor. Es
+    // verschwindet von selbst wieder, sobald die Rechnung lange durchgehalten
+    // hat — siehe `ERHOLUNGSSCHRITTE`.
+    if (meldung !== null) {
+      anzeige.textContent = laeuft ? `${meldung} · ${stand}` : meldung;
+      return;
+    }
     if (!laeuft) {
       anzeige.textContent = `Angehalten · ${stand}`;
       return;

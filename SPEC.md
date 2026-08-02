@@ -731,3 +731,47 @@ Fehler.*
     Durchgang für die Wirbelstärke ließe sich überspringen, wenn sie nicht
     angezeigt wird — schätzungsweise ein Drittel des Ablesens, also gut 7 % je
     Bild. Weniger Gewinn, aber ohne an der Bildfolge zu drehen.
+
+- **2026-08-02 (Etappe 3.4):** *Auffangnetz gegen zerfallende Rechnungen.* Neue
+  Kernfunktion `istHeil(kanal)`: Sie geht über alle Luftzellen und meldet, ob
+  deren Dichte noch zwischen 0,5 und 2 liegt. Der Bereich ist mit Absicht weit
+  gespannt — er soll nicht anzeigen, dass die Strömung ungewöhnlich ist, sondern
+  dass die Rechnung zerfallen ist, und das ist kein allmähliches Abdriften: Wo
+  das Verfahren aufschaukelt, verdoppelt sich der Fehler in jedem Schritt.
+  Gemessen: Bei einer Angleichzeit von 0,5005 (unter der Stabilitätsgrenze 0,5)
+  schlägt die Prüfung nach 116 Schritten an, zu einem Zeitpunkt, an dem noch
+  weniger als ein Prozent der Zellen verdorben ist.
+  - **Warum überhaupt, wo die Regler doch eng genug gespannt sind:** Die Grenzen
+    aus Etappe 3.1 sind an ausgewählten ungünstigsten Fällen gemessen. An einer
+    Reglerkombination, die dabei nicht ausprobiert wurde, oder in einem Browser,
+    dessen Gleitkommarechnung anders rundet, kann etwas durchrutschen. Das Netz
+    kostet fast nichts und macht aus einem kaputten Bild ein neu angesetztes.
+  - **Kosten und Prüfabstand:** Ein Aufruf kostet 0,22 ms in der groben und
+    1,08 ms in der feinen Stufe — dort fast ein Zehntel des Zeitbudgets eines
+    Bildes. Deshalb wird nur in **jedem zehnten Bild** nachgesehen. Das genügt,
+    weil vom ersten Anzeichen bis zum unbrauchbaren Bild rund hundert
+    Rechenschritte vergehen. (Erste Annahme war „unter einer Zehntelmillisekunde",
+    die Messung hat sie widerlegt.)
+  - **Was beim Zusammenbruch geschieht:** Die Strömung wird neu angesetzt, die
+    Reglerstellung bleibt stehen, und die Laufanzeige sagt, was war. Die
+    Einstellung zurückzudrehen wäre bevormundend, und der Nutzer sähe nicht, was
+    es ausgelöst hat. Bricht es beim dritten Mal in Folge wieder zusammen, hält
+    die Seite an und sagt, was zu tun ist — sonst liefe sie in eine endlose Folge
+    aus Neuansetzen und Zerfallen. Jeder Eingriff des Nutzers setzt die Zählung
+    zurück; hält die Rechnung 1000 Schritte durch, verschwindet die Meldung von
+    selbst.
+- **2026-08-02 (Etappe 3.4):** *Weggeschalteter Tab.* Die Bildschleife wird beim
+  Wegschalten wirklich abgestellt und beim Zurückkommen wieder angeworfen —
+  außer der Nutzer hatte selbst angehalten. Der eigentliche Grund ist nicht der
+  Strom, den ein unsichtbares Bild kostet, sondern die Messung der Bildfolge:
+  Ohne das Abstellen würde sie über die ganze Pause hinweg gemittelt und meldete
+  beim ersten Blick „0 Bilder je Sekunde" — eine Zahl, die es nie gab.
+- **2026-08-02 (Etappe 3.4):** *Fenster verkleinern und Gerät drehen brauchten
+  keine Änderung.* Nachgemessen bei 320, 375, 393, 430, 768, 852 und 1200 Punkten
+  Breite sowie im Wechsel 1100 → 393 → 852 mitten im Lauf: Die Seite läuft
+  nirgends über den Rand (`scrollWidth` gleich `clientWidth`), und die
+  Zeichenfläche behält ihre Punktzahl und wird vom Browser skaliert. Bewusst
+  **nicht** geändert: Die Auflösungsstufe wird beim Drehen nicht neu ermittelt.
+  Sie ist eine Voreinstellung für den Start, und ein Gitterwechsel setzt die
+  Strömung neu an — das Drehen soll nichts umwerfen, was der Nutzer eingestellt
+  hat.
