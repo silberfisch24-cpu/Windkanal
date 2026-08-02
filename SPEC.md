@@ -115,6 +115,8 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Einseitige und zweiseitige Farbskalen** (festgelegt in Etappe 3.3): Die Geschwindigkeit kennt kein Vorzeichen und behält ihre **einseitige** Skala (ein Farbton, hell nach dunkel). Druck und Wirbelstärke haben eins, und die Null ist ihre natürliche Mitte — Ruhedruck und drehungsfreie Strömung. Sie bekommen deshalb **zweiseitige** Skalen: von einer hellen Mitte aus in beide Richtungen dunkler werdend, Druck blau → hell → rot, Wirbelstärke violett → hell → orange. Damit liegt die Stärke weiterhin in der Helligkeit und die Richtung im Farbton; eine einseitige Skala müsste das Vorzeichen unterschlagen oder in die Helligkeit stecken, wo es nicht hingehört. **Zwei verschiedene Farbpaare**, obwohl beide Skalen gleich gebaut sind: sonst sähen Druck und Wirbelstärke auf den ersten Blick gleich aus. Beide Paare bleiben bei Rot- und Grünblindheit unterscheidbar, ein Rot-Grün-Paar täte das nicht.
 - **Woran die Skalengrenzen hängen** (festgelegt in Etappe 3.3): Alle drei bleiben **fest je Bild** statt am größten Wert des Einzelbildes zu hängen (Begründung unter „Bild auf dem Bildschirm"), wachsen aber mit dem Wind, weil der sich seit Etappe 3.1 im Lauf verstellen lässt. **Womit** sie wachsen, ist je Größe verschieden und aus dem Verfahren abgeleitet: Geschwindigkeit geradewegs mit dem Wind (Grenze 2 · u), Druck mit dessen **Quadrat**, weil Staudruck ½·ρ·u² ist (Grenze 2 · u²), Wirbelstärke mit dem Wind **je Zelle**, also geteilt durch den Faktor der Auflösungsstufe (Grenze 0,5 · u/f) — auf einem feineren Gitter verteilt sich dieselbe Scherung auf mehr Zellen. Alle drei Zahlen sind gemessen, nicht geschätzt; siehe Änderungsverlauf zum 2026-08-01.
 - **Vier Bildpunkte je Zelle statt einem** (geändert in Etappe 3.3): Das Farbfeld entsteht unverändert mit **einem Bildpunkt je Zelle** — daran ändert sich nichts, es wird nur auf einer unsichtbaren Fläche gemalt und in einem Zug auf die sichtbare gezogen. Die sichtbare Zeichenfläche ist seither **viermal so fein**, weil die Teilchenstriche Linien sind und keine Zellen: Auf 200 Punkten Breite, die der Browser auf gut 900 zieht, ist der dünnste zeichenbare Strich fünf Bildschirmpunkte breit und verwischt — aus Strichen wurden Flecken. Der Umweg über die zweite Fläche ist nötig, weil `putImageData` weder vergrößert noch glättet.
+- **Die Teilchen ziehen von links nach rechts durch** (festgelegt in Etappe 3.3, nach der ersten Abnahme geändert): Ein Teilchen entsteht am **Einlass** und verschwindet nur am **Auslass**. Es taucht nicht mitten im Bild auf und löst sich nicht mitten im Bild auf; an einer Wand bleibt es stehen, statt zu verschwinden. Der erste Entwurf setzte sie an zufälligen Stellen des ganzen Kanals aus und ließ sie nach einer festen Lebenszeit ablaufen — das gab eine gleichmäßige Verteilung, aber keine Bahnen: Man sah Striche flackern statt Luft strömen. **Eine Ausnahme, und sie ist unsichtbar:** Hinter einem stumpfen Körper steht die Luft nahezu still, und was dort hineingerät, käme nie wieder heraus (gemessen: nach einer Minute Lauf waren 14 bis 26 % des Schwarms versackt). Ein Teilchen, das **so langsam ist, dass ohnehin kein Strich mehr gezeichnet wird**, wird deshalb nach vier Sekunden am Einlass neu angesetzt. Maßgeblich ist genau die Grenze, die auch über das Zeichnen entscheidet — nur eine, damit beides nicht auseinanderläuft; es verschwindet also nie etwas, das zu sehen war. Nicht gewählt wurde „das älteste Teilchen geht": gleich viel Code, träfe aber auch sichtbar durchziehende Teilchen, und „alt" hängt am Wind — bei 10 % Wind wären nach kurzer Zeit alle alt.
+- **Was im Druckbild pulsiert** (untersucht in Etappe 3.3): Im Druckbild schwankt der ganze Kanal sichtbar im Takt, bis in den Bereich vor dem Auslass. Das ist **kein Rechenfehler und keine Sache der Darstellung**, sondern der Schall, den die Wirbelablösung abstrahlt: Der leere Kanal pulsiert überhaupt nicht (0,0 %), mit Körper 4 bis 5 % der Skalenbreite, und der Takt ist mit 310 Schritten genau der halbe der Wirbelablösung (637) — ein abgelöster Wirbel je Seite, also zwei Druckstöße je Umlauf, wie es sein muss. Im ganzen Kanal ist es zu sehen, weil Schall auf dem Gitter 0,577 Zellen je Schritt zurücklegt und die 200 Zellen damit in etwa 350 Schritten durchquert. Verstärkt wird es dadurch, dass Ein- und Auslass die Dichte hart auf 1 setzen und Wellen zurückwerfen — aber nur zu einem Drittel: in einem viermal so langen Kanal fällt die Schwankung nur von 5,0 auf 3,3 %. **Der eigentliche Grund ist das Verfahren:** Lattice-Boltzmann rechnet schwach kompressibel, und die Dichteschwankung wächst mit dem Quadrat der Mach-Zahl. Die liegt hier bei 0,17 (Wind 0,1 gegen Gittersschall 0,577), in echter Luft bei dieser Anschauung eher bei 0,03. Bei halbem Wind fällt die Schwankung von 4,9 auf 1,9 % der Skala — der Windregler ist damit das Mittel dagegen. Wegrechnen lässt es sich nicht: Der Abzug des Kanalmittelwerts nimmt nur 10 % davon weg, der Abzug des Spaltenmittelwerts halbiert zwar das Flackern, halbiert aber ebenso die Aussage (Abstand Stau ↔ Sog von 30 auf 16 % der Skala). Beides wurde verworfen.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -187,6 +189,10 @@ Commit-Nachrichten verweisen auf diese Nummern.*
   - Abnahme: Alle vier Ansichten am selben Strömungsbild durchschalten; die Teilchen treiben sichtbar mit.
 - [ ] **3.4** Ungewöhnliche Situationen führen zu vernünftigem Verhalten statt zu kaputten Bildern.
   - Abnahme: Fenster verkleinern, Gerät drehen, Tab wegschalten und zurückkommen, extreme Reglerstellungen wählen — die Darstellung bleibt heil oder setzt sich sauber zurück.
+- [ ] **3.5** *(aufgenommen 2026-08-02)* Die Einstellungen lassen sich einklappen, damit die Seite aufgeräumt wirkt und auf dem Handy ohne Scrollen auskommt.
+  - Abnahme: Auf dem Handy die Seite öffnen; Bild und die wichtigsten Schaltflächen sind ohne Scrollen zu sehen, die Regler lassen sich bei Bedarf aufklappen.
+  - Anlass: Etappe 3.3 hat die Bedienleiste um zwei Gruppen erweitert; die Unterkante des Bildes rückte dadurch auf 393 Punkten Breite von 498 auf 696 Punkte hinunter.
+  - Verhältnis zu **4.2**: Diese Etappe schafft die Voraussetzung (weniger Höhe), 4.2 nimmt das Sitzen im Hoch- und Querformat als Ganzes ab. Sie ersetzt 4.2 nicht.
 
 ### Abschnitt 4 — Darstellung und Politur
 
@@ -640,3 +646,31 @@ Fehler.*
      Grenze wird dadurch deutlicher. Seitlich läuft bei 393, 430 und 820 Punkten
      nichts über, und alle zehn Schaltflächen messen 44 Punkte in der Höhe. Das
      Sitzen im Hoch- und Querformat bleibt Abnahmekriterium von Etappe 4.2.
+- **2026-08-02:** Vier Rückmeldungen des Nutzers zur ersten Vorlage von Etappe 3.3.
+  1. *Abgenommen wird künftig über raw.githack statt über eine Artifact-Vorschau.*
+     Anlass: Das Veröffentlichen als Artifact hat in einer Session so viele Tokens
+     verbraucht, dass das Nutzungslimit erreicht wurde. Der GitHack-Weg ist ohnehin
+     der bessere: Er liefert die **unveränderten Dateien vom Branch** aus und belegt
+     damit auch, dass die echte Modulaufteilung lädt — was die zusammengelegte
+     Vorschau grundsätzlich nicht kann. `werkzeug/baue-vorschau.js` bleibt als
+     Rückfallweg bestehen, wird aber nicht mehr im Regelfall gebraucht. In
+     `CLAUDE.md` nachgetragen.
+  2. *Die Einstellungen sollen sich einklappen lassen.* Als **Etappe 3.5**
+     aufgenommen, nicht in 3.3 hineingezogen: Ein Umbau der Bedienleiste neben einer
+     Fehlersuche ließe hinterher nicht zuordnen, was woran lag.
+  3. *Das Pulsieren im Druckbild untersucht* — Ergebnis unter „Was im Druckbild
+     pulsiert" in der Architektur. **Weder Rechen- noch Darstellungsfehler:** Es ist
+     der Schall der Wirbelablösung, im Takt genau der halbe der Ablösung; der leere
+     Kanal pulsiert gar nicht. Am Programm wurde daraufhin **nichts geändert** —
+     zwei Wege, es wegzurechnen, wurden gemessen und beide verworfen, weil sie mehr
+     Aussage kosten als Flackern. Das Mittel dagegen ist der Windregler.
+  4. *Die Teilchen ziehen jetzt von links nach rechts durch*, statt überall zu
+     entstehen und abzulaufen — siehe „Die Teilchen ziehen von links nach rechts
+     durch". Die dabei erwartete Nebenwirkung trat ein und wurde gemessen: Ohne
+     Gegenmaßnahme versackten nach einer Minute Lauf 14 bis 26 % des Schwarms im
+     Totwasser (Kreis 387, aufsitzendes Rechteck 356, Platte 333 von 450 sichtbar).
+     Der Nutzer gab daraufhin ausdrücklich frei, für diesen Sonderfall von der
+     Vorgabe abzuweichen. Gewählt wurde die engste Abweichung, die trägt: Nur wer
+     zu langsam für einen sichtbaren Strich ist, wird nach vier Sekunden vorn neu
+     angesetzt. Damit stehen dieselben Fälle bei 433 / 423 / 404 von 450, und es
+     verschwindet nie etwas, das zu sehen war.

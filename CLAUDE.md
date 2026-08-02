@@ -162,6 +162,15 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   sieht. **Ungefragt eine lauffähige Vorschau als Artifact veröffentlichen**, sobald
   eine Etappe etwas Sichtbares ändert:
 
+  **Seit dem 2026-08-02 gilt dafür der GitHack-Weg als Regelfall, nicht die
+  Artifact-Vorschau.** Anlass: Das Veröffentlichen als Artifact hat einmal so viele
+  Tokens verbraucht, dass das Nutzungslimit des Nutzers erreicht war. Der
+  GitHack-Link kostet nur einen `git push` und ist ohnehin aussagekräftiger — er
+  liefert die unveränderten Dateien aus, die Vorschau legt sie zusammen. Also:
+  committen, pushen, den Link mit dem **vollen Commit-Schlüssel** vorlegen (siehe
+  unten). Die zusammengelegte Vorschau nur noch, wenn der GitHack-Weg einmal nicht
+  trägt:
+
   ```
   node werkzeug/baue-vorschau.js <arbeitsverzeichnis>/vorschau.html
   ```

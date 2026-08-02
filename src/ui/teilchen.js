@@ -13,12 +13,28 @@
  * Strömungsrichtung: ein einzelner Punkt zeigt nur, *wo* die Luft ist, ein
  * Strich zeigt zusätzlich, *wohin* und *wie schnell* sie geht.
  *
- * **Warum ein Teilchen wieder verschwindet:** Es läuft hinten aus dem Kanal,
- * es gerät in eine Wand — oder seine Zeit ist um. Das Letzte ist nötig, weil
- * die Luft hinter einem stumpfen Körper fast steht: ohne Ablauf sammelten sich
- * dort mit der Zeit alle Teilchen, und der Rest des Kanals liefe leer. Wer
- * abläuft, wird an einer zufälligen freien Stelle neu gesetzt, damit die
- * Verteilung gleichmäßig bleibt.
+ * **Links hinein, rechts hinaus.** Ein Teilchen entsteht am Einlass und
+ * verschwindet nur am Auslass — sonst nirgends. Es taucht nicht mitten im Bild
+ * auf und löst sich nicht mitten im Bild auf; was man sieht, ist durchgehend
+ * der Weg, den die Luft von vorn nach hinten nimmt. Gerät ein Teilchen an eine
+ * Wand, bleibt es stehen, statt zu verschwinden: die Wand ist ein Hindernis auf
+ * dem Weg, kein Ausgang.
+ *
+ * **Eine Ausnahme, und sie ist unsichtbar.** Hinter einem stumpfen Körper steht
+ * die Luft nahezu still. Was dort hineingerät, käme nie wieder heraus: gemessen
+ * waren nach einer Minute Lauf je nach Form 14 bis 26 % des Schwarms dort
+ * versackt, und der Kanal dahinter lief allmählich leer. Deshalb wird ein
+ * Teilchen, das **so langsam ist, dass ohnehin kein Strich mehr gezeichnet
+ * wird**, nach einer Weile am Einlass neu angesetzt. Die Grenze ist genau
+ * dieselbe, die über das Zeichnen entscheidet — es verschwindet also nie etwas,
+ * das zu sehen war. Ein Teilchen, das langsam, aber sichtbar weiterzieht,
+ * bleibt beliebig lange unterwegs.
+ *
+ * Beim Start und nach jeder Änderung an der Szene werden sie **über die
+ * Kanallänge verteilt** gesetzt. Das ist keine Ausnahme von der Regel, sondern
+ * genau der Zustand, den das Einströmen nach kurzer Zeit von selbst herstellt —
+ * setzte man alle vorn an, sähe man erst ein leeres Bild und dann einen
+ * geschlossenen Vorhang durchziehen.
  *
  * **Die Koordinaten sind die des Kerns**, y zählt also vom Boden nach oben. Das
  * Umdrehen für die Zeichenfläche besorgt `darstellung.js` an seiner einen
@@ -39,14 +55,26 @@ import { FLUID } from '../kern/loeser.js';
 const ANZAHL = 450;
 
 /**
- * Wie lange ein Teilchen höchstens lebt, in Einzelbildern.
+ * Über wie viele Spalten hinter dem Einlass ein neu entstehendes Teilchen
+ * gestreut wird.
  *
- * Gezählt wird in Bildern und nicht in Rechenschritten, weil es um das Auge
- * geht: Vier Sekunden bei 60 Bildern je Sekunde sind lang genug, dass man einem
- * Teilchen um den Körper herum folgen kann, und kurz genug, dass sich im
- * Totwasser nichts festsetzt. Im angehaltenen Zustand altert nichts.
+ * Genau auf die Einlassspalte gesetzt kämen die Teilchen im Gleichschritt und
+ * bildeten sichtbare Reihen. Ein paar Zellen Streuung genügen, damit sie
+ * unregelmäßig eintreffen, ohne dass es aussähe, als entstünden sie mitten im
+ * Bild.
  */
-const LEBENSDAUER = 240;
+const EINLASSTIEFE = 4;
+
+/**
+ * Wie viele Einzelbilder ein Teilchen unsichtbar langsam sein darf, bevor es
+ * am Einlass neu angesetzt wird.
+ *
+ * Vier Sekunden bei 60 Bildern je Sekunde. Kürzer, und ein Teilchen, das nur
+ * kurz in eine ruhige Ecke gerät, würde schon eingesammelt; länger, und der
+ * Nachlauf setzt sich wieder zu. Gezählt wird nur, solange es ununterbrochen
+ * zu langsam ist — jede sichtbare Bewegung setzt den Zähler zurück.
+ */
+const GEDULD = 240;
 
 /**
  * Wie lang ein Strich bei voller Skalengeschwindigkeit wird, in **groben**
@@ -101,45 +129,72 @@ export function erzeugeTeilchen(kanal, faktor = 1) {
 
   const x = new Float64Array(ANZAHL);
   const y = new Float64Array(ANZAHL);
-  const restzeit = new Int32Array(ANZAHL);
+  /** Wie viele Bilder in Folge dieses Teilchen schon unsichtbar langsam ist. */
+  const stillstand = new Int32Array(ANZAHL);
 
   saeeAlle();
 
   /**
-   * Setzt alle Teilchen neu — beim Anlegen und immer dann, wenn sich die Szene
-   * geändert hat. Die Lebenszeiten werden dabei zufällig gestreut, sonst liefen
-   * sie später alle im selben Bild ab und der Schwarm blinkte im Takt.
+   * Wie lang der Strich zu diesem Tempo wird — 0, wenn er zu kurz zum Zeichnen
+   * wäre.
+   *
+   * Steht an einer Stelle, weil zwei Dinge daran hängen: was gezeichnet wird
+   * und was als festgesetzt gilt. Zwei getrennte Grenzen liefen früher oder
+   * später auseinander, und dann verschwänden entweder sichtbare Teilchen oder
+   * unsichtbare blieben liegen.
+   */
+  function strichlaenge(tempo, windgeschwindigkeit) {
+    const anteil = Math.min(1, tempo / (TEMPO_OBERGRENZE * windgeschwindigkeit));
+    const laenge = anteil * STRICHLAENGE * faktor;
+    return laenge < STRICHLAENGE_MINDESTENS ? 0 : laenge;
+  }
+
+  /**
+   * Verteilt alle Teilchen über den Kanal — beim Anlegen und nach jeder
+   * Änderung an der Szene. Die x-Stelle ist dabei zufällig über die ganze
+   * Länge gestreut, weil das der Zustand ist, den das Einströmen ohnehin
+   * herstellt (siehe oben).
    */
   function saeeAlle() {
     for (let n = 0; n < ANZAHL; n++) {
-      setzeNeu(n);
-      restzeit[n] = 1 + Math.floor(Math.random() * LEBENSDAUER);
+      if (!setzeIrgendwo(n)) setzeAmEinlass(n);
     }
   }
 
   /**
-   * Setzt ein einzelnes Teilchen an eine zufällige freie Stelle.
+   * Setzt ein Teilchen an den Einlass — der einzige Ort, an dem im Lauf welche
+   * entstehen. In der Höhe zufällig, in der Länge über die ersten Spalten
+   * gestreut.
    *
-   * Gleichverteilt über den ganzen Kanal statt am Einlass: Wer vorne einsetzt,
-   * bekommt eine gleichmäßige Anströmung, lässt den Nachlauf hinter dem Körper
-   * aber leer, solange sich die Teilchen dort erst hineinarbeiten müssen.
-   * Versucht wird eine begrenzte Zahl von Malen — findet sich keine freie
-   * Stelle, bleibt das Teilchen, wo es ist, und wird im nächsten Bild wieder
-   * eingesammelt. (Ein Kanal, der ganz aus Wand besteht, kann nicht vorkommen:
-   * der Kern weist eine Form zurück, die Einlass, Auslass oder Decke berührt.)
+   * Die Einlassspalte selbst ist immer frei: der Kern weist eine Form zurück,
+   * die den Einlass berührt. Trotzdem wird geprüft, damit ein Teilchen nicht
+   * unbemerkt in einer Wand landet, wenn diese Zusage einmal fiele.
    */
-  function setzeNeu(n) {
+  function setzeAmEinlass(n) {
+    for (let versuch = 0; versuch < 20; versuch++) {
+      const px = 0.5 + Math.random() * EINLASSTIEFE;
+      const py = Math.random() * hoehe;
+      if (istFrei(px, py)) {
+        x[n] = px;
+        y[n] = py;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Wie `setzeAmEinlass`, nur über die ganze Kanallänge — nur für den Start. */
+  function setzeIrgendwo(n) {
     for (let versuch = 0; versuch < 20; versuch++) {
       const px = Math.random() * breite;
       const py = Math.random() * hoehe;
       if (istFrei(px, py)) {
         x[n] = px;
         y[n] = py;
-        restzeit[n] = LEBENSDAUER;
-        return;
+        return true;
       }
     }
-    restzeit[n] = LEBENSDAUER;
+    return false;
   }
 
   function istFrei(px, py) {
@@ -218,25 +273,46 @@ export function erzeugeTeilchen(kanal, faktor = 1) {
      *
      * @param {object} felder    Ergebnis von `leseFelder`
      * @param {number} schritte  gerechnete Schritte seit dem letzten Bild
+     * @param {number} windgeschwindigkeit
      */
-    treibe(felder, schritte) {
+    treibe(felder, schritte, windgeschwindigkeit) {
       if (schritte <= 0) return;
 
       for (let n = 0; n < ANZAHL; n++) {
-        restzeit[n] -= 1;
-        if (restzeit[n] <= 0) {
-          setzeNeu(n);
+        const { ux, uy } = geschwindigkeitAn(felder, x[n], y[n]);
+
+        // Zu langsam, um noch einen Strich zu ergeben? Dann mitzählen — wer zu
+        // lange am Stück unsichtbar ist, steckt fest und wird unten vorn neu
+        // angesetzt. Weiterbewegt wird er trotzdem: langsam ist nicht dasselbe
+        // wie stehend, und ein Kriechen soll ein Kriechen bleiben.
+        if (strichlaenge(Math.hypot(ux, uy), windgeschwindigkeit) === 0) {
+          stillstand[n] += 1;
+        } else {
+          stillstand[n] = 0;
+        }
+
+        if (stillstand[n] > GEDULD) {
+          setzeAmEinlass(n);
+          stillstand[n] = 0;
           continue;
         }
 
-        const { ux, uy } = geschwindigkeitAn(felder, x[n], y[n]);
         const naechstesX = x[n] + ux * schritte;
         const naechstesY = y[n] + uy * schritte;
 
-        if (!istFrei(naechstesX, naechstesY)) {
-          setzeNeu(n);
+        // Hinten hinaus: das Teilchen hat den Kanal durchquert und tritt vorn
+        // wieder ein. Der einzige Weg, auf dem ein *sichtbares* verschwindet.
+        if (naechstesX >= breite - 1) {
+          setzeAmEinlass(n);
+          stillstand[n] = 0;
           continue;
         }
+
+        // Gegen eine Wand: stehen bleiben, nicht verschwinden. Die Luft
+        // ringsherum trägt es im nächsten Bild in aller Regel weiter; ein
+        // Auflösen an der Körperkante sähe dagegen aus, als schluckte der
+        // Körper die Luft.
+        if (!istFrei(naechstesX, naechstesY)) continue;
 
         x[n] = naechstesX;
         y[n] = naechstesY;
@@ -259,9 +335,6 @@ export function erzeugeTeilchen(kanal, faktor = 1) {
      * @param {number} windgeschwindigkeit
      */
     zeichne(stift, felder, windgeschwindigkeit) {
-      const vollesTempo = TEMPO_OBERGRENZE * windgeschwindigkeit;
-      const hoechstlaenge = STRICHLAENGE * faktor;
-
       stift.beginPath();
       for (let n = 0; n < ANZAHL; n++) {
         const { ux, uy } = geschwindigkeitAn(felder, x[n], y[n]);
@@ -269,9 +342,11 @@ export function erzeugeTeilchen(kanal, faktor = 1) {
         if (tempo === 0) continue;
 
         // Die Länge zeigt die Geschwindigkeit — bei voller Skalengeschwindigkeit
-        // ist der Strich am längsten, in ruhiger Luft nur noch ein Stummel.
-        const laenge = Math.min(1, tempo / vollesTempo) * hoechstlaenge;
-        if (laenge < STRICHLAENGE_MINDESTENS) continue;
+        // ist der Strich am längsten, in ruhiger Luft nur noch ein Stummel. Zu
+        // kurz zum Zeichnen heißt zugleich „gilt als festgesetzt": eine Grenze
+        // für beides, siehe `strichlaenge`.
+        const laenge = strichlaenge(tempo, windgeschwindigkeit);
+        if (laenge === 0) continue;
 
         // Der Strich liegt **hinter** dem Teilchen: er zeigt, wo es herkam,
         // und läuft an seiner gegenwärtigen Stelle aus. Vorweg gezeichnet

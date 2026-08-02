@@ -261,7 +261,7 @@ export function erzeugeDarstellung(zeichenflaeche, kanal) {
 
       if (!mitTeilchen) return;
 
-      teilchen.treibe(felder, schritte);
+      teilchen.treibe(felder, schritte, kanal.windgeschwindigkeit);
 
       // Die Teilchen rechnen in Zellen und in den Koordinaten des Kerns, y also
       // vom Boden nach oben. Statt jeden Punkt einzeln umzurechnen, wird die
