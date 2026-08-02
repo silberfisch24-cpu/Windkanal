@@ -102,7 +102,7 @@ const SKALENSTUFEN = 256;
  * Womit die Grenze wächst, ist je Größe verschieden und nicht geraten, sondern
  * aus dem Verfahren abgeleitet und nachgemessen (4000 Schritte, vier Szenen,
  * alle drei Auflösungsstufen, Wind 30 % und 100 % — siehe Änderungsverlauf in
- * `SPEC.md` zum 2026-08-01):
+ * `SPEC.md` zum 2026-08-02):
  *
  *   - **Geschwindigkeit** wächst geradewegs mit dem Wind. Das Doppelte deckt ab,
  *     was an der Körperkante auftritt: dort wird die Luft auf gut das Doppelte
@@ -156,12 +156,11 @@ export const ANFANGSANSICHT = 'tempo';
  * Die **Teilchenstriche** aber sind Linien und keine Zellen. Auf einer Fläche
  * von 200 Punkten Breite, die der Browser auf gut 900 Punkte zieht, ist der
  * dünnste zeichenbare Strich fünf Bildschirmpunkte breit und verwischt dabei:
- * Aus Strichen wurden Flecken — im ersten Versuch am 2026-08-01 genau so
+ * Aus Strichen wurden Flecken — im ersten Versuch am 2026-08-02 genau so
  * gesehen. Mit vier Punkten je Zelle sind die Striche fein genug, um Richtung
  * und Länge zu zeigen. Mehr bringt nichts mehr und kostet Zeichenfläche.
  */
 const FEINHEIT = 4;
-
 
 /**
  * Richtet das Zeichnen auf einer Zeichenfläche für einen bestimmten Kanal ein.
