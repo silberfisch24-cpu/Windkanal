@@ -9,16 +9,16 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
   (nötig, weil ES-Module aus einer lokalen Datei heraus vom Browser blockiert werden)
 - Kernlogik prüfen (Abschnitt 1, ohne Oberfläche): `node werkzeug/pruefe-kern.js` —
   **allein laufen lassen.** Ein Teil misst die Rechenzeit je Auflösungsstufe und schlägt
-  fehl, wenn nebenher etwas anderes rechnet (am 2026-08-01 passiert, weil parallel ein
-  kopfloser Browser lief). Ein Fehlschlag genau dieses Punktes ist deshalb erst ein
-  Befund, wenn der Lauf ohne Nebenlast wiederholt wurde.
-- Vorschau für die Abnahme bauen: `node werkzeug/baue-vorschau.js <ziel.html>` — legt die
-  Seite zu einer einzigen Datei zusammen, damit sie sich als Artifact veröffentlichen
-  lässt. Nur für Cloud-Sessions nötig, siehe dort. **Kein Build-Schritt:** Das Ergebnis
-  muss außerhalb des Repos liegen (das Skript weigert sich sonst) und wird nie eingecheckt.
-- Tests: `node --test tests/`
+  fehl, wenn nebenher etwas anderes rechnet. Ein Fehlschlag genau dieses Punktes ist
+  deshalb erst ein Befund, wenn der Lauf ohne Nebenlast wiederholt wurde.
+- Tests: `node --test tests/` — **greift noch nicht.** `tests/` ist bis Abschnitt 5 leer,
+  der Aufruf bricht deshalb ab. Abgesichert wird bis dahin über `werkzeug/pruefe-kern.js`.
 - Linting: keins — bewusst, siehe Abhängigkeiten in `SPEC.md`
 - Build: keiner — die Dateien werden unverändert ausgeliefert
+- Sichtbares prüfen und dem Nutzer vorlegen: Skill `browser-abnahme`. Dort steht der
+  ganze Weg — auch `werkzeug/baue-vorschau.js`, das die Seite als Rückfallweg zu einer
+  Datei zusammenlegt. **Kein Build-Schritt:** Das Ergebnis liegt außerhalb des Repos (das
+  Skript weigert sich sonst) und wird nie eingecheckt.
 
 ## Struktur
 
@@ -26,13 +26,10 @@ getroffenen Entscheidungen dort nachlesen, statt anzunehmen.
 - Oberfläche: `src/ui/` — alles Bildschirmbezogene; ruft den Kern auf, nie umgekehrt
 - Einstiegspunkt: `index.html`
 - Prüfskripte für die Kommandozeile: `werkzeug/` — dort dürfen **Maße und Rechenzeiten**
-  von den Voreinstellungen abweichen, wenn es allein der Erkennbarkeit dient: im groben
-  Textbild (Etappe 1.2: kürzerer Kanal, Etappe 1.3: dickere Platte und dickeres Profil)
-  oder weil eine Erscheinung Zeit braucht, bis sie sich zeigt (Etappe 1.4: 6600 statt
-  2000 Schritte, damit die Wirbelablösung eingeschwungen ist). Die Abweichung gehört mit
-  Begründung in den Änderungsverlauf von `SPEC.md`, sonst liest sie sich später wie eine
-  stille Änderung der Voreinstellungen. Dort liegt auch `baue-vorschau.js`, das nichts
-  prüft, sondern die Seite für die Abnahme zusammenlegt.
+  von den Voreinstellungen abweichen, wenn es allein der Erkennbarkeit dient (gröberes
+  Textbild, längerer Lauf bis eine Erscheinung eingeschwungen ist). Die Abweichung gehört
+  mit Begründung in den Änderungsverlauf von `SPEC.md`, sonst liest sie sich später wie
+  eine stille Änderung der Voreinstellungen.
 - Tests: `tests/`
 - Versionsstand: `VERSION.md` — daraus setzt `.github/workflows/tag.yml` den Tag
 
@@ -84,15 +81,19 @@ Lege ihm nach jeder Etappe ungefragt vor:
 
 Frage nie "ist das gut so?" — solche Fragen bekommen Zustimmung statt Prüfung.
 
+Ändert die Etappe etwas Sichtbares, gehört eine lauffähige Vorschau dazu — ungefragt,
+Weg im Skill `browser-abnahme`.
+
 Ohne ausdrückliche Bestätigung: keinen Tag setzen, nicht zur nächsten Etappe übergehen.
 
 ## Sessionabschluss — ungefragt, bevor die Session endet
 
 1. Entscheidungen und geänderte Annahmen in `SPEC.md` nachtragen
 2. Stand in Etappenliste und Kern-Abschnitt aktualisieren
-3. Zwei-Mal-Regel prüfen: Wurde etwas zum zweiten Mal erklärt? Dann hier oder in
-   einen Skill aufnehmen und dem Nutzer sagen, was du aufgenommen hast.
-4. Commit setzen; bei bestätigter Etappe zusätzlich den Tag
+3. Zwei-Mal-Regel prüfen: Wurde etwas zum zweiten Mal erklärt? Dann hier aufnehmen (Fakt,
+   immer gebraucht) oder in einen Skill (Vorgehen für einen bestimmten Anlass) — und dem
+   Nutzer sagen, was du aufgenommen hast.
+4. Commit setzen; bei bestätigter Etappe zusätzlich `VERSION.md`
 
 Was nur im Gesprächsverlauf steht, ist nach der Session verloren. Nachtragen ist
 kein Abschlussritual, sondern Voraussetzung.
@@ -111,183 +112,38 @@ Versionsnummern nach Nutzbarkeitsgrad, nicht nach Projektstruktur:
 
 Vergebene Tags werden nie umnummeriert oder umbenannt.
 
-Commit-Nachricht **im Klartext**, fachlich statt technisch — der Nutzer muss die
-Historie überfliegen können, ohne den Änderungssatz zu öffnen:
+Commit-Nachricht **im Klartext**, fachlich statt technisch — der Nutzer muss die Historie
+überfliegen können, ohne den Änderungssatz zu öffnen. Erste Zeile: was sich geändert hat,
+plus Etappennummer. Darunter Stichpunkte: was das Programm jetzt anders macht. Begründung
+nur, wo sie nicht auf der Hand liegt. Vorbild sind die bestehenden Nachrichten in
+`git log`.
 
-```
-Günstigerprüfung ergänzt (Etappe 3.2)
+## In Cloud-Sessions (claude.ai/code)
 
-- Beide Berechnungswege werden verglichen, das günstigere Ergebnis wird übernommen
-- Betrifft nur Fälle mit Kapitaleinkünften
-- Grund: Die Einzelberechnung lieferte bei niedrigen Einkommen zu hohe Werte
-```
+Die Arbeit läuft über einen Branch statt über direkte Commits auf den Hauptzweig.
+**Ein Branch je Etappe, nicht je Session.** Die Abnahme durch den Nutzer bleibt
+Voraussetzung — erst danach zum Pull Request.
 
-Erste Zeile: was sich geändert hat, plus Etappennummer. Stichpunkte: was das
-Programm jetzt anders macht. Begründung nur, wo sie nicht auf der Hand liegt.
-
-**In Cloud-Sessions** (claude.ai/code) läuft die Arbeit über einen Branch statt über
-direkte Commits auf den Hauptzweig. Dann gilt:
-
-- Ein Branch je Etappe, nicht je Session
-- Die Abnahme durch den Nutzer bleibt Voraussetzung — erst danach zum Pull Request
-- **Tags kann eine Cloud-Session grundsätzlich nicht selbst setzen — auch nicht mit
-  Zugriff auf den Hauptzweig.** Die Umgebung sperrt jedes Anlegen von Tags: `git push`
-  von `refs/tags/*` und die GitHub-API-Pfade `/git/tags` und `/git/refs` antworten mit
-  403. Eine neue Session mit anderen Rechten hilft deshalb nicht. Am 2026-07-30
-  geprüft. Gewöhnliche Branch-Pushes und auch das Pushen von `.github/workflows/`
-  gehen durch — darauf beruht der Weg unten.
-- **Deshalb entsteht der Tag über `VERSION.md`.** Bei einer bestätigten Etappe
-  schreibst du diese Datei neu: erste Zeile die Versionsnummer in der Form `v0.1`,
-  darunter die Stichpunkte im Klartext. Beim Merge nach `main` legt
-  `.github/workflows/tag.yml` daraus den annotierten Tag an. Existiert die Nummer
-  schon, passiert nichts — überschrieben wird nie.
-- `VERSION.md` gehört in denselben Pull Request wie die Etappe, nicht in einen
-  eigenen. Vergisst du sie, läuft der Workflow nicht an und der Tag fehlt
-  stillschweigend — deshalb bei jeder bestätigten Etappe mit vorlegen.
-- Schlägt der Workflow fehl, ist die wahrscheinlichste Ursache die Einstellung
-  *Settings → Actions → General → **Workflow permissions***; sie muss auf
-  „Read and write permissions" stehen. Das ist etwas, das nur der Nutzer erledigen
-  kann. Nicht zu verwechseln mit *Actions permissions* weiter oben auf derselben
-  Seite („Allow all actions …") — die regelt etwas anderes.
-- **Branches kann eine Cloud-Session ebenso wenig löschen wie Tags setzen.**
-  `git push origin --delete` meldet „Everything up-to-date" und bricht die Verbindung
-  ab; der API-Weg antwortet mit 403 („Write access to this GitHub API path is not
-  permitted through this proxy"). Am 2026-07-30 geprüft, Wiederholversuche helfen
-  nicht. Den gemergten Branch löscht deshalb der Nutzer selbst — auf der
-  Pull-Request-Seite über **„Delete branch"**. Nach jedem Merge ungefragt daran
-  erinnern und dazusagen, dass nichts verloren geht.
-- **Der Nutzer kann die Seite nicht über `localhost` ansehen.** Die Session läuft in
-  einem Container in der Cloud; `python3 -m http.server 8000` startet dort und ist für
-  ihn nicht erreichbar. Ab Abschnitt 2 hängt aber jede Abnahme daran, dass er das Bild
-  sieht. **Ungefragt eine lauffähige Vorschau vorlegen**, sobald eine Etappe etwas
-  Sichtbares ändert — seit dem 2026-08-02 über den **GitHack-Link**, nicht mehr als
-  Artifact:
-
-  ```
-  https://raw.githack.com/silberfisch24-cpu/Windkanal/<voller-commit-schluessel>/index.html
-  ```
-
-  Anlass für den Wechsel: Das Veröffentlichen als Artifact hat einmal so viele
-  Tokens verbraucht, dass das Nutzungslimit des Nutzers erreicht war. Der
-  GitHack-Link kostet nur einen `git push` und ist ohnehin aussagekräftiger — er
-  liefert die unveränderten Dateien aus, die Vorschau legt sie zusammen. Also:
-  committen, pushen, den Link mit dem **vollen Commit-Schlüssel** vorlegen (zum
-  Dienst selbst siehe unten). Die zusammengelegte Vorschau nur noch, wenn der
-  GitHack-Weg einmal nicht trägt:
-
-  ```
-  node werkzeug/baue-vorschau.js <arbeitsverzeichnis>/vorschau.html
-  ```
-
-  Das Skript legt die Seite zu einer einzigen Datei zusammen — ein Artifact kann nicht
-  aus mehreren bestehen, die Quellen sind aber ES-Module. Es sucht sich die Dateien
-  selbst aus den `import`-Zeilen zusammen, es gibt also **keine Liste zu pflegen**, wenn
-  eine Etappe eine Datei hinzufügt. Es bricht ab, wenn zwei Dateien denselben Namen auf
-  oberster Ebene vergeben, und es weigert sich, ins Repo zu schreiben.
-
-  Am Quelltext wird dabei nichts geändert außer den `import`-Zeilen und dem Wort
-  `export` — auch nicht die Gestaltung. Der Nutzer soll das abnehmen, was ausgeliefert
-  wird, nicht eine aufgehübschte Fassung. Ihm jedes Mal dazusagen, was die Vorschau
-  **nicht** belegt: dass die echte Modulaufteilung im Browser lädt und dass der
-  Pages-Link trägt (beides Abnahmekriterium von Etappe 2.3).
-- **Die Vorschau zeigt nicht, ob die echte Dateiaufteilung lädt.** Sie legt alle Module zu
-  einer Datei zusammen — genau das, was bei einer Etappe zu prüfen wäre, die Dateien
-  hinzufügt, verschiebt oder die `<script>`-Zeilen in `index.html` anfasst. Dafür gibt es
-  einen zweiten Weg, der die **unveränderten Dateien vom Branch** ausliefert:
-
-  ```
-  https://raw.githack.com/silberfisch24-cpu/Windkanal/<voller-commit-schluessel>/index.html
-  ```
-
-  Der Dienst reicht Repo-Dateien mit den richtigen Dateitypen durch; GitHub selbst schickt
-  rohe Dateien als reinen Text, und der Browser führt sie dann nicht als Programm aus. Es
-  wird nichts installiert und nichts am Repo geändert, und weil das Repo öffentlich ist,
-  wird nichts sichtbar, was es nicht ohnehin wäre. Am 2026-07-31 vom Nutzer erprobt.
-  **Den vollen Commit-Schlüssel einsetzen, nicht den Branchnamen** — die Branchnamen der
-  Cloud-Sessions enthalten einen Schrägstrich, an dem sich der Dienst verschluckt, und ein
-  fester Stand ist bei einer Abnahme ohnehin das Richtige. Diesen Link **zusätzlich** zur
-  Vorschau vorlegen, wenn die Etappe an der Dateiaufteilung rührt; sonst genügt die
-  Vorschau. Der Pages-Link selbst zeigt immer `main` und ist vor dem Merge nicht prüfbar.
-- **Vor dem Veröffentlichen im eigenen Browser gegenprüfen.** Chromium liegt unter
-  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`; mit `--headless --no-sandbox
-  --disable-gpu --screenshot=… --virtual-time-budget=…` gegen einen lokalen Server im
-  Arbeitsverzeichnis lässt sich ein Bild aufnehmen und selbst ansehen. So fallen
-  Zeichensatz- und Ladefehler auf, bevor der Nutzer sie sieht — genau das ist am
-  2026-07-31 passiert.
-- **Bedienelemente dabei wirklich betätigen, nicht nur abbilden.** Ein Standbild zeigt
-  den Anfangszustand; ob eine Schaltfläche oder ein Regler etwas bewirkt, zeigt es
-  nicht. Playwright ist in der Umgebung **nicht** installiert, und der kopflose Browser
-  kann von sich aus nicht klicken. Der Weg, der sich am 2026-07-31 (Etappe 2.2) bewährt
-  hat: `index.html` samt `src/` ins Arbeitsverzeichnis kopieren, in die **Kopie** vor
-  `</body>` ein kleines Skript einsetzen, das eine über `?klick=Profil,Anhalten`
-  übergebene Liste von Beschriftungen nacheinander per `setTimeout` anklickt, und dann
-  je Zustand ein Bild aufnehmen. Das Skript gehört ausschließlich in die Kopie —
-  **nie ins Repo**, aus demselben Grund, aus dem sich `baue-vorschau.js` weigert, dorthin
-  zu schreiben. Zu prüfen ist dabei auch der angehaltene oder umgeschaltete Zustand,
-  nicht nur der eingeschwungene.
-- **Ein Regler lässt sich nicht anklicken.** Für Schieber (`input type="range"`) im
-  Prüfskript stattdessen `wert` setzen und `dispatchEvent(new Event('input', { bubbles:
-  true }))` auslösen — sonst passiert nichts, und es sähe aus, als wirkte der Regler
-  nicht. Am 2026-08-01 (Etappe 3.1) so gemacht. Lohnend ist außerdem, das Skript am Ende
-  den **Zustand als Text** in einen Kasten schreiben zu lassen (Reglerwerte, Grenzen,
-  Beschriftungen) und die Seite mit `--dump-dom` abzurufen: Das liest sich zuverlässiger
-  als aus Bildpunkten, und Fehler fallen auf, statt in einem hübschen Bild unterzugehen.
-- **`--window-size` stellt keine Handybreite ein.** Chrome erzwingt eine
-  Mindestfensterbreite von 500 Punkten: `--window-size=393,852` ergibt ein Sichtfeld von
-  500, das Bild wird aber auf 393 beschnitten — die Seite sieht dann aus, als liefe sie
-  über den Rand, obwohl sie es nicht tut. Genau darauf bin ich am 2026-07-31 (Etappe 2.3)
-  hereingefallen. `--force-device-scale-factor` hilft nicht, es skaliert die Rasterung,
-  nicht das Sichtfeld. Der Weg, der trägt: eine Hilfsseite im Arbeitsverzeichnis, die
-  `index.html` in einem `<iframe>` fester Breite lädt. Der Rahmen bekommt ein echtes
-  Sichtfeld dieser Breite; darin lassen sich `scrollWidth` gegen `clientWidth` und die
-  Größe der Schaltflächen messen. Wie jedes Prüfgerüst gehört auch diese Seite
-  ausschließlich ins Arbeitsverzeichnis, **nie ins Repo**.
-- **`--virtual-time-budget` misst keine Laufzeit.** Unter virtueller Zeit stimmen die
-  Angaben aus `performance.now()` nicht mit der Wanduhr überein; die angezeigte Bildfolge
-  („0 Bilder je Sekunde") und der Fortschritt der Strömung sind dort nicht aussagekräftig.
-  Für Fragen nach Geschwindigkeit oder Einschwingen die Rechnung stattdessen ohne Browser
-  über ein kleines Node-Skript gegen `src/kern/` laufen lassen. **Misst das Programm selbst
-  die Zeit** — seit Etappe 3.2 tut es das beim Start —, ist auch das Ergebnis dieser
-  Messung unter virtueller Zeit wertlos. Dann ohne `--virtual-time-budget` prüfen: das
-  Prüfskript schreibt seinen Zustand im `load`-Handler statt in einem `setTimeout`, und
-  `--dump-dom` allein wartet auf `load`. So läuft die Wanduhr echt. Am 2026-08-01 (Etappe
-  3.2) so gemacht; mit virtueller Zeit kam dieselbe Messung einmal auf 3,4 und einmal auf
-  288 Millionen Zellen je Sekunde.
-- **Soll die Seite über Minuten wirklich laufen, trägt `--dump-dom` nicht mehr.** Es
-  wartet nur auf `load`, und virtuelle Zeit hilft hier nicht: Ein `setInterval`, das den
-  Zustand mitschreibt, frisst unter virtueller Zeit die ganze Uhr, bevor
-  `requestAnimationFrame` überhaupt drankommt — die Rechnung steht dann bei null Schritten.
-  Der Weg, der sich am 2026-08-02 (Etappe 3.4) bewährt hat, um einen Zusammenbruch nach
-  knapp 3000 Rechenschritten zu beobachten:
-  1. Den lokalen Server so starten, dass sein **Zugriffsprotokoll in eine Datei** geht
-     (`python3 -m http.server 8140 > protokoll.txt 2>&1`).
-  2. Die Prüfseite meldet jedes Ereignis mit `fetch('/melde?' + encodeURIComponent(text))`.
-     Der Server antwortet mit 404 — das stört nicht, die Zeile steht im Protokoll.
-  3. Chromium mit `--headless=new` und **ohne** `--dump-dom`/`--screenshot` starten; er
-     läuft dann weiter, statt nach dem Laden zu beenden.
-  4. Warten, bis die Abschlussmeldung im Protokoll steht, dann Chromium beenden und die
-     Zeilen aus dem Protokoll herausfiltern.
-
-  Beobachtet wird dabei über einen `MutationObserver` auf der Laufanzeige, nicht über
-  einen Zeitgeber. Die Reihenfolge der Meldungen kann leicht durcheinandergeraten, weil
-  `fetch` nebenläufig ist — für „ist es eingetreten" reicht es, für „genau in dieser
-  Reihenfolge" nicht.
-- **`pkill -f` bringt die eigene Shell um.** Das Muster steht auch in der Befehlszeile des
-  Shell-Prozesses, der den Befehl ausführt; `pkill -f "http.server"` trifft deshalb sich
-  selbst, der Rest des Befehls läuft nicht mehr, und was danach kommen sollte, bleibt
-  liegen. Am 2026-08-02 zweimal darauf hereingefallen — es sah aus, als sei der Server
-  nicht hochgekommen, dabei war die Zeile nie ausgeführt worden. Stattdessen über die
-  Prozessnummern gehen und das Muster in Klammern setzen, damit es sich nicht selbst
-  findet: `for P in $(pgrep -f '[h]ttp\.server'); do kill "$P"; done`.
-  **Die Klammern allein genügen nicht**, wenn derselbe Befehl den Server auch startet: In
-  `nohup python3 -m http.server 8160 … ; for P in $(pgrep -f '[h]ttp\.server')` steht die
-  Zeichenfolge ein paar Zeichen weiter vorn im Klartext, und der Treffer sitzt wieder.
-  Aufräumen deshalb **in einem eigenen Befehl**, nicht angehängt.
-- **Das Prüfgerüst darf die Seitenbreite nicht verfälschen.** Ein eingesetzter Kasten mit
-  `white-space: pre` und langen Zeilen macht das Dokument breiter als die Seite und meldet
-  einen Überlauf, den es ohne ihn nicht gibt — am 2026-08-01 zunächst als Befund
-  missverstanden. Solche Kästen bekommen `overflow: hidden; max-width: 100%`, bevor
-  `scrollWidth` gegen `clientWidth` gemessen wird.
+- **Tags kann eine Cloud-Session nicht selbst setzen**, auch nicht mit Zugriff auf den
+  Hauptzweig: `git push` von `refs/tags/*` und die API-Pfade `/git/tags` und `/git/refs`
+  antworten mit 403. Eine neue Session mit anderen Rechten hilft nicht (2026-07-30
+  geprüft).
+- **Deshalb entsteht der Tag über `VERSION.md`.** Bei bestätigter Etappe diese Datei neu
+  schreiben: erste Zeile die Nummer in der Form `v0.1`, darunter Stichpunkte im Klartext.
+  Beim Merge nach `main` legt `.github/workflows/tag.yml` daraus den annotierten Tag an;
+  eine schon vergebene Nummer wird nie überschrieben. `VERSION.md` gehört in **denselben**
+  Pull Request wie die Etappe — fehlt sie, läuft der Workflow nicht an und der Tag fehlt
+  stillschweigend.
+- Schlägt der Workflow fehl, steht wahrscheinlich *Settings → Actions → General →
+  **Workflow permissions*** nicht auf „Read and write permissions". Das kann nur der
+  Nutzer ändern. Nicht zu verwechseln mit *Actions permissions* weiter oben auf derselben
+  Seite.
+- **Branches kann eine Cloud-Session ebenso wenig löschen** (2026-07-30 geprüft,
+  Wiederholversuche helfen nicht). Den gemergten Branch löscht der Nutzer selbst auf der
+  Pull-Request-Seite über **„Delete branch"**. Nach jedem Merge ungefragt daran erinnern
+  und dazusagen, dass nichts verloren geht.
+- Der Nutzer erreicht `localhost` in der Cloud nicht — für alles Sichtbare deshalb Skill
+  `browser-abnahme`.
 
 ## Umfangsänderungen
 
@@ -297,17 +153,7 @@ sie umsetzt.** Der Nutzer entscheidet, ob der Umfang wächst.
 `SPEC.md` wird ergänzt, nie still überschrieben — datierter Eintrag im
 Änderungsverlauf.
 
-## Welcher Skill wann
-
-| Situation | Skill |
-|---|---|
-| Etappe umsetzen (Regelfall) | `projekt-etappe` |
-| Prüfen, Qualität sichern, Doku fertigstellen | `projekt-review` |
-| Neues Projekt | `projekt-start` |
-
-## Einordnung neuer Anforderungen
-
-Ordne zuerst ein, dann handle:
+Ordne eine neue Anforderung zuerst ein, dann handle:
 
 | Art | Vorgehen |
 |---|---|
@@ -321,3 +167,12 @@ Projekte unbemerkt etwas anderes werden, als sie sein sollten.
 
 Wird dieselbe Stelle wiederholt angefasst, ist das ein Strukturproblem, kein
 Zufall — sprich es an.
+
+## Welcher Skill wann
+
+| Situation | Skill |
+|---|---|
+| Etappe umsetzen (Regelfall) | `projekt-etappe` |
+| Sichtbares prüfen und vorlegen | `browser-abnahme` |
+| Prüfen, Qualität sichern, Doku fertigstellen | `projekt-review` |
+| Neues Projekt | `projekt-start` |
