@@ -83,8 +83,29 @@ const GEDULD = 240;
  */
 const STRICHLAENGE = 4.5;
 
-/** Kürzer als das wird kein Strich gezeichnet — darunter ist es ein Punkt. */
+/**
+ * Kürzer wird ein Strich nie — auch in fast stehender Luft bleibt ein Stummel
+ * übrig.
+ *
+ * Anfangs wurde unterhalb dieser Länge **gar nichts** gezeichnet. Das war ein
+ * Fehler, und zwar der, den man am Bild zuerst sieht: Ein Teilchen, das durch
+ * eine langsame Stelle zieht, erlosch dort und tauchte danach wieder auf — es
+ * sah aus, als entstünde mitten im Kanal eines, obwohl es die ganze Zeit
+ * dieselbe Bahn lief. Wer sichtbar ist, bleibt sichtbar.
+ */
 const STRICHLAENGE_MINDESTENS = 0.5;
+
+/**
+ * Unterhalb welchen Anteils der Windgeschwindigkeit ein Teilchen als
+ * festsitzend gilt.
+ *
+ * Bis zum 2026-08-02 war das dieselbe Grenze, die über das Zeichnen entschied —
+ * das ging nicht mehr, seit auch die Langsamsten gezeichnet werden. Der Wert
+ * entspricht ungefähr der alten Grenze, ist jetzt aber eigens benannt: Er sagt
+ * „diese Luft steht", und das ist etwas anderes als „dieser Strich wäre zu
+ * kurz".
+ */
+const KRIECHTEMPO = 0.1;
 
 /**
  * Strichstärken in groben Zellen: erst der dunkle Saum, dann der helle Kern.
@@ -135,18 +156,13 @@ export function erzeugeTeilchen(kanal, faktor = 1) {
   saeeAlle();
 
   /**
-   * Wie lang der Strich zu diesem Tempo wird — 0, wenn er zu kurz zum Zeichnen
-   * wäre.
-   *
-   * Steht an einer Stelle, weil zwei Dinge daran hängen: was gezeichnet wird
-   * und was als festgesetzt gilt. Zwei getrennte Grenzen liefen früher oder
-   * später auseinander, und dann verschwänden entweder sichtbare Teilchen oder
-   * unsichtbare blieben liegen.
+   * Wie lang der Strich zu diesem Tempo wird. Nach oben durch das Doppelte der
+   * Windgeschwindigkeit begrenzt, nach unten durch den Stummel — gezeichnet
+   * wird immer.
    */
   function strichlaenge(tempo, windgeschwindigkeit) {
     const anteil = Math.min(1, tempo / (TEMPO_OBERGRENZE * windgeschwindigkeit));
-    const laenge = anteil * STRICHLAENGE * faktor;
-    return laenge < STRICHLAENGE_MINDESTENS ? 0 : laenge;
+    return Math.max(STRICHLAENGE_MINDESTENS, anteil * STRICHLAENGE * faktor);
   }
 
   /**
@@ -281,11 +297,11 @@ export function erzeugeTeilchen(kanal, faktor = 1) {
       for (let n = 0; n < ANZAHL; n++) {
         const { ux, uy } = geschwindigkeitAn(felder, x[n], y[n]);
 
-        // Zu langsam, um noch einen Strich zu ergeben? Dann mitzählen — wer zu
-        // lange am Stück unsichtbar ist, steckt fest und wird unten vorn neu
-        // angesetzt. Weiterbewegt wird er trotzdem: langsam ist nicht dasselbe
-        // wie stehend, und ein Kriechen soll ein Kriechen bleiben.
-        if (strichlaenge(Math.hypot(ux, uy), windgeschwindigkeit) === 0) {
+        // In stehender Luft mitzählen — wer zu lange am Stück nicht vorankommt,
+        // steckt im Totwasser fest und wird unten vorn neu angesetzt.
+        // Weiterbewegt wird er trotzdem: langsam ist nicht dasselbe wie
+        // stehend, und ein Kriechen soll ein Kriechen bleiben.
+        if (Math.hypot(ux, uy) < KRIECHTEMPO * windgeschwindigkeit) {
           stillstand[n] += 1;
         } else {
           stillstand[n] = 0;
@@ -339,14 +355,22 @@ export function erzeugeTeilchen(kanal, faktor = 1) {
       for (let n = 0; n < ANZAHL; n++) {
         const { ux, uy } = geschwindigkeitAn(felder, x[n], y[n]);
         const tempo = Math.hypot(ux, uy);
-        if (tempo === 0) continue;
+
+        // Steht die Luft genau still, gibt es keine Richtung, in die ein Strich
+        // zeigen könnte. Dann wird ein Punkt gesetzt — die runde Strichkappe
+        // macht aus einer Strecke der Länge null einen. Auch hier gilt: nichts
+        // auslassen, sonst blinkt es.
+        if (tempo === 0) {
+          stift.moveTo(x[n], y[n]);
+          stift.lineTo(x[n], y[n]);
+          continue;
+        }
 
         // Die Länge zeigt die Geschwindigkeit — bei voller Skalengeschwindigkeit
-        // ist der Strich am längsten, in ruhiger Luft nur noch ein Stummel. Zu
-        // kurz zum Zeichnen heißt zugleich „gilt als festgesetzt": eine Grenze
-        // für beides, siehe `strichlaenge`.
+        // ist der Strich am längsten, in ruhiger Luft nur noch ein Stummel.
+        // Übersprungen wird keines: ein aussetzendes Teilchen sähe aus, als
+        // entstünde mitten im Kanal ein neues.
         const laenge = strichlaenge(tempo, windgeschwindigkeit);
-        if (laenge === 0) continue;
 
         // Der Strich liegt **hinter** dem Teilchen: er zeigt, wo es herkam,
         // und läuft an seiner gegenwärtigen Stelle aus. Vorweg gezeichnet

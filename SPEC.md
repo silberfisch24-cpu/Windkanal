@@ -116,6 +116,7 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Woran die Skalengrenzen hängen** (festgelegt in Etappe 3.3): Alle drei bleiben **fest je Bild** statt am größten Wert des Einzelbildes zu hängen (Begründung unter „Bild auf dem Bildschirm"), wachsen aber mit dem Wind, weil der sich seit Etappe 3.1 im Lauf verstellen lässt. **Womit** sie wachsen, ist je Größe verschieden und aus dem Verfahren abgeleitet: Geschwindigkeit geradewegs mit dem Wind (Grenze 2 · u), Druck mit dessen **Quadrat**, weil Staudruck ½·ρ·u² ist (Grenze 2 · u²), Wirbelstärke mit dem Wind **je Zelle**, also geteilt durch den Faktor der Auflösungsstufe (Grenze 0,5 · u/f) — auf einem feineren Gitter verteilt sich dieselbe Scherung auf mehr Zellen. Alle drei Zahlen sind gemessen, nicht geschätzt; siehe Änderungsverlauf zum 2026-08-01.
 - **Vier Bildpunkte je Zelle statt einem** (geändert in Etappe 3.3): Das Farbfeld entsteht unverändert mit **einem Bildpunkt je Zelle** — daran ändert sich nichts, es wird nur auf einer unsichtbaren Fläche gemalt und in einem Zug auf die sichtbare gezogen. Die sichtbare Zeichenfläche ist seither **viermal so fein**, weil die Teilchenstriche Linien sind und keine Zellen: Auf 200 Punkten Breite, die der Browser auf gut 900 zieht, ist der dünnste zeichenbare Strich fünf Bildschirmpunkte breit und verwischt — aus Strichen wurden Flecken. Der Umweg über die zweite Fläche ist nötig, weil `putImageData` weder vergrößert noch glättet.
 - **Die Teilchen ziehen von links nach rechts durch** (festgelegt in Etappe 3.3, nach der ersten Abnahme geändert): Ein Teilchen entsteht am **Einlass** und verschwindet nur am **Auslass**. Es taucht nicht mitten im Bild auf und löst sich nicht mitten im Bild auf; an einer Wand bleibt es stehen, statt zu verschwinden. Der erste Entwurf setzte sie an zufälligen Stellen des ganzen Kanals aus und ließ sie nach einer festen Lebenszeit ablaufen — das gab eine gleichmäßige Verteilung, aber keine Bahnen: Man sah Striche flackern statt Luft strömen. **Eine Ausnahme, und sie ist unsichtbar:** Hinter einem stumpfen Körper steht die Luft nahezu still, und was dort hineingerät, käme nie wieder heraus (gemessen: nach einer Minute Lauf waren 14 bis 26 % des Schwarms versackt). Ein Teilchen, das **so langsam ist, dass ohnehin kein Strich mehr gezeichnet wird**, wird deshalb nach vier Sekunden am Einlass neu angesetzt. Maßgeblich ist genau die Grenze, die auch über das Zeichnen entscheidet — nur eine, damit beides nicht auseinanderläuft; es verschwindet also nie etwas, das zu sehen war. Nicht gewählt wurde „das älteste Teilchen geht": gleich viel Code, träfe aber auch sichtbar durchziehende Teilchen, und „alt" hängt am Wind — bei 10 % Wind wären nach kurzer Zeit alle alt.
+- **Druck und Wirbelstärke werden vor dem Einfärben geglättet, die Geschwindigkeit nicht** (festgelegt in Etappe 3.3, nach der zweiten Vorlage): Die Rechnung trägt ein Zittern von Zelle zu Zelle mit sich, wie es jedes Gitterverfahren erzeugt. Es steckt in **allen drei Feldern** etwa gleich stark drin — sichtbar wird es nur bei den zweiseitigen Skalen, weil deren Mitte den *Farbton* wechselt (Blassblau → Weiß → Blassrosa), während die Helligkeit fast gleich bleibt: ein Zehntelprozent Unterschied kippt dort die Farbe, und das Auge liest ein Gittermuster daraus. Auf der einfarbigen Skala der Geschwindigkeit sind dieselben Zehntelprozent ein unsichtbarer Helligkeitsschritt; sie bleibt deshalb unangetastet — eine abgenommene Ansicht ohne Anlass zu ändern wäre falsch. Geglättet wird mit den Gewichten **1–2–1**, erst waagerecht, dann senkrecht: Diese löschen eine Schwingung von genau zwei Zellen vollständig aus (−1 + 2 − 1 = 0) und lassen alles Größere stehen; ein gewöhnlicher Mittelwert über die vier Nachbarn halbiert sie nur. Wandzellen zählen nicht mit, sonst zöge die Null aus dem Körperinneren einen Saum um jedes Hindernis.
 - **Was im Druckbild pulsiert** (untersucht in Etappe 3.3): Im Druckbild schwankt der ganze Kanal sichtbar im Takt, bis in den Bereich vor dem Auslass. Das ist **kein Rechenfehler und keine Sache der Darstellung**, sondern der Schall, den die Wirbelablösung abstrahlt: Der leere Kanal pulsiert überhaupt nicht (0,0 %), mit Körper 4 bis 5 % der Skalenbreite, und der Takt ist mit 310 Schritten genau der halbe der Wirbelablösung (637) — ein abgelöster Wirbel je Seite, also zwei Druckstöße je Umlauf, wie es sein muss. Im ganzen Kanal ist es zu sehen, weil Schall auf dem Gitter 0,577 Zellen je Schritt zurücklegt und die 200 Zellen damit in etwa 350 Schritten durchquert. Verstärkt wird es dadurch, dass Ein- und Auslass die Dichte hart auf 1 setzen und Wellen zurückwerfen — aber nur zu einem Drittel: in einem viermal so langen Kanal fällt die Schwankung nur von 5,0 auf 3,3 %. **Der eigentliche Grund ist das Verfahren:** Lattice-Boltzmann rechnet schwach kompressibel, und die Dichteschwankung wächst mit dem Quadrat der Mach-Zahl. Die liegt hier bei 0,17 (Wind 0,1 gegen Gittersschall 0,577), in echter Luft bei dieser Anschauung eher bei 0,03. Bei halbem Wind fällt die Schwankung von 4,9 auf 1,9 % der Skala — der Windregler ist damit das Mittel dagegen. Wegrechnen lässt es sich nicht: Der Abzug des Kanalmittelwerts nimmt nur 10 % davon weg, der Abzug des Spaltenmittelwerts halbiert zwar das Flackern, halbiert aber ebenso die Aussage (Abstand Stau ↔ Sog von 30 auf 16 % der Skala). Beides wurde verworfen.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
@@ -670,7 +671,30 @@ Fehler.*
      Gegenmaßnahme versackten nach einer Minute Lauf 14 bis 26 % des Schwarms im
      Totwasser (Kreis 387, aufsitzendes Rechteck 356, Platte 333 von 450 sichtbar).
      Der Nutzer gab daraufhin ausdrücklich frei, für diesen Sonderfall von der
-     Vorgabe abzuweichen. Gewählt wurde die engste Abweichung, die trägt: Nur wer
-     zu langsam für einen sichtbaren Strich ist, wird nach vier Sekunden vorn neu
-     angesetzt. Damit stehen dieselben Fälle bei 433 / 423 / 404 von 450, und es
-     verschwindet nie etwas, das zu sehen war.
+     Vorgabe abzuweichen. Gewählt wurde die engste Abweichung, die trägt: nur wer
+     zu langsam ist, wird nach vier Sekunden vorn neu angesetzt. Nicht gewählt
+     wurde „das älteste geht" — gleich viel Code, träfe aber auch sichtbar
+     durchziehende Teilchen, und „alt" hängt am Wind.
+- **2026-08-02:** Zwei weitere Befunde des Nutzers an der zweiten Vorlage,
+  beide am Zeichnen und nicht an der Rechnung:
+  1. *Teilchen schienen mitten im Kanal zu entstehen.* Ursache war nicht die neue
+     Regel, sondern die Mindestlänge beim Zeichnen: Unterhalb davon wurde **gar
+     nichts** gemalt, ein Teilchen erlosch also beim Durchqueren einer langsamen
+     Stelle und kam danach wieder. Jetzt wird jedes gezeichnet, im Grenzfall als
+     Stummel und bei genau stehender Luft als Punkt. Damit stehen in jedem Bild
+     alle 450 Striche. Der Preis: Die Kennzeichnung „festgesetzt" kann nicht mehr
+     dieselbe Grenze benutzen und ist als eigener Wert benannt (`KRIECHTEMPO`,
+     ein Zehntel der Windgeschwindigkeit). Gemessen verschwindet dadurch noch
+     0,2 bis 0,6 Mal je Sekunde ein Teilchen aus dem Kanalinneren, gegenüber 160
+     bis 180 Mal je Sekunde am Auslass.
+  2. *Rasterung in Druck und Wirbelstärke* — siehe „Druck und Wirbelstärke werden
+     vor dem Einfärben geglättet". **Kein Rechenfehler:** Das Zittern liegt in
+     allen drei Feldern, nur die zweiseitigen Skalen machen es sichtbar.
+     *Nebenbefund zum Vorgehen:* Drei Maße für dieses Zittern schlugen
+     nacheinander fehl — der Hochpass gegen die Nachbarn misst echte Krümmung
+     mit, ein Fenster mit ungerader Kantenlänge lässt den Mittelwert des Feldes
+     durch, und selbst mit geradem Fenster bleibt zu viel echte Struktur darin.
+     Entschieden hat am Ende der unmittelbare Vergleich zweier Bilder desselben
+     eingeschwungenen Feldes, mit und ohne Glättung. Lehre für das nächste Mal:
+     Bei einer Erscheinung, die man **sieht**, ist das Bild das Maß — eine
+     Kennzahl dafür muss selbst erst belegt werden.
