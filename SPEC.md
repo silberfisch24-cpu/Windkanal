@@ -835,3 +835,51 @@ Fehler.*
     Minuten sind für ein Abnahmeskript zu lang, und ein Prüfpunkt, der
     fehlschlägt, sobald jemand die Rechnung unempfindlicher macht, wäre ein
     schlechter Prüfpunkt.
+- **2026-08-02 (Etappe 3.4):** *Nachgemessen mit 6000 statt 3000 Schritten — es
+  sind weit mehr als drei Fälle, und eine engere Reglergrenze wäre
+  Scheinsicherheit.* Anlass war die Rückmeldung des Nutzers, der genau die
+  gefundene Ecke am iPad nachgestellt hat (Platte, `mittel`, alles am Anschlag,
+  Zusammenbruch nach etwa 2700 Schritten). Um beantworten zu können, was es
+  kostet, diese Ecke unerreichbar zu machen, wurde je ein Regler zurückgenommen
+  und über 6000 Schritte gerechnet — feine Stufe, Platte, aufsitzend, sonst
+  alles am Anschlag:
+  - **Größe:** 115 % → Zerfall bei 2600, 110 % → 3675, 105 % → 3775,
+    100 % → hält, 95 % → hält
+  - **Anstellwinkel:** 30° → 2600, 28° → 3375, 26° → 4250, 24° → 4325,
+    22° → 5175 (kein geprüfter Winkel hält)
+  - **Wind:** 100 % → 2600, 95 % → 4050, 90 % → 5725, 85 % → 5425,
+    80 % → hält
+  - Gegenprobe feines Rechteck, 21 Zellen frei: 115 % → 2975, 110 % → 2975,
+    105 % → 3475, 100 % → hält
+
+  Zwei Schlüsse:
+  1. **Die drei Fälle aus dem 3000-Schritte-Durchlauf waren nur die
+     schnellsten.** Wer länger zusieht, findet mehr. Die Formulierung „drei von
+     288 zerfallen" aus dem Eintrag darüber gilt nur für 3000 Schritte und ist
+     ohne diesen Zusatz irreführend.
+  2. **Keine Reglerstellung ist als stabil bewiesen** — bewiesen ist nur, dass
+     eine bestimmte Strecke gehalten hat. Eine engere Grenze nähme deshalb
+     Bereich weg, ohne die Frage zu beantworten, was bei 20 000 Schritten
+     geschieht. Die Grenzen bleiben, wie sie sind; zuständig ist das
+     Auffangnetz, das bei jeder Einstellung und jeder Laufzeit wirkt.
+- **2026-08-02 (Etappe 3.4):** *Die Zählung der Auffangvorgänge verjährt nicht
+  mehr mit der Zeit, sondern nur durch einen Eingriff des Nutzers.* Zwei Anläufe
+  mit einer Frist sind gescheitert — erst 1000, dann 5000 Schritte. Beide Male
+  lag die Frist unter dem Wiederkehrabstand des Zusammenbruchs, die Zählung war
+  jedes Mal schon zurückgesetzt, bevor sie die drei erreichte, und die Seite
+  lief in genau die endlose Folge aus Neuansetzen und Zerfallen, die verhindert
+  werden sollte. Der zweite Anlauf fiel erst durch die 6000-Schritte-Messung auf:
+  Wiederkehrabstände reichen bis über 5700. Eine passende Zahl gibt es nicht.
+  - Ohne Frist bleibt die Aussage stimmig: Dreimal zusammengebrochen, ohne dass
+    jemand etwas verstellt hat, heißt „diese Einstellung trägt nicht" —
+    gleichgültig, wie viel Zeit dazwischen lag. Ein einmaliger Ausrutscher zählt
+    nie weiter, weil er sich nicht wiederholt.
+  - Der **Text** in der Laufanzeige verschwindet weiterhin von selbst, nach 1500
+    Rechenschritten. Das ist eine Frage der Lesbarkeit und hat mit der Zählung
+    nichts zu tun; die beiden waren vorher fälschlich aneinandergekoppelt.
+- **2026-08-02 (Etappe 3.4):** *Auch die Bezugsszene in Prüfteil 9 musste
+  nachziehen.* Sie stand zunächst auf der Platte bei 115 % und 30°, 21 Zellen
+  über dem Boden — nach der 6000-Schritte-Messung ist auch die nicht als haltbar
+  ausgewiesen. Jetzt dieselbe Platte bei **100 %**, aufsitzend: über 6000
+  Schritte auf dem feinen Gitter nachgemessen heil und trotzdem scharf genug,
+  dass ein überempfindliches Auffangnetz dort anschlüge.

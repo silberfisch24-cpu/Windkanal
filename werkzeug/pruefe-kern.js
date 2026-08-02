@@ -79,24 +79,29 @@ const NACH_DEM_WECHSEL = 1500;
 
 /**
  * Teil 9, Bezugsszene für den Fehlalarm: eine um 30° angestellte Platte in
- * voller Größe (115 % von 30 Zellen), **21 Zellen über dem Boden**, bei vollem
- * Wind. Das ist die schärfste Szene, von der nachgewiesen ist, dass sie hält.
+ * **Normalgröße** (100 %, also 30 Zellen), aufsitzend auf dem Boden, bei vollem
+ * Wind. Scharf genug, dass ein überempfindliches Auffangnetz hier anschlüge —
+ * und über 6000 Schritte auf dem feinen Gitter, dem ungünstigsten von allen,
+ * nachgemessen heil (2026-08-02, siehe Änderungsverlauf in `SPEC.md`).
  *
- * Bewusst **nicht** die allerschärfste. Dieselbe Platte auf dem Boden aufsitzend
- * zerfällt wirklich — in der mittleren Stufe bei Schritt 2950, in der feinen bei
- * 2600 (Durchlauf über alle 288 Kombinationen am 2026-08-02, siehe
- * Änderungsverlauf in `SPEC.md`). Sie hier als Beleg dafür zu nehmen, dass
- * `istHeil` nicht grundlos anschlägt, hieße dem Auffangnetz vorzuwerfen, dass es
- * einen echten Zusammenbruch findet.
+ * Bewusst **nicht** dieselbe Platte bei voller Größe (115 %). Die zerfällt
+ * wirklich, in der mittleren Stufe bei Schritt 2950 und in der feinen bei 2600.
+ * Sie als Beleg dafür zu nehmen, dass `istHeil` nicht grundlos anschlägt, hieße
+ * dem Auffangnetz vorzuwerfen, dass es einen echten Zusammenbruch findet — was
+ * hier zunächst auch so dastand und nur deshalb bestand, weil der Prüfpunkt bei
+ * 2000 Schritten aufhört.
+ *
+ * „Heil" heißt dabei immer nur: über die gemessene Strecke heil. Für keine
+ * Reglerstellung ist bewiesen, dass sie beliebig lange hält.
  *
  * Der Wind ist die Obergrenze des Reglers, nicht die des Kerns: 0,1 statt 0,12
  * (siehe REGLER in start.js).
  */
-const SCHAERFSTE_HALTBARE_SZENE = { art: 'platte', x: 40, bodenabstand: 21, winkel: 30, laenge: 35 };
+const BEZUGSSZENE = { art: 'platte', x: 40, bodenabstand: 0, winkel: 30, laenge: 30 };
 
 /*
- * Bewusst **kein** Prüfpunkt: dieselbe Platte aufsitzend, bis sie wirklich
- * zerfällt. Er würde 15 Sekunden zu diesem Skript hinzufügen — und er würde
+ * Bewusst **kein** Prüfpunkt: dieselbe Platte bei voller Größe, bis sie
+ * wirklich zerfällt. Er würde 15 Sekunden zu diesem Skript hinzufügen — und er würde
  * fehlschlagen, sobald jemand die Rechnung unempfindlicher macht und der
  * Zusammenbruch ausbleibt. Ein Prüfpunkt, der bei einer Verbesserung anschlägt,
  * ist ein schlechter Prüfpunkt. Dass die Ecke zerfällt, ist eine Messung und
@@ -1016,9 +1021,9 @@ function pruefeAuffangnetz() {
   const scharf = erzeugeKanal({
     aufloesung: 'mittel',
     windgeschwindigkeit: WIND_REGLER_HOECHSTENS,
-    hindernis: skaliereForm(SCHAERFSTE_HALTBARE_SZENE, AUFLOESUNGEN.mittel.faktor),
+    hindernis: skaliereForm(BEZUGSSZENE, AUFLOESUNGEN.mittel.faktor),
   });
-  console.log('Schärfste Szene, von der nachgewiesen ist, dass sie hält:');
+  console.log('Bezugsszene — scharf, aber über 6000 Schritte nachgemessen heil:');
   beschreibeKanal(scharf);
   console.log(`  ${beschreibeHindernis(scharf.hindernis)}`);
 
@@ -1070,7 +1075,7 @@ function pruefeAuffangnetz() {
   const zerfallend = erzeugeKanal({
     aufloesung: 'grob',
     windgeschwindigkeit: WIND_REGLER_HOECHSTENS,
-    hindernis: SCHAERFSTE_HALTBARE_SZENE,
+    hindernis: BEZUGSSZENE,
   });
   zerfallend.angleichzeit = ANGLEICHZEIT_ZU_KLEIN;
 
@@ -1099,7 +1104,7 @@ function pruefeAuffangnetz() {
 
   return melde([
     {
-      name: 'Die schärfste nachweislich haltbare Szene gilt durchweg als heil — kein Fehlalarm',
+      name: 'Eine scharfe, nachgemessen heile Szene gilt durchweg als heil — kein Fehlalarm',
       bestanden: fehlalarm === null,
       befund:
         fehlalarm === null

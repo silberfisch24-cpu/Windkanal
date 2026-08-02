@@ -164,19 +164,28 @@ const WIND_VOREINSTELLUNG = 0.1;
  * `loeser.js` zuließe: Diese 0,12 wurden in Etappe 1.5 an einer freistehenden
  * Platte gemessen — ein aufsitzendes Rechteck bei 30° hält sie nicht aus.
  *
- * **Die Grenzen halten fast, aber nicht ganz.** Etappe 3.4 hat alle 288
- * Kombinationen aus vier Formen, beiden Windenden, beiden Größenenden, drei
- * Anstellwinkeln, zwei Höhen und drei Auflösungsstufen über je 3000 Schritte
- * durchgerechnet. Drei davon zerfallen — alle drei mit **Wind, Größe und
- * Anstellwinkel gleichzeitig am Anschlag**, und alle erst nach 2600 bis 2950
- * Schritten. Die früheren Messungen aus 3.1 und 3.2 liefen kürzer und haben sie
- * deshalb nicht gesehen.
+ * **Die obere Ecke der Regler trägt nicht, und sie lässt sich auch nicht
+ * sauber abschneiden.** Etappe 3.4 hat das in zwei Durchläufen nachgemessen
+ * (Einzelheiten im Änderungsverlauf von `SPEC.md` zum 2026-08-02):
  *
- * Die Grenzen bleiben trotzdem stehen, statt um diese Ecke herum verengt zu
- * werden: Sie würden dann für alle 285 unbedenklichen Fälle mit beschnitten, und
- * genau dafür ist das Auffangnetz aus Etappe 3.4 da. Es setzt die Strömung neu
- * an und hält nach dem dritten Mal an — die Ecke ist damit erreichbar und sagt
- * von selbst Bescheid.
+ * 1. Alle 288 Kombinationen aus vier Formen, beiden Windenden, beiden
+ *    Größenenden, drei Anstellwinkeln, zwei Höhen und drei Auflösungsstufen
+ *    über je **3000** Schritte: drei zerfallen.
+ * 2. Dieselbe Ecke über **6000** Schritte, dabei je ein Regler zurückgenommen:
+ *    Es sind weit mehr. Bei voller Größe zerfällt es noch bei 22° Anstellung
+ *    (Schritt 5175) und bei 85 % Wind (Schritt 5425). Die drei aus dem ersten
+ *    Durchlauf waren nur die schnellsten.
+ *
+ * Daraus folgt zweierlei. Erstens ist **keine Reglerstellung als stabil
+ * bewiesen** — bewiesen ist nur, dass eine bestimmte Strecke gehalten hat; eine
+ * längere kann jede Grenze verschieben. Zweitens wäre eine engere Grenze eine
+ * Scheinsicherheit: Sie nähme Bereich weg und ließe trotzdem offen, was bei
+ * 20 000 Schritten geschieht.
+ *
+ * Die Grenzen bleiben deshalb stehen, wie sie sind, und die Zuständigkeit liegt
+ * beim **Auffangnetz** aus Etappe 3.4: Es setzt die Strömung neu an und hält
+ * nach dem dritten Mal an. Das wirkt bei jeder Einstellung und jeder Laufzeit,
+ * auch bei einer, die hier niemand ausprobiert hat.
  */
 const REGLER = [
   { schluessel: 'wind', name: 'Wind', mindestens: 10, hoechstens: 100, schritt: 5, wert: 100 },
@@ -273,8 +282,8 @@ const MITTELUNGSZEIT = 500;
 const PRUEFABSTAND = 10;
 
 /**
- * Wie viele Auffangvorgänge kurz hintereinander hingenommen werden, bevor die
- * Seite die Rechnung anhält.
+ * Wie viele Auffangvorgänge hingenommen werden, bevor die Seite die Rechnung
+ * anhält.
  *
  * Ohne diese Grenze liefe die Seite bei einer Einstellung, die zuverlässig
  * zerfällt, in eine endlose Folge aus Neuansetzen und Zerfallen — der Betrachter
@@ -282,25 +291,36 @@ const PRUEFABSTAND = 10;
  * sagt, woran es liegt. Nach dem dritten Mal wird deshalb angehalten und in der
  * Laufanzeige gesagt, was zu tun ist.
  *
- * Gezählt wird in Folge: Ein Auffangvorgang, nach dem die Rechnung wieder lange
- * durchhält, soll nicht ewig nachwirken. `ERHOLUNGSSCHRITTE` legt fest, ab wann
- * das gilt.
+ * **Zurückgesetzt wird die Zählung allein durch einen Eingriff des Nutzers**,
+ * nicht dadurch, dass die Rechnung eine Weile durchhält. Zwei Anläufe über eine
+ * Frist sind gescheitert: erst 1000 Schritte, dann 5000. Beide Male lag die
+ * Frist unter dem Abstand, in dem der Zusammenbruch wiederkehrt, die Zählung war
+ * jedes Mal schon zurückgesetzt, bevor sie die drei erreichte — genau die
+ * endlose Folge, die verhindert werden soll.
  *
- * **Diese Zahl muss über dem Abstand liegen, in dem ein Zusammenbruch
- * wiederkehrt** — sonst wäre die Zählung jedes Mal schon zurückgesetzt, bevor
- * sie die drei erreicht, und die Seite liefe genau in die endlose Folge, die
- * verhindert werden soll. Der Durchlauf über alle 288 Reglerkombinationen am
- * 2026-08-02 hat die drei Fälle gefunden, die überhaupt zerfallen; der früheste
- * bei Schritt 2600 (siehe Änderungsverlauf in `SPEC.md`). 5000 liegt darüber und
- * lässt einer einmalig gestolperten Rechnung zugleich reichlich Gelegenheit, sich
- * als gesund zu erweisen.
+ * Eine passende Frist gibt es auch nicht: Die Messung vom 2026-08-02 zeigt
+ * Wiederkehrabstände von 2600 bis über 5700 Schritten, je nach Reglerstellung,
+ * und für keine Einstellung ist bewiesen, dass sie überhaupt hält — nur, dass
+ * sie eine bestimmte Strecke gehalten hat. Jede Zahl, die ich hier hinschriebe,
+ * ließe sich von der nächsten Reglerstellung überschreiten.
  *
- * So lange steht dann auch die Meldung in der Laufanzeige. Das ist Absicht: Sie
- * ist wahr, solange nicht feststeht, dass es dabei bleibt, und ein Hinweis, der
- * nach zwei Sekunden verschwindet, wird ohnehin überlesen.
+ * Ohne Frist bleibt die Aussage dagegen stimmig: Dreimal zusammengebrochen,
+ * ohne dass jemand etwas verstellt hat, heißt „diese Einstellung trägt nicht" —
+ * gleichgültig, wie viel Zeit dazwischen lag. Und ein einmaliger Ausrutscher
+ * zählt nie weiter, weil er sich nicht wiederholt.
  */
 const AUFFANGVERSUCHE = 3;
-const ERHOLUNGSSCHRITTE = 5000;
+
+/**
+ * Nach wie vielen Rechenschritten die Meldung „war aus dem Tritt geraten"
+ * wieder aus der Laufanzeige verschwindet.
+ *
+ * Das betrifft **nur den Text**, nicht die Zählung darüber. Der Hinweis soll
+ * lange genug stehen, um gelesen zu werden, aber nicht für immer die
+ * Bildfolge verdecken. Bei 4 bis 20 Rechenschritten je Bild sind 1500 Schritte
+ * grob eine Viertel- bis anderthalb Minuten.
+ */
+const MELDUNG_SCHRITTE = 1500;
 
 starte();
 
@@ -625,6 +645,9 @@ function starte() {
    * die alte Zählung sagt über die neue Einstellung nichts mehr aus. Ohne das
    * bliebe die Seite nach drei Zusammenbrüchen bei jeder weiteren Einstellung
    * gleich wieder stehen, auch bei einer harmlosen.
+   *
+   * **Dies ist der einzige Weg, auf dem die Zählung zurückgeht.** Von selbst
+   * verjährt sie nicht — warum nicht, steht bei `AUFFANGVERSUCHE`.
    */
   function nimmMeldungZurueck() {
     meldung = null;
@@ -663,8 +686,11 @@ function starte() {
         bildanforderung = requestAnimationFrame(naechstesBild);
         return;
       }
-      // Lange durchgehalten: Das Vorgefallene ist abgehakt.
-      if (meldung !== null && kanal.schrittzahl >= ERHOLUNGSSCHRITTE) nimmMeldungZurueck();
+      // Der Hinweis ist lange genug gestanden. Die Zählung bleibt stehen — sie
+      // gehört zur Einstellung, nicht zum Text (siehe `AUFFANGVERSUCHE`).
+      if (meldung !== null && laeuft && kanal.schrittzahl >= MELDUNG_SCHRITTE) {
+        meldung = null;
+      }
     }
 
     leseFelder(kanal, felder);
