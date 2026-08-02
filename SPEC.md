@@ -7,11 +7,12 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappe 3.2 abgenommen (`v1.1`) — die Szene lässt sich
-  einstellen, die Rechenauflösung auch.**
-  Unter <https://silberfisch24-cpu.github.io/Windkanal/> zeigt die Seite die laufende
-  Strömung als Farbfeld der Geschwindigkeit; über dem Bild lässt sich zwischen Kreis,
-  Rechteck, Platte und Profil wechseln, die Strömung anhalten und zurücksetzen, unter dem
+- **Aktueller Stand:** **Etappe 3.3 abgenommen (`v1.2`) — alle vier Darstellungsarten
+  sind da.**
+  Unter <https://silberfisch24-cpu.github.io/Windkanal/> läuft die Strömung als Farbfeld;
+  über dem Bild lässt sich zwischen Kreis, Rechteck, Platte und Profil wechseln, zwischen
+  den drei Farbfeldern Geschwindigkeit, Druck und Wirbelstärke umschalten, die
+  mitströmenden Teilchen als Striche darüberlegen, anhalten und zurücksetzen; unter dem
   Bild stellen fünf Regler Wind, Größe, Anstellwinkel, Höhe über dem Boden und die
   Rechenauflösung ein — ohne Neuladen, auf dem Rechner wie mit dem Finger. Womit die Seite
   aufgeht, misst sie beim Laden selbst: auf dem Handy gröber als auf dem Rechner. Darunter
@@ -23,9 +24,10 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
   `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5` abgeleitete Größen, `v0.6`
   Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem Bildschirm, `v0.8` Seite
   bedienbar, `v0.9` öffentlich erreichbar und auf dem Handy lauffähig, `v1.0` Szene über
-  Regler einstellbar. Noch nicht: nur eine der vier Darstellungsarten, keine Legende, kein
-  Auffangnetz für zerfallende Rechnungen, im Querformat muss man scrollen. Als Nächstes
-  **Etappe 3.3** — zwischen den vier Darstellungsarten umschalten, Teilchen zuschalten.
+  Regler einstellbar, `v1.1` Rechenauflösung über einen Regler. Noch nicht: keine Legende
+  zu den Skalen, kein Auffangnetz für zerfallende Rechnungen, die Bedienleiste braucht auf
+  dem Handy zu viel Höhe, das Druckbild pulsiert im Takt der Wirbelablösung (untersucht,
+  echte Erscheinung). Als Nächstes **Etappe 3.5** — die Einstellungen einklappbar machen.
 
 ---
 
@@ -46,6 +48,7 @@ sobald sie geklärt sind.*
   - Eigene Formen zeichnen — bewusst zurückgestellt
   - Mitbewegter Boden (wie das Laufband in echten Fahrzeug-Windkanälen) — bewusst zurückgestellt, siehe „Kanalform" unten
   - ~~Zwischen mehreren Farbschemata wählen können~~ — am 2026-07-31 aus „Kann" in den Plan geholt und als **Etappe 4.4** aufgenommen
+  - Weniger Bilder je Sekunde zugunsten einer schneller voranschreitenden Strömung — aufgeworfen am 2026-08-02, **noch nicht entschieden**. Rechnung dazu im Änderungsverlauf: Es brächte etwa ein Drittel mehr Rechenschritte je Sekunde, kehrt aber die in Etappe 2.1 getroffene Wahl „lieber langsamer als ruckelig" um.
 - **Zielgruppe:** interessierte Laien und Schüler; jemand, der den Link öffnet, soll ohne Anleitung in etwa einer Minute zu einem sinnvollen Strömungsbild kommen.
 - **Daten:** keine. Nichts wird gespeichert, nichts hochgeladen, nichts nachgeladen — alle Formen sind im Programm hinterlegt. Damit besteht kein Schutzbedarf.
 - **Umgebung:** statische Webseite, aufgerufen über einen GitHub-Pages-Link — wie beim Schwesterprojekt *Steuerrechner*, dort unter <https://silberfisch24-cpu.github.io/Steuerrechner/>. Keine Installation, kein Server, keine Anmeldung. Zielbrowser: Safari (iOS/macOS), Chrome, Firefox, Edge in aktuellen Versionen.
@@ -91,7 +94,7 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Dateistruktur:**
   - `index.html` — Einstiegspunkt, lädt die Module direkt
   - `src/kern/` — Fachlogik, kennt weder Browser noch Bildschirm: `loeser.js` (Strömungsrechnung), `formen.js` (Hindernisse als Gitterbelegung), `felder.js` (abgeleitete Größen: Geschwindigkeit, Druck, Wirbelstärke)
-  - `src/ui/` — Oberfläche: `darstellung.js` (Zeichnen), `bedienung.js` (Regler, Maus, Finger), `start.js` (verbindet beides)
+  - `src/ui/` — Oberfläche: `darstellung.js` (Zeichnen), `teilchen.js` (mitströmende Teilchen), `bedienung.js` (Regler, Maus, Finger), `start.js` (verbindet beides)
   - `werkzeug/` — Skripte für die Kommandozeile: `pruefe-kern.js` nimmt Abschnitt 1 ohne Oberfläche ab, `baue-vorschau.js` legt die Seite für die Abnahme zu einer einzigen Datei zusammen (siehe „Vorschau für die Abnahme" unten)
   - `tests/` — automatische Tests (Abschnitt 5)
   - `VERSION.md` — aktuelle Versionsnummer und die Stichpunkte dazu; Grundlage des Tags
@@ -111,6 +114,13 @@ Maßstab dafür, ob eine geplante Änderung noch zur Struktur passt.*
 - **Regler für die Rechenauflösung** (festgelegt in Etappe 3.2): Der fünfte Regler fährt die drei Stufen aus `AUFLOESUNGEN` durch; sein Wert ist die Nummer der Stufe, weil ein Schieber Zahlen führt. **Die Oberfläche rechnet durchgängig in groben Zellen** — alle Reglerstellungen, `LAGE_X` und die Grundmaße der Formen sind Maße der Stufe `grob`, und erst `baueForm` rechnet sie mit `skaliereForm` auf das Gitter der eingestellten Stufe hoch. Nur so bedeutet eine Reglerstellung nach dem Stufenwechsel dieselbe Szene; ohne diese Umrechnung zeigte die feine Stufe einen kleineren Körper in einem größeren Kanal. Ein Stufenwechsel legt **Kanal, Felder und Zeichenfläche neu an** und setzt die Strömung damit neu an — ein Gitter lässt sich nicht mitten im Lauf austauschen. Die Obergrenze des Höhenreglers wird deshalb aus `AUFLOESUNGEN` gelesen und nicht aus `kanal`: sie muss schon feststehen, während der Kanal für die neue Stufe erst gebaut wird. Die in Etappe 3.1 gemessenen Reglergrenzen gelten unverändert in allen drei Stufen (nachgemessen, siehe Änderungsverlauf).
 - **Die Voreinstellung wird gemessen, nicht geraten** (festgelegt in Etappe 3.2): Womit die Seite aufgeht, begrenzen zwei voneinander unabhängige Fragen, und es gilt die gröbere Antwort. **Bringt die Stufe sichtbares Detail?** Das Bild wird auf die verfügbare Breite gezogen, ein Bildpunkt je Zelle; mehr Zellen als Bildpunkte kosten Rechenzeit, ohne dass mehr zu erkennen wäre. Auf dem Handy stehen rund 350 Punkte zur Verfügung — die feine Stufe mit 400 Zellen fällt dort schon deshalb heraus. **Läuft die Stufe flüssig?** Ein Probelauf von 58 Schritten auf dem groben Gitter misst beim Laden, wie schnell dieses Gerät rechnet; verlangt werden mindestens vier Rechenschritte je Bild. Gemessen statt geraten, weil weder Bildschirmgröße noch Kernzahl verlässlich sagen, wie schnell ein Gerät rechnet, und weil eine Messung nicht altert: ein schnelleres Gerät bekommt von selbst eine feinere Voreinstellung. Gemessen wird in vier Blöcken, von denen der **schnellste** zählt — ein Ausreißer nach unten ist unmöglich, einer nach oben (etwas kam dem Browser dazwischen) dagegen häufig.
 - **Die Farbskala folgt dem Wind** (nachgezogen in Etappe 3.1): Ihre Obergrenze ist ein Vielfaches der Windgeschwindigkeit und wird deshalb je Bild neu gelesen, statt einmal beim Einrichten. Seit der Wind im Lauf verstellbar ist, wäre eine stehengebliebene Grenze nach jeder Änderung falsch — das Bild würde durchweg hell oder durchweg dunkel. Dass die Grenze nicht am größten Wert des Einzelbildes hängt, bleibt unverändert (siehe „Bild auf dem Bildschirm").
+- **Die vier Darstellungsarten** (festgelegt in Etappe 3.3): Drei davon sind **Farbfelder** und schließen einander aus — Geschwindigkeit, Druck, Wirbelstärke; die vierte, die **Teilchen**, liegt als Auflage darüber und hat deshalb einen eigenen Schalter statt einer vierten Schaltfläche in derselben Reihe. Das folgt aus „Darstellung" oben („Teilchen als kurze Striche darüber") und ist die einzige Aufteilung, die alle Kombinationen erreichbar lässt: „welche Größe wird eingefärbt" und „liegen Teilchen darüber" sind zwei Fragen, und zusammen sind Farbfeld und Teilchen am aufschlussreichsten. Ein Wechsel der Ansicht **setzt die Rechnung nicht zurück** — `leseFelder` rechnet ohnehin in jedem Bild alle drei Größen aus, eingefärbt wird nur eine andere davon. Die Namen der drei Größen sind in Kern, Feldern und Oberfläche dieselben (`tempo`, `druck`, `wirbelstaerke`), damit die Zuordnung nirgends nachgeschlagen werden muss.
+- **Einseitige und zweiseitige Farbskalen** (festgelegt in Etappe 3.3): Die Geschwindigkeit kennt kein Vorzeichen und behält ihre **einseitige** Skala (ein Farbton, hell nach dunkel). Druck und Wirbelstärke haben eins, und die Null ist ihre natürliche Mitte — Ruhedruck und drehungsfreie Strömung. Sie bekommen deshalb **zweiseitige** Skalen: von einer hellen Mitte aus in beide Richtungen dunkler werdend, Druck blau → hell → rot, Wirbelstärke violett → hell → orange. Damit liegt die Stärke weiterhin in der Helligkeit und die Richtung im Farbton; eine einseitige Skala müsste das Vorzeichen unterschlagen oder in die Helligkeit stecken, wo es nicht hingehört. **Zwei verschiedene Farbpaare**, obwohl beide Skalen gleich gebaut sind: sonst sähen Druck und Wirbelstärke auf den ersten Blick gleich aus. Beide Paare bleiben bei Rot- und Grünblindheit unterscheidbar, ein Rot-Grün-Paar täte das nicht.
+- **Woran die Skalengrenzen hängen** (festgelegt in Etappe 3.3): Alle drei bleiben **fest je Bild** statt am größten Wert des Einzelbildes zu hängen (Begründung unter „Bild auf dem Bildschirm"), wachsen aber mit dem Wind, weil der sich seit Etappe 3.1 im Lauf verstellen lässt. **Womit** sie wachsen, ist je Größe verschieden und aus dem Verfahren abgeleitet: Geschwindigkeit geradewegs mit dem Wind (Grenze 2 · u), Druck mit dessen **Quadrat**, weil Staudruck ½·ρ·u² ist (Grenze 2 · u²), Wirbelstärke mit dem Wind **je Zelle**, also geteilt durch den Faktor der Auflösungsstufe (Grenze 0,5 · u/f) — auf einem feineren Gitter verteilt sich dieselbe Scherung auf mehr Zellen. Alle drei Zahlen sind gemessen, nicht geschätzt; siehe Änderungsverlauf zum 2026-08-02.
+- **Vier Bildpunkte je Zelle statt einem** (geändert in Etappe 3.3): Das Farbfeld entsteht unverändert mit **einem Bildpunkt je Zelle** — daran ändert sich nichts, es wird nur auf einer unsichtbaren Fläche gemalt und in einem Zug auf die sichtbare gezogen. Die sichtbare Zeichenfläche ist seither **viermal so fein**, weil die Teilchenstriche Linien sind und keine Zellen: Auf 200 Punkten Breite, die der Browser auf gut 900 zieht, ist der dünnste zeichenbare Strich fünf Bildschirmpunkte breit und verwischt — aus Strichen wurden Flecken. Der Umweg über die zweite Fläche ist nötig, weil `putImageData` weder vergrößert noch glättet.
+- **Die Teilchen ziehen von links nach rechts durch** (festgelegt in Etappe 3.3, nach der ersten Abnahme geändert): Ein Teilchen entsteht am **Einlass** und verschwindet nur am **Auslass**. Es taucht nicht mitten im Bild auf und löst sich nicht mitten im Bild auf; an einer Wand bleibt es stehen, statt zu verschwinden. Der erste Entwurf setzte sie an zufälligen Stellen des ganzen Kanals aus und ließ sie nach einer festen Lebenszeit ablaufen — das gab eine gleichmäßige Verteilung, aber keine Bahnen: Man sah Striche flackern statt Luft strömen. **Gezeichnet wird jedes**, im Grenzfall als Stummel und bei genau stehender Luft als Punkt. Wer unterhalb einer Mindestlänge gar nichts malt, lässt ein Teilchen beim Durchqueren einer langsamen Stelle erlöschen und danach wieder auftauchen — es sieht dann aus, als entstünde mitten im Kanal ein neues, obwohl es dieselbe Bahn läuft. **Eine Ausnahme:** Hinter einem stumpfen Körper steht die Luft nahezu still, und was dort hineingerät, käme nie wieder heraus (gemessen: nach einer Minute Lauf waren 14 bis 26 % des Schwarms versackt). Ein Teilchen, das vier Sekunden am Stück langsamer ist als ein Zehntel der Windgeschwindigkeit, wird deshalb am Einlass neu angesetzt und verschwindet dabei aus dem Bild. Gemessen betrifft das 0,2 bis 0,6 Teilchen je Sekunde, gegenüber 160 bis 180 am Auslass — etwa eines von dreihundert. Nicht gewählt wurde „das älteste Teilchen geht": gleich viel Code, träfe aber auch sichtbar durchziehende Teilchen, und „alt" hängt am Wind — bei 10 % Wind wären nach kurzer Zeit alle alt.
+- **Druck und Wirbelstärke werden vor dem Einfärben geglättet, die Geschwindigkeit nicht** (festgelegt in Etappe 3.3, nach der zweiten Vorlage): Die Rechnung trägt ein Zittern von Zelle zu Zelle mit sich, wie es jedes Gitterverfahren erzeugt. Es steckt in **allen drei Feldern** etwa gleich stark drin — sichtbar wird es nur bei den zweiseitigen Skalen, weil deren Mitte den *Farbton* wechselt (Blassblau → Weiß → Blassrosa), während die Helligkeit fast gleich bleibt: ein Zehntelprozent Unterschied kippt dort die Farbe, und das Auge liest ein Gittermuster daraus. Auf der einfarbigen Skala der Geschwindigkeit sind dieselben Zehntelprozent ein unsichtbarer Helligkeitsschritt; sie bleibt deshalb unangetastet — eine abgenommene Ansicht ohne Anlass zu ändern wäre falsch. Geglättet wird mit den Gewichten **1–2–1**, erst waagerecht, dann senkrecht: Diese löschen eine Schwingung von genau zwei Zellen vollständig aus (−1 + 2 − 1 = 0) und lassen alles Größere stehen; ein gewöhnlicher Mittelwert über die vier Nachbarn halbiert sie nur. Wandzellen zählen nicht mit, sonst zöge die Null aus dem Körperinneren einen Saum um jedes Hindernis.
+- **Was im Druckbild pulsiert** (untersucht in Etappe 3.3): Im Druckbild schwankt der ganze Kanal sichtbar im Takt, bis in den Bereich vor dem Auslass. Das ist **kein Rechenfehler und keine Sache der Darstellung**, sondern der Schall, den die Wirbelablösung abstrahlt: Der leere Kanal pulsiert überhaupt nicht (0,0 %), mit Körper 4 bis 5 % der Skalenbreite, und der Takt ist mit 310 Schritten genau der halbe der Wirbelablösung (637) — ein abgelöster Wirbel je Seite, also zwei Druckstöße je Umlauf, wie es sein muss. Im ganzen Kanal ist es zu sehen, weil Schall auf dem Gitter 0,577 Zellen je Schritt zurücklegt und die 200 Zellen damit in etwa 350 Schritten durchquert. Verstärkt wird es dadurch, dass Ein- und Auslass die Dichte hart auf 1 setzen und Wellen zurückwerfen — aber nur zu einem Drittel: in einem viermal so langen Kanal fällt die Schwankung nur von 5,0 auf 3,3 %. **Der eigentliche Grund ist das Verfahren:** Lattice-Boltzmann rechnet schwach kompressibel, und die Dichteschwankung wächst mit dem Quadrat der Mach-Zahl. Die liegt hier bei 0,17 (Wind 0,1 gegen Gittersschall 0,577), in echter Luft bei dieser Anschauung eher bei 0,03. Bei halbem Wind fällt die Schwankung von 4,9 auf 1,9 % der Skala — der Windregler ist damit das Mittel dagegen. Wegrechnen lässt es sich nicht: Der Abzug des Kanalmittelwerts nimmt nur 10 % davon weg, der Abzug des Spaltenmittelwerts halbiert zwar das Flackern, halbiert aber ebenso die Aussage (Abstand Stau ↔ Sog von 30 auf 16 % der Skala). Beides wurde verworfen.
 - **Trennung Fachlogik / Darstellung:** `src/kern/` gibt ausschließlich Zahlenfelder heraus und ruft nichts aus `src/ui/` auf. Alles, was `document`, `canvas` oder `window` anfasst, steht in `src/ui/`. Diese Trennung macht Abschnitt 1 überhaupt erst ohne Oberfläche abnehmbar.
 
 ---
@@ -179,10 +189,19 @@ Commit-Nachrichten verweisen auf diese Nummern.*
     auf schwachen Geräten langsam voran (auf dem Prüfrechner 1,6 Rechenschritte je Bild);
     voreingestellt wird sie deshalb nur, wo sie mindestens vier schafft. Ob eine
     zerfallende Rechnung aufgefangen wird, bleibt Etappe 3.4.
-- [ ] **3.3** Zwischen den vier Darstellungsarten lässt sich umschalten, die Teilchen lassen sich zuschalten.
+- [x] **3.3** *(abgenommen 2026-08-02, v1.2)* Zwischen den vier Darstellungsarten lässt sich umschalten, die Teilchen lassen sich zuschalten.
   - Abnahme: Alle vier Ansichten am selben Strömungsbild durchschalten; die Teilchen treiben sichtbar mit.
+  - Noch nicht: Das Druckbild pulsiert im Takt der Wirbelablösung — untersucht und als
+    echte Erscheinung ausgewiesen (siehe „Was im Druckbild pulsiert"), nicht behoben.
+    Wer es ruhiger will, dreht den Wind herunter. Keine Legende zu den drei Skalen
+    (Etappe 4.1). Die Bedienleiste ist um zwei Gruppen gewachsen und drückt das Bild
+    auf dem Handy nach unten — dafür ist Etappe 3.5 aufgenommen.
 - [ ] **3.4** Ungewöhnliche Situationen führen zu vernünftigem Verhalten statt zu kaputten Bildern.
   - Abnahme: Fenster verkleinern, Gerät drehen, Tab wegschalten und zurückkommen, extreme Reglerstellungen wählen — die Darstellung bleibt heil oder setzt sich sauber zurück.
+- [ ] **3.5** *(aufgenommen 2026-08-02)* Die Einstellungen lassen sich einklappen, damit die Seite aufgeräumt wirkt und auf dem Handy ohne Scrollen auskommt.
+  - Abnahme: Auf dem Handy die Seite öffnen; Bild und die wichtigsten Schaltflächen sind ohne Scrollen zu sehen, die Regler lassen sich bei Bedarf aufklappen.
+  - Anlass: Etappe 3.3 hat die Bedienleiste um zwei Gruppen erweitert; die Unterkante des Bildes rückte dadurch auf 393 Punkten Breite von 498 auf 696 Punkte hinunter.
+  - Verhältnis zu **4.2**: Diese Etappe schafft die Voraussetzung (weniger Höhe), 4.2 nimmt das Sitzen im Hoch- und Querformat als Ganzes ab. Sie ersetzt 4.2 nicht.
 
 ### Abschnitt 4 — Darstellung und Politur
 
@@ -577,3 +596,138 @@ Fehler.*
      Rechenzeit misst die Geschwindigkeit des Rechners mit und schlägt fehl, wenn
      nebenher etwas anderes läuft — allein ausgeführt ist er grün. Kein Fehler im
      Programm, aber ein Prüfpunkt, der bei Gelegenheit unempfindlicher werden sollte.
+- **2026-08-02:** Etappe 3.3 umgesetzt (zwischen den Darstellungsarten umschalten,
+  Teilchen zuschalten). Dabei festgelegt:
+  1. *Drei Farbfelder als Entweder-oder, die Teilchen als eigener Schalter daneben* —
+     siehe „Die vier Darstellungsarten" unter Architektur. Kein Umfangszuwachs: alle
+     vier stehen von Anfang an in den Anforderungen. Die **Aufteilung** musste
+     entschieden werden, weil der Etappentext beide Lesarten zulässt („zwischen den
+     vier umschalten" gegen „Teilchen zuschalten"); den Ausschlag gab „Darstellung"
+     unter Architektur, wo die Teilchen seit dem ersten Tag „als kurze Striche
+     **darüber**" beschrieben sind.
+  2. *Zweiseitige Skalen für Druck und Wirbelstärke*, mit zwei verschiedenen
+     Farbpaaren — siehe „Einseitige und zweiseitige Farbskalen".
+  3. *Die Skalengrenzen sind gemessen, nicht geschätzt.* Gemessen wurde über
+     4000 Schritte an vier Szenen (Kreis, Platte 30°, Profil, aufsitzendes Rechteck)
+     in allen drei Auflösungsstufen bei Wind 30 % und 100 %, ausgewertet über das
+     99,5-%-Band der Werte im Kanalinneren:
+     - **Druck:** das Band liegt bei 0,29 bis 2,08 · u², die Grenze deckt es mit
+       **2 · u²** ab. Der stärkste Sog (aufsitzendes Rechteck, −4,3 · u²) läuft
+       bewusst ins Skalenende — ihm zuliebe die Skala aufzuziehen machte den ganzen
+       Rest des Bildes farblos.
+     - **Wirbelstärke:** das Band liegt bei 0,15 bis 0,51 · u/f, die Grenze bei
+       **0,5 · u/f**. Dass der Faktor der Stufe hineingehört, ist der eigentliche
+       Befund: mit ihm liegt dasselbe Band in allen drei Stufen bei 0,26 / 0,27 /
+       0,28, ohne ihn liefe es um das Doppelte auseinander.
+     - **Nebenbefund zum Druckbild:** Der über die Kanallänge gleichmäßig abfallende
+       Druck aus Etappe 1.4 ist jetzt zum ersten Mal *im Bild* zu sehen — er liegt
+       bei 0,17 bis 1,55 · u² und damit in derselben Größenordnung wie der Stau vor
+       dem Körper. Das Bild zeigt deshalb eine durchgehende Schräge, auf der sich
+       Stau und Sog abheben. Das ist die Randbedingung aus Etappe 1.1 und kein
+       Fehler; herausgerechnet wird sie nicht, weil das eine Beschönigung wäre. Der
+       Untertitel sagt es dazu.
+  4. *Die Zeichenfläche ist viermal so fein geworden* — siehe „Vier Bildpunkte je
+     Zelle statt einem". Das war **nicht geplant, sondern Folge eines Befunds**: Im
+     ersten Versuch waren die Teilchen auf dem Bildschirm Flecken statt Striche, und
+     die Richtung der Strömung ging darin verloren. Am Farbfeld ändert sich dadurch
+     nichts Sichtbares (im Browser gegengeprüft), an der Rechnung nichts.
+  5. *Was ein Teilchen kostet:* gemessen im Browser, ohne virtuelle Zeit (Wanduhr):
+     Zeichnen in grober Auflösung 0,32 ms ohne und 0,44 ms mit Teilchen, in feiner
+     1,7 ms mit wie ohne. Gegen ein Zeitbudget von 12 ms je Bild und 1,55 bzw.
+     6,29 ms je Rechenschritt fällt das nicht ins Gewicht; die Voreinstellung der
+     Auflösung bleibt davon unberührt.
+  6. *Ungefragt hinzugekommen:* Das Erzeugen der Formschaltflächen und der neuen
+     Ansichtsschaltflächen ist in `bedienung.js` zu **einer** Funktion
+     zusammengezogen — es ist derselbe Fall („eine Reihe, von der immer genau eine
+     gilt"), und zweimal derselbe Code wäre die Art Doppelung, die später an einer
+     Stelle nachgezogen wird und an der anderen nicht.
+  7. *Vom Prüfnetz gefangen:* `baue-vorschau.js` brach ab, weil `ANSICHTEN` nach dem
+     Zusammenlegen doppelt vorgekommen wäre — einmal in `darstellung.js`, einmal in
+     `start.js`. Die in `darstellung.js` heißt jetzt `FARBFELDER`, nach dem, was sie
+     ist. Genau dafür ist die Gegenprobe da (siehe „Vorschau für die Abnahme").
+  8. *An `src/kern/` keine Zeile geändert.* `node werkzeug/pruefe-kern.js` läuft
+     allein ausgeführt mit allen 47 Prüfpunkten durch.
+  9. *Bekannte Folge für die Aufteilung der Seite:* Auf 393 Punkten Breite rückt die
+     Unterkante des Bildes von 498 auf 696 Punkte hinunter — die Bedienleiste hat
+     zwei Gruppen mehr, und „Geschwindigkeit / Druck / Wirbelstärke" bricht dort auf
+     zwei Zeilen um. Im Hochformat des iPhones (852 Punkte) bleibt das Bild ohne
+     Scrollen sichtbar, im Querformat nicht — die schon in Etappe 2.3 ausgewiesene
+     Grenze wird dadurch deutlicher. Seitlich läuft bei 393, 430 und 820 Punkten
+     nichts über, und alle zehn Schaltflächen messen 44 Punkte in der Höhe. Das
+     Sitzen im Hoch- und Querformat bleibt Abnahmekriterium von Etappe 4.2.
+- **2026-08-02:** Vier Rückmeldungen des Nutzers zur ersten Vorlage von Etappe 3.3.
+  1. *Abgenommen wird künftig über raw.githack statt über eine Artifact-Vorschau.*
+     Anlass: Das Veröffentlichen als Artifact hat in einer Session so viele Tokens
+     verbraucht, dass das Nutzungslimit erreicht wurde. Der GitHack-Weg ist ohnehin
+     der bessere: Er liefert die **unveränderten Dateien vom Branch** aus und belegt
+     damit auch, dass die echte Modulaufteilung lädt — was die zusammengelegte
+     Vorschau grundsätzlich nicht kann. `werkzeug/baue-vorschau.js` bleibt als
+     Rückfallweg bestehen, wird aber nicht mehr im Regelfall gebraucht. In
+     `CLAUDE.md` nachgetragen.
+  2. *Die Einstellungen sollen sich einklappen lassen.* Als **Etappe 3.5**
+     aufgenommen, nicht in 3.3 hineingezogen: Ein Umbau der Bedienleiste neben einer
+     Fehlersuche ließe hinterher nicht zuordnen, was woran lag.
+  3. *Das Pulsieren im Druckbild untersucht* — Ergebnis unter „Was im Druckbild
+     pulsiert" in der Architektur. **Weder Rechen- noch Darstellungsfehler:** Es ist
+     der Schall der Wirbelablösung, im Takt genau der halbe der Ablösung; der leere
+     Kanal pulsiert gar nicht. Am Programm wurde daraufhin **nichts geändert** —
+     zwei Wege, es wegzurechnen, wurden gemessen und beide verworfen, weil sie mehr
+     Aussage kosten als Flackern. Das Mittel dagegen ist der Windregler.
+  4. *Die Teilchen ziehen jetzt von links nach rechts durch*, statt überall zu
+     entstehen und abzulaufen — siehe „Die Teilchen ziehen von links nach rechts
+     durch". Die dabei erwartete Nebenwirkung trat ein und wurde gemessen: Ohne
+     Gegenmaßnahme versackten nach einer Minute Lauf 14 bis 26 % des Schwarms im
+     Totwasser (Kreis 387, aufsitzendes Rechteck 356, Platte 333 von 450 sichtbar).
+     Der Nutzer gab daraufhin ausdrücklich frei, für diesen Sonderfall von der
+     Vorgabe abzuweichen. Gewählt wurde die engste Abweichung, die trägt: nur wer
+     zu langsam ist, wird nach vier Sekunden vorn neu angesetzt. Nicht gewählt
+     wurde „das älteste geht" — gleich viel Code, träfe aber auch sichtbar
+     durchziehende Teilchen, und „alt" hängt am Wind.
+- **2026-08-02:** Zwei weitere Befunde des Nutzers an der zweiten Vorlage,
+  beide am Zeichnen und nicht an der Rechnung:
+  1. *Teilchen schienen mitten im Kanal zu entstehen.* Ursache war nicht die neue
+     Regel, sondern die Mindestlänge beim Zeichnen: Unterhalb davon wurde **gar
+     nichts** gemalt, ein Teilchen erlosch also beim Durchqueren einer langsamen
+     Stelle und kam danach wieder. Jetzt wird jedes gezeichnet, im Grenzfall als
+     Stummel und bei genau stehender Luft als Punkt. Damit stehen in jedem Bild
+     alle 450 Striche. Der Preis: Die Kennzeichnung „festgesetzt" kann nicht mehr
+     dieselbe Grenze benutzen und ist als eigener Wert benannt (`KRIECHTEMPO`,
+     ein Zehntel der Windgeschwindigkeit). Gemessen verschwindet dadurch noch
+     0,2 bis 0,6 Mal je Sekunde ein Teilchen aus dem Kanalinneren, gegenüber 160
+     bis 180 Mal je Sekunde am Auslass.
+  2. *Rasterung in Druck und Wirbelstärke* — siehe „Druck und Wirbelstärke werden
+     vor dem Einfärben geglättet". **Kein Rechenfehler:** Das Zittern liegt in
+     allen drei Feldern, nur die zweiseitigen Skalen machen es sichtbar.
+     *Nebenbefund zum Vorgehen:* Drei Maße für dieses Zittern schlugen
+     nacheinander fehl — der Hochpass gegen die Nachbarn misst echte Krümmung
+     mit, ein Fenster mit ungerader Kantenlänge lässt den Mittelwert des Feldes
+     durch, und selbst mit geradem Fenster bleibt zu viel echte Struktur darin.
+     Entschieden hat am Ende der unmittelbare Vergleich zweier Bilder desselben
+     eingeschwungenen Feldes, mit und ohne Glättung. Lehre für das nächste Mal:
+     Bei einer Erscheinung, die man **sieht**, ist das Bild das Maß — eine
+     Kennzahl dafür muss selbst erst belegt werden.
+- **2026-08-02:** *Frage des Nutzers, für später vorgemerkt:* Brächte es eine
+  schneller voranschreitende Strömung, die Bildfolge auf 20 Bilder je Sekunde
+  herunterzunehmen? **Ja, aber weniger, als man erwartet — etwa ein Drittel.**
+  Gerechnet mit den am selben Tag gemessenen Zeiten:
+  - Je Bild fällt neben der Rechnung ein fester Aufwand an, der sich nicht teilen
+    lässt: Felder auslesen und zeichnen, zusammen 1,5 ms in der groben und 6,2 ms
+    in der feinen Stufe. Bei 60 Bildern je Sekunde ist das 90 bzw. 370 ms jeder
+    Sekunde, bei 20 Bildern nur noch 30 bzw. 124 ms. Genau diese Ersparnis ist der
+    ganze Gewinn.
+  - In Zahlen für die feine Stufe: heute rund 143 Rechenschritte je Sekunde, bei
+    20 Bildern je Sekunde rund 192 — Faktor 1,3. In der groben Stufe dasselbe
+    Verhältnis, **aber nur, wenn `SCHRITTE_HOECHSTENS` mit angehoben wird**: Die
+    Obergrenze von 20 Schritten je Bild würde sonst greifen und das Ergebnis sogar
+    verschlechtern.
+  - **Der Preis ist die in Etappe 2.1 getroffene Wahl.** Dort steht ausdrücklich
+    „lieber langsamer als ruckelig"; 20 Bilder je Sekunde sind für das Auge
+    sichtbar ruckelig. Ein Drittel mehr Fortschritt dafür einzutauschen ist eine
+    Entscheidung über den Zweck der Seite, keine technische — deshalb steht sie
+    unter „Kann" und wird nicht nebenbei umgesetzt.
+  - *Alternative ohne diesen Preis:* Der feste Aufwand je Bild selbst ist
+    angreifbar. `leseFelder` rechnet in jedem Bild alle fünf Größen aus, gezeigt
+    wird eine davon (die Teilchen brauchen zusätzlich `ux`/`uy`). Der zweite
+    Durchgang für die Wirbelstärke ließe sich überspringen, wenn sie nicht
+    angezeigt wird — schätzungsweise ein Drittel des Ablesens, also gut 7 % je
+    Bild. Weniger Gewinn, aber ohne an der Bildfolge zu drehen.

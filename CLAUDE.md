@@ -159,8 +159,21 @@ direkte Commits auf den Hauptzweig. Dann gilt:
 - **Der Nutzer kann die Seite nicht über `localhost` ansehen.** Die Session läuft in
   einem Container in der Cloud; `python3 -m http.server 8000` startet dort und ist für
   ihn nicht erreichbar. Ab Abschnitt 2 hängt aber jede Abnahme daran, dass er das Bild
-  sieht. **Ungefragt eine lauffähige Vorschau als Artifact veröffentlichen**, sobald
-  eine Etappe etwas Sichtbares ändert:
+  sieht. **Ungefragt eine lauffähige Vorschau vorlegen**, sobald eine Etappe etwas
+  Sichtbares ändert — seit dem 2026-08-02 über den **GitHack-Link**, nicht mehr als
+  Artifact:
+
+  ```
+  https://raw.githack.com/silberfisch24-cpu/Windkanal/<voller-commit-schluessel>/index.html
+  ```
+
+  Anlass für den Wechsel: Das Veröffentlichen als Artifact hat einmal so viele
+  Tokens verbraucht, dass das Nutzungslimit des Nutzers erreicht war. Der
+  GitHack-Link kostet nur einen `git push` und ist ohnehin aussagekräftiger — er
+  liefert die unveränderten Dateien aus, die Vorschau legt sie zusammen. Also:
+  committen, pushen, den Link mit dem **vollen Commit-Schlüssel** vorlegen (zum
+  Dienst selbst siehe unten). Die zusammengelegte Vorschau nur noch, wenn der
+  GitHack-Weg einmal nicht trägt:
 
   ```
   node werkzeug/baue-vorschau.js <arbeitsverzeichnis>/vorschau.html

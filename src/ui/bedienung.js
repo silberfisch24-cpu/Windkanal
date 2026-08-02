@@ -7,9 +7,9 @@
  * geschieht, entscheidet `start.js`. Damit bleibt die Bedienung prüfbar, ohne
  * dass eine Strömung läuft.
  *
- * Formschaltflächen wie Regler werden aus den übergebenen Listen erzeugt, nicht
- * in `index.html` hinterlegt. Sonst stünde beides an zwei Stellen, und ein
- * fünfter Eintrag später nur an einer davon.
+ * Formschaltflächen, Ansichtsschaltflächen und Regler werden aus den übergebenen
+ * Listen erzeugt, nicht in `index.html` hinterlegt. Sonst stünde beides an zwei
+ * Stellen, und ein weiterer Eintrag später nur an einer davon.
  */
 
 /**
@@ -17,43 +17,42 @@
  *
  * @param {object} teile
  * @param {HTMLElement} teile.auswahlfeld  nimmt die erzeugten Formschaltflächen auf
+ * @param {HTMLElement} teile.ansichtfeld  nimmt die erzeugten Ansichtsschaltflächen auf
  * @param {HTMLButtonElement} teile.laufschalter  hält an und lässt weiterlaufen
  * @param {HTMLButtonElement} teile.ruecksetzer   setzt die Rechnung zurück
+ * @param {HTMLButtonElement} teile.teilchenschalter  legt die Teilchen darüber
  * @param {HTMLElement} teile.reglerfeld  nimmt die erzeugten Regler auf
  * @param {Array<{schluessel: string, name: string}>} teile.formen  Auswahl in Reihenfolge
+ * @param {Array<{schluessel: string, name: string}>} teile.ansichten  Auswahl in Reihenfolge
  * @param {Array<object>} teile.regler  je Regler Schlüssel, Name, Bereich und Anfangswert
  * @param {(schluessel: string) => void} teile.beiFormwahl
+ * @param {(schluessel: string) => void} teile.beiAnsichtwahl
  * @param {() => void} teile.beiLaufwechsel
  * @param {() => void} teile.beiRuecksetzen
+ * @param {() => void} teile.beiTeilchenwechsel
  * @param {(schluessel: string, wert: number) => void} teile.beiReglerwechsel
  */
 export function erzeugeBedienung({
   auswahlfeld,
+  ansichtfeld,
   laufschalter,
   ruecksetzer,
+  teilchenschalter,
   reglerfeld,
   formen,
+  ansichten,
   regler,
   beiFormwahl,
+  beiAnsichtwahl,
   beiLaufwechsel,
   beiRuecksetzen,
+  beiTeilchenwechsel,
   beiReglerwechsel,
 }) {
-  const formknoepfe = new Map();
   const reglerteile = new Map();
 
-  for (const form of formen) {
-    const knopf = document.createElement('button');
-    knopf.type = 'button';
-    knopf.className = 'schaltflaeche';
-    knopf.textContent = form.name;
-    // Die Formauswahl ist ein Entweder-oder. `aria-pressed` sagt einer
-    // Vorlesehilfe, welche der vier gerade gilt — sichtbar ist es an der Farbe.
-    knopf.setAttribute('aria-pressed', 'false');
-    knopf.addEventListener('click', () => beiFormwahl(form.schluessel));
-    auswahlfeld.append(knopf);
-    formknoepfe.set(form.schluessel, knopf);
-  }
+  const formknoepfe = baueKnopfreihe(auswahlfeld, formen, beiFormwahl);
+  const ansichtknoepfe = baueKnopfreihe(ansichtfeld, ansichten, beiAnsichtwahl);
 
   for (const einstellung of regler) {
     const feld = document.createElement('div');
@@ -89,13 +88,29 @@ export function erzeugeBedienung({
 
   laufschalter.addEventListener('click', beiLaufwechsel);
   ruecksetzer.addEventListener('click', beiRuecksetzen);
+  teilchenschalter.addEventListener('click', beiTeilchenwechsel);
 
   return {
     /** Hebt die gewählte Form hervor und nimmt die Hervorhebung von den übrigen. */
     zeigeForm(schluessel) {
-      for (const [name, knopf] of formknoepfe) {
-        knopf.setAttribute('aria-pressed', String(name === schluessel));
-      }
+      hebeHervor(formknoepfe, schluessel);
+    },
+
+    /** Dasselbe für die gewählte Ansicht. */
+    zeigeAnsicht(schluessel) {
+      hebeHervor(ansichtknoepfe, schluessel);
+    },
+
+    /**
+     * Zeigt am Teilchenschalter, ob die Teilchen gerade liegen.
+     *
+     * Anders als der Laufschalter behält er seine Beschriftung und wird
+     * hervorgehoben oder nicht — er ist ein Schalter für eine Auflage, keine
+     * Handlung. `aria-pressed` sagt einer Vorlesehilfe dasselbe, was die Farbe
+     * zeigt.
+     */
+    zeigeTeilchen(an) {
+      teilchenschalter.setAttribute('aria-pressed', String(an));
     },
 
     /**
@@ -136,4 +151,37 @@ export function erzeugeBedienung({
       teil.schieber.setAttribute('aria-valuetext', text);
     },
   };
+}
+
+/**
+ * Baut eine Reihe von Schaltflächen, von denen immer genau eine gilt — die
+ * Formauswahl und die Ansichtsauswahl sind derselbe Fall.
+ *
+ * `aria-pressed` weist die gewählte aus, nicht nur die Farbe: Sonst erführe
+ * eine Vorlesehilfe gar nicht, welche der Schaltflächen gerade gilt.
+ *
+ * @returns {Map<string, HTMLButtonElement>}
+ */
+function baueKnopfreihe(feld, eintraege, beiWahl) {
+  const knoepfe = new Map();
+
+  for (const eintrag of eintraege) {
+    const knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.className = 'schaltflaeche';
+    knopf.textContent = eintrag.name;
+    knopf.setAttribute('aria-pressed', 'false');
+    knopf.addEventListener('click', () => beiWahl(eintrag.schluessel));
+    feld.append(knopf);
+    knoepfe.set(eintrag.schluessel, knopf);
+  }
+
+  return knoepfe;
+}
+
+/** Hebt eine Schaltfläche der Reihe hervor und nimmt es den übrigen. */
+function hebeHervor(knoepfe, schluessel) {
+  for (const [name, knopf] of knoepfe) {
+    knopf.setAttribute('aria-pressed', String(name === schluessel));
+  }
 }
