@@ -882,3 +882,38 @@ Fehler.*
     auf den Schirm. Bei 375 Punkten (iPhone SE) sind es 671 statt 754; dort
     bricht die Ansichtsreihe weiterhin auf zwei Zeilen um, weil „Geschwindigkeit"
     allein 145 Punkte breit ist.
+- **2026-08-02:** `CLAUDE.md` aufgeräumt, von 323 auf 177 Zeilen. Keine Regel entfällt,
+  jede steht nur noch an einer Stelle.
+  1. *Das Wissen über das Prüfen im Browser liegt jetzt im Skill `browser-abnahme`* statt
+     in `CLAUDE.md` — rund 130 Zeilen. Grund: `CLAUDE.md` wird in **jeder** Session
+     gelesen, ein Skill nur, wenn sein Anlass eintritt. Das Wissen wurde bei jeder Etappe
+     ohne Sichtbares mitgeschleppt. In `CLAUDE.md` bleibt der Verweis an den drei Stellen,
+     an denen der Anlass entsteht (Befehle, Abnahme, Cloud-Sessions).
+  2. *Geprüft wird künftig mit Playwright, nicht mehr mit dem nackten Chromium.*
+     `CLAUDE.md` behauptete, Playwright sei nicht installiert — es liegt global unter
+     `/opt/node22/lib/node_modules/playwright` (1.56.1) samt Chromium. Am 2026-08-02 an
+     der laufenden Seite belegt: Formwechsel auf Profil, Windregler von 100 auf 70,
+     Anhalten mit „Angehalten · 92 Schritte gerechnet", danach 51 Bilder je Sekunde über
+     echte Sekunden, Handybreite 393 ohne Überlauf, keine Konsolenfehler. Damit entfallen
+     vier Umgehungen: das eingesetzte Klickskript in einer Kopie der Seite, die
+     `<iframe>`-Hilfsseite für die Handybreite, `--virtual-time-budget` samt seiner
+     unbrauchbaren Zeitmessung und der Umweg über das Zugriffsprotokoll des Servers für
+     lange Läufe. Die Fallen des nackten Chromium bleiben im Skill vermerkt, damit
+     niemand dorthin zurückfällt.
+  3. *Vier überholte Stellen berichtigt.* `CLAUDE.md` beschrieb den Artifact-Weg noch als
+     Zweck von `baue-vorschau.js` und den GitHack-Link an zweiter Stelle als Zusatz „nur
+     wenn die Etappe an der Dateiaufteilung rührt" — beides seit dem Wechsel am 2026-08-02
+     falsch, und der GitHack-Link stand deshalb zweimal in der Datei. Der Verweis auf
+     „Abnahmekriterium von Etappe 2.3" zeigte auf eine längst abgenommene Etappe. Und der
+     angegebene Testaufruf `node --test tests/` bricht ab, weil `tests/` bis Abschnitt 5
+     nur `.gitkeep` enthält — jetzt als noch nicht greifend gekennzeichnet, statt eine
+     Absicherung vorzutäuschen, die es nicht gibt. (Die Abnahme von Etappe 5.1 nennt
+     `npm test`; ein solches Skript gibt es in `package.json` nicht. Das ist bei
+     Abschnitt 5 zu klären, nicht jetzt.)
+  4. *Wortgleiche Doppelungen zum Skill `projekt-etappe` entfernt.* Das Beispiel für eine
+     Commit-Nachricht stand in beiden Dateien identisch; in `CLAUDE.md` steht jetzt die
+     Regel, das Beispiel liefert `git log`. Die Abnahmeregel, die Sessionschritte und die
+     Einordnungstabelle bleiben bewusst **auch** in `CLAUDE.md`: Sie müssen gelten, bevor
+     ein Skill geladen ist.
+  5. *Nicht geändert:* keine Zeile an Programm, Oberfläche oder Prüfskripten. Reine
+     Dokumentation, deshalb nur Commit und kein Tag — `VERSION.md` bleibt unberührt.
