@@ -84,6 +84,27 @@ export const WIND_HOECHSTENS = 0.12;
  */
 export const ZAEHIGKEIT_MINDESTENS = 0.005;
 
+/**
+ * In welchem Bereich die Dichte einer Luftzelle liegen darf, damit die Rechnung
+ * noch als heil gilt — siehe `istHeil`.
+ *
+ * Im Ruhezustand ist die Dichte überall genau 1; die Strömung drückt sie um
+ * wenige Prozent darüber oder darunter. Aus dem Druck abgeleitet, den Etappe 3.3
+ * über vier Szenen und alle drei Stufen nachgemessen hat: Er bleibt unter
+ * 2 · u² = 0,02, und weil Druck = (Dichte − 1) · 1/3 gilt, weicht die Dichte
+ * dabei um höchstens 0,06 von 1 ab.
+ *
+ * Der Bereich hier ist mit Absicht **viel** weiter gespannt. Er soll nicht
+ * anzeigen, dass die Strömung ungewöhnlich ist, sondern dass die Rechnung
+ * zerfallen ist — und das ist kein allmähliches Abdriften: Schaukelt sich das
+ * Verfahren auf, verdoppelt sich der Fehler in jedem Schritt, und die Dichte
+ * verlässt jeden endlichen Bereich innerhalb weniger Dutzend Schritte. Wo genau
+ * die Grenze liegt, ändert daran nichts; weit gespannt kann sie dafür nicht aus
+ * Versehen bei einer noch gesunden Strömung anschlagen.
+ */
+export const DICHTE_MINDESTENS = 0.5;
+export const DICHTE_HOECHSTENS = 2;
+
 /** Ruhezustand einer Richtung bei gegebener Dichte und Geschwindigkeit. */
 function ruhezustand(richtung, dichte, ux, uy) {
   const projektion = 3 * (RICHTUNG_X[richtung] * ux + RICHTUNG_Y[richtung] * uy);
@@ -460,4 +481,54 @@ export function geschwindigkeitBei(kanal, x, y) {
 /** Ist die Zelle Luft (im Gegensatz zu Wand)? */
 export function istFluid(kanal, x, y) {
   return kanal.zellart[x + y * kanal.breite] === FLUID;
+}
+
+/**
+ * Ist die Rechnung noch heil — oder hat sie sich aufgeschaukelt?
+ *
+ * Das Verfahren ist nur innerhalb bestimmter Grenzen stabil (siehe
+ * `WIND_HOECHSTENS` und `ZAEHIGKEIT_MINDESTENS`). Wird eine davon überschritten,
+ * wächst der Fehler in jedem Schritt, bis die Zahlen ins Unendliche laufen. Das
+ * Bild zeigt dann kein Strömungsfeld mehr, sondern ein zerfallenes Muster, und
+ * es kommt von allein nie wieder in Ordnung.
+ *
+ * Die Oberfläche fragt hier nach, statt darauf zu vertrauen, dass die Regler eng
+ * genug gespannt sind. Die Grenzen sind gemessen, aber sie sind an ausgewählten
+ * ungünstigsten Fällen gemessen — an einer Reglerkombination, an einem Gerät
+ * oder in einem Browser, wo die Gleitkommarechnung anders rundet, kann etwas
+ * durchrutschen. Ein Auffangnetz kostet nichts und macht aus einem kaputten Bild
+ * ein neu angesetztes.
+ *
+ * Geprüft wird die **Dichte** und nur sie. Sie ist die Summe der neun Anteile
+ * einer Zelle und wird als Erstes ungültig: die Geschwindigkeit wird durch sie
+ * geteilt, der Druck aus ihr gebildet. Wandzellen werden übersprungen — in ihnen
+ * wird nicht gerechnet.
+ *
+ * **Nicht in jedem Bild aufrufen.** Der Durchgang geht über alle Zellen und
+ * summiert je Zelle neun Werte; gemessen am 2026-08-02 kostet er 0,22 ms in der
+ * groben und 1,08 ms in der feinsten Stufe — dort also fast ein Zehntel des
+ * Zeitbudgets, das ein Einzelbild zum Rechnen hat. Das ist auch nicht nötig: Vom
+ * ersten Anzeichen bis zum unbrauchbaren Bild vergehen rund hundert
+ * Rechenschritte (nachgemessen), und in dieser Zeit vergehen mehrere Bilder.
+ * `start.js` fragt deshalb in jedem zehnten nach.
+ *
+ * @returns {boolean} true, solange jede Luftzelle eine gültige Dichte hat
+ */
+export function istHeil(kanal) {
+  const { breite, hoehe, zellart, anteile } = kanal;
+  const anzahlZellen = breite * hoehe;
+
+  for (let zelle = 0; zelle < anzahlZellen; zelle++) {
+    if (zellart[zelle] !== FLUID) continue;
+    let dichte = 0;
+    for (let richtung = 0; richtung < 9; richtung++) {
+      dichte += anteile[richtung * anzahlZellen + zelle];
+    }
+    // Die Abfrage ist bewusst so herum geschrieben: `NaN` ist mit keiner Zahl
+    // vergleichbar, `NaN < DICHTE_MINDESTENS` wäre also falsch und der Zerfall
+    // bliebe unbemerkt. So schlägt jeder Wert an, der nicht im Bereich liegt.
+    if (!(dichte >= DICHTE_MINDESTENS && dichte <= DICHTE_HOECHSTENS)) return false;
+  }
+
+  return true;
 }

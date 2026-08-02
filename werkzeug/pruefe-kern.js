@@ -27,6 +27,12 @@
  * Wind, ein Windwechsel mitten im Lauf und die Grenzfälle, die abgewiesen werden
  * müssen. Dieser Teil ist der längste — die feine Stufe rechnet viermal so viele
  * Zellen wie die grobe.
+ *
+ * Teil 9 (Etappe 3.4): das Auffangnetz. Geprüft wird, dass `istHeil` eine
+ * gesunde Rechnung nicht fälschlich anschwärzt, dass es einen einzelnen
+ * ungültigen Wert findet, dass es einen echten Zusammenbruch früh genug bemerkt
+ * und dass es billig genug ist, um in der Bildschleife mitzulaufen. Er läuft
+ * schnell — die längste Strecke sind 2000 Schritte auf dem mittleren Gitter.
  */
 
 import {
@@ -37,10 +43,13 @@ import {
   geschwindigkeitBei,
   istFluid,
   setzeWindgeschwindigkeit,
+  istHeil,
   AUFLOESUNGEN,
   WIND_MINDESTENS,
   WIND_HOECHSTENS,
   ZAEHIGKEIT_MINDESTENS,
+  DICHTE_MINDESTENS,
+  DICHTE_HOECHSTENS,
 } from '../src/kern/loeser.js';
 import { leseFelder, druckBei, wirbelstaerkeBei } from '../src/kern/felder.js';
 import { ausdehnung, skaliereForm } from '../src/kern/formen.js';
@@ -68,6 +77,64 @@ const WIND_VERGLEICH = 0.1;
 const VOR_DEM_WECHSEL = 1000;
 const NACH_DEM_WECHSEL = 1500;
 
+/**
+ * Teil 9, Bezugsszene für den Fehlalarm: eine um 30° angestellte Platte in
+ * **Normalgröße** (100 %, also 30 Zellen), aufsitzend auf dem Boden, bei vollem
+ * Wind. Scharf genug, dass ein überempfindliches Auffangnetz hier anschlüge —
+ * und über 6000 Schritte auf dem feinen Gitter, dem ungünstigsten von allen,
+ * nachgemessen heil (2026-08-02, siehe Änderungsverlauf in `SPEC.md`).
+ *
+ * Bewusst **nicht** dieselbe Platte bei voller Größe (115 %). Die zerfällt
+ * wirklich, in der mittleren Stufe bei Schritt 2950 und in der feinen bei 2600.
+ * Sie als Beleg dafür zu nehmen, dass `istHeil` nicht grundlos anschlägt, hieße
+ * dem Auffangnetz vorzuwerfen, dass es einen echten Zusammenbruch findet — was
+ * hier zunächst auch so dastand und nur deshalb bestand, weil der Prüfpunkt bei
+ * 2000 Schritten aufhört.
+ *
+ * „Heil" heißt dabei immer nur: über die gemessene Strecke heil. Für keine
+ * Reglerstellung ist bewiesen, dass sie beliebig lange hält.
+ *
+ * Der Wind ist die Obergrenze des Reglers, nicht die des Kerns: 0,1 statt 0,12
+ * (siehe REGLER in start.js).
+ */
+const BEZUGSSZENE = { art: 'platte', x: 40, bodenabstand: 0, winkel: 30, laenge: 30 };
+
+/*
+ * Bewusst **kein** Prüfpunkt: dieselbe Platte bei voller Größe, bis sie
+ * wirklich zerfällt. Er würde 15 Sekunden zu diesem Skript hinzufügen — und er würde
+ * fehlschlagen, sobald jemand die Rechnung unempfindlicher macht und der
+ * Zusammenbruch ausbleibt. Ein Prüfpunkt, der bei einer Verbesserung anschlägt,
+ * ist ein schlechter Prüfpunkt. Dass die Ecke zerfällt, ist eine Messung und
+ * steht als solche im Änderungsverlauf; dass `istHeil` einen Zerfall findet,
+ * prüft der Punkt mit der von Hand nachgesetzten Angleichzeit unten.
+ */
+
+const WIND_REGLER_HOECHSTENS = 0.1;
+const AUFFANG_SCHRITTE = 2000;
+
+/**
+ * Womit der Zusammenbruch in Teil 9 erzwungen wird: eine Angleichzeit knapp über
+ * 0,5. Dort dämpft das Verfahren praktisch nicht mehr, und der Fehler wächst in
+ * jedem Schritt. Der Kern lässt diesen Wert nicht zu (siehe
+ * ZAEHIGKEIT_MINDESTENS) — für die Prüfung wird er von Hand nachgesetzt.
+ */
+const ANGLEICHZEIT_ZU_KLEIN = 0.5005;
+
+/**
+ * Bis wann der Zusammenbruch bemerkt sein muss und wie viel vom Bild dabei
+ * höchstens schon verdorben sein darf.
+ *
+ * 500 Schritte sind bei 4 bis 20 Schritten je Bild höchstens gut zwei Sekunden —
+ * und die Prüfung sieht ohnehin nur in jedem zehnten Bild nach. Ein Prozent
+ * verdorbener Zellen ist auf dem Bildschirm nicht als Muster zu erkennen,
+ * sondern höchstens als vereinzelter Punkt.
+ */
+const ZERFALL_SPAETESTENS = 500;
+const VERDORBEN_HOECHSTENS = 0.01;
+
+/** Wie lange ein Aufruf von `istHeil` in der feinsten Stufe dauern darf. */
+const PRUEFKOSTEN_HOECHSTENS = 5;
+
 console.log('Windkanal — Prüfung der Kernlogik');
 console.log('=================================');
 
@@ -91,12 +158,13 @@ const bestandenTeile = [
   pruefeBodenfreiheit(),
   pruefeAbgeleiteteGroessen(),
   pruefeAufloesungUndWind(),
+  pruefeAuffangnetz(),
 ];
 
 const allesBestanden = bestandenTeile.every(Boolean);
 console.log('\n=================================');
 if (allesBestanden) {
-  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.5 erfüllt.');
+  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.5 und das Auffangnetz aus 3.4 erfüllt.');
 } else {
   console.log('Ergebnis: Mindestens ein Prüfpunkt nicht bestanden.');
 }
@@ -938,6 +1006,162 @@ function pruefeAufloesungUndWind() {
           : `durchgerutscht: ${durchgerutscht.join(', ')}`,
     },
   ]);
+}
+
+// --- Teil 9: das Auffangnetz (Etappe 3.4) ----------------------------------
+
+function pruefeAuffangnetz() {
+  console.log('\nTeil 9 — Auffangnetz gegen zerfallende Rechnungen (Etappe 3.4)');
+  console.log('--------------------------------------------------------------');
+
+  // --- Fehlalarm: Die schärfste Szene, die die Regler zulassen, muss über die
+  // ganze Strecke als heil durchgehen. Ein Auffangnetz, das bei gesunder
+  // Strömung anschlägt, wäre schlimmer als keines: Es setzte dem Nutzer die
+  // Rechnung zurück, während alles in Ordnung ist.
+  const scharf = erzeugeKanal({
+    aufloesung: 'mittel',
+    windgeschwindigkeit: WIND_REGLER_HOECHSTENS,
+    hindernis: skaliereForm(BEZUGSSZENE, AUFLOESUNGEN.mittel.faktor),
+  });
+  console.log('Bezugsszene — scharf, aber über 6000 Schritte nachgemessen heil:');
+  beschreibeKanal(scharf);
+  console.log(`  ${beschreibeHindernis(scharf.hindernis)}`);
+
+  let fehlalarm = null;
+  for (let n = 1; n <= AUFFANG_SCHRITTE; n++) {
+    schritt(scharf);
+    if (n % 100 === 0 && !istHeil(scharf) && fehlalarm === null) fehlalarm = n;
+  }
+
+  // --- Einzelne ungültige Werte. Alle drei Arten müssen auffallen: der Wert,
+  // der keine Zahl mehr ist, der über jede Grenze gewachsene, und die Zelle,
+  // aus der alles verschwunden ist (Dichte 0 — daran scheitert später die
+  // Division bei der Geschwindigkeit).
+  const anzahlZellen = scharf.breite * scharf.hoehe;
+  // Weit hinter dem Hindernis und auf halber Höhe — dort ist mit Sicherheit
+  // Luft. Nachgesehen wird trotzdem: Läge die Störung in einer Wandzelle, ginge
+  // `istHeil` mit Recht darüber hinweg, und der Prüfpunkt fiele durch, ohne dass
+  // an der Sache etwas wäre.
+  const probeX = Math.round(scharf.breite * 0.75);
+  const probeY = Math.round(scharf.hoehe / 2);
+  if (!istFluid(scharf, probeX, probeY)) {
+    throw new Error(`Die Probezelle bei x = ${probeX}, y = ${probeY} ist keine Luftzelle.`);
+  }
+  const probezelle = probeX + probeY * scharf.breite;
+  const stoerungen = [
+    ['keine Zahl (NaN)', () => { scharf.anteile[3 * anzahlZellen + probezelle] = NaN; }],
+    ['unendlich', () => { scharf.anteile[3 * anzahlZellen + probezelle] = Infinity; }],
+    [
+      'Zelle leergelaufen (Dichte 0)',
+      () => {
+        for (let r = 0; r < 9; r++) scharf.anteile[r * anzahlZellen + probezelle] = 0;
+      },
+    ],
+  ];
+  const uebersehen = stoerungen
+    .filter(([, stoere]) => {
+      const gesichert = Array.from({ length: 9 }, (_, r) => scharf.anteile[r * anzahlZellen + probezelle]);
+      stoere();
+      const bemerkt = !istHeil(scharf);
+      for (let r = 0; r < 9; r++) scharf.anteile[r * anzahlZellen + probezelle] = gesichert[r];
+      return !bemerkt;
+    })
+    .map(([name]) => name);
+
+  // --- Echter Zusammenbruch. Ausgelöst wird er von Hand: die Angleichzeit wird
+  // unter die Grenze gedrückt, ab der das Verfahren nicht mehr dämpft. Über
+  // `erzeugeKanal` ginge das nicht — `pruefeZaehigkeit` weist es zurück, und
+  // genau das prüft Teil 8. Hier soll der Zusammenbruch aber eintreten.
+  const zerfallend = erzeugeKanal({
+    aufloesung: 'grob',
+    windgeschwindigkeit: WIND_REGLER_HOECHSTENS,
+    hindernis: BEZUGSSZENE,
+  });
+  zerfallend.angleichzeit = ANGLEICHZEIT_ZU_KLEIN;
+
+  let bemerktBeiSchritt = null;
+  let verdorbenBeiEntdeckung = null;
+  for (let n = 1; n <= AUFFANG_SCHRITTE; n++) {
+    schritt(zerfallend);
+    if (!istHeil(zerfallend)) {
+      bemerktBeiSchritt = n;
+      verdorbenBeiEntdeckung = anteilVerdorben(zerfallend);
+      break;
+    }
+  }
+
+  // --- Kosten. Sie tragen die Entscheidung in `start.js`, nur in jedem zehnten
+  // Bild nachzusehen; ohne Zahl wäre das geraten.
+  const grosser = erzeugeKanal({ aufloesung: 'fein', windgeschwindigkeit: WIND_REGLER_HOECHSTENS });
+  schritte(grosser, 50);
+  for (let n = 0; n < 20; n++) istHeil(grosser); // aufwärmen
+  let kuerzeste = Infinity;
+  for (let block = 0; block < 5; block++) {
+    const beginn = performance.now();
+    for (let n = 0; n < 20; n++) istHeil(grosser);
+    kuerzeste = Math.min(kuerzeste, (performance.now() - beginn) / 20);
+  }
+
+  return melde([
+    {
+      name: 'Eine scharfe, nachgemessen heile Szene gilt durchweg als heil — kein Fehlalarm',
+      bestanden: fehlalarm === null,
+      befund:
+        fehlalarm === null
+          ? `${AUFFANG_SCHRITTE} Schritte, alle 100 nachgesehen: durchweg heil` +
+            ` (Dichte darf zwischen ${DICHTE_MINDESTENS} und ${DICHTE_HOECHSTENS} liegen)`
+          : `fälschlich angeschlagen bei Schritt ${fehlalarm}`,
+    },
+    {
+      name: 'Ein einzelner ungültiger Wert im Gitter fällt auf',
+      bestanden: uebersehen.length === 0,
+      befund:
+        uebersehen.length === 0
+          ? `alle ${stoerungen.length} Störungen bemerkt: ${stoerungen.map(([n]) => n).join(', ')}`
+          : `übersehen: ${uebersehen.join(', ')}`,
+    },
+    {
+      // Das Abnahmekriterium der Etappe, in Zahlen: Der Zusammenbruch muss
+      // bemerkt werden, solange das Bild noch weitgehend heil ist — sonst sähe
+      // der Nutzer das zerfallene Muster, bevor die Oberfläche eingreift.
+      name: 'Ein echter Zusammenbruch wird bemerkt, bevor das Bild verdorben ist',
+      bestanden:
+        bemerktBeiSchritt !== null &&
+        bemerktBeiSchritt <= ZERFALL_SPAETESTENS &&
+        verdorbenBeiEntdeckung <= VERDORBEN_HOECHSTENS,
+      befund:
+        bemerktBeiSchritt === null
+          ? `nach ${AUFFANG_SCHRITTE} Schritten bei Angleichzeit ${ANGLEICHZEIT_ZU_KLEIN} nichts bemerkt`
+          : `Angleichzeit ${ANGLEICHZEIT_ZU_KLEIN} (unter der Grenze 0,5): bemerkt bei Schritt ${bemerktBeiSchritt}` +
+            ` (erlaubt bis ${ZERFALL_SPAETESTENS}), dabei erst` +
+            ` ${(100 * verdorbenBeiEntdeckung).toFixed(2)} % der Luftzellen verdorben` +
+            ` (erlaubt bis ${100 * VERDORBEN_HOECHSTENS} %)`,
+    },
+    {
+      name: 'Die Prüfung ist billig genug, um in der Bildschleife mitzulaufen',
+      bestanden: kuerzeste <= PRUEFKOSTEN_HOECHSTENS,
+      befund:
+        `feine Stufe (${grosser.breite * grosser.hoehe} Zellen): ${kuerzeste.toFixed(3)} ms je Aufruf` +
+        ` (erlaubt bis ${PRUEFKOSTEN_HOECHSTENS}). Bei jedem zehnten Bild kostet das unter einem Prozent` +
+        ' der Rechenzeit — die Grenze ist weit gesetzt, damit ein nebenher laufender Rechner sie nicht reißt',
+    },
+  ]);
+}
+
+/** Anteil der Luftzellen, deren Dichte den zulässigen Bereich verlassen hat. */
+function anteilVerdorben(kanal) {
+  const { breite, hoehe } = kanal;
+  let luftzellen = 0;
+  let verdorben = 0;
+  for (let y = 0; y < hoehe; y++) {
+    for (let x = 0; x < breite; x++) {
+      if (!istFluid(kanal, x, y)) continue;
+      luftzellen++;
+      const dichte = dichteBei(kanal, x, y);
+      if (!(dichte >= DICHTE_MINDESTENS && dichte <= DICHTE_HOECHSTENS)) verdorben++;
+    }
+  }
+  return verdorben / luftzellen;
 }
 
 /**

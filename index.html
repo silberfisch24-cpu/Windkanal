@@ -136,6 +136,60 @@
         color: var(--schrift-leise);
       }
 
+      /* Das einklappbare Feld mit den Reglern (Etappe 3.5). Es steht unter dem
+         Bild und ist auf schmalen Schirmen zugeklappt — zusammen mit dem
+         Hinweistext sparen die fünf Regler dort rund 580 Bildpunkte Höhe, und
+         nur dadurch stehen Bild und Schaltflächen ohne Scrollen da. */
+      .einstellungen {
+        margin: 1rem 0 0;
+        border: 1px solid var(--linie);
+        border-radius: 4px;
+      }
+
+      /* So hoch wie die Schaltflächen, aus demselben Grund: mit dem Finger muss
+         die Zeile zu treffen sein. */
+      .einstellungenkopf {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0 1rem;
+        font-size: 0.9375rem;
+        cursor: pointer;
+        touch-action: manipulation;
+        /* Das eingebaute Dreieck des Browsers sieht in jedem anders aus und
+           lässt sich nicht mitdrehen. Es weicht dem eigenen unten. */
+        list-style: none;
+      }
+
+      .einstellungenkopf::-webkit-details-marker {
+        display: none;
+      }
+
+      /* Das Dreieck ist aus Rahmenlinien gebaut, nicht aus einem Schriftzeichen:
+         welche Zeichen ein Gerät hat, ist nicht verlässlich — am 2026-07-31 ist
+         genau daran schon einmal ein Zeichen als leeres Kästchen erschienen. */
+      .einstellungenkopf::before {
+        content: '';
+        width: 0;
+        height: 0;
+        border-left: 0.4rem solid currentColor;
+        border-top: 0.32rem solid transparent;
+        border-bottom: 0.32rem solid transparent;
+      }
+
+      .einstellungen[open] > .einstellungenkopf::before {
+        transform: rotate(90deg);
+      }
+
+      .einstellungen[open] > .einstellungenkopf {
+        border-bottom: 1px solid var(--linie);
+      }
+
+      .einstellungeninhalt {
+        padding: 0.75rem 1rem 0;
+      }
+
       /* Die Zeichenfläche ist so groß wie das Rechengitter — ein Bildpunkt je
          Zelle, je nach Auflösungsstufe 200 × 60 bis 400 × 120. Der Browser
          vergrößert sie hier auf Bildschirmbreite und glättet dabei; das spart
@@ -153,6 +207,35 @@
         color: var(--schrift-leise);
         font-size: 0.875rem;
         font-variant-numeric: tabular-nums;
+      }
+
+      /* Auf schmalen Schirmen rückt alles zusammen, damit das Bild nach oben
+         kommt (Etappe 3.5).
+         Angefasst werden nur Abstände, nicht die Höhe der Schaltflächen: Die
+         2,75 rem sind die Fläche, die man mit dem Finger trifft, und daran wird
+         gerade auf dem Handy nicht gespart. Die schmaleren Seitenränder der
+         Schaltflächen bringen dagegen ganze Zeilen ein — die vier Formen passen
+         damit nebeneinander statt in zwei Reihen. */
+      @media (max-width: 30rem) {
+        body {
+          padding: 1.25rem 1rem 2rem;
+        }
+
+        .untertitel {
+          margin-bottom: 1rem;
+        }
+
+        .bedienleiste {
+          gap: 0.75rem 1.25rem;
+        }
+
+        .knopfreihe {
+          gap: 0.375rem;
+        }
+
+        .schaltflaeche {
+          padding: 0 0.625rem;
+        }
       }
     </style>
   </head>
@@ -203,16 +286,28 @@
            brauchen sie auf dem Handy so viel Platz, dass das Bild sonst aus dem
            Sichtfeld rutscht — und gerade beim Ziehen soll man es sehen.
            Die fünf entstehen in bedienung.js aus der Liste in start.js; Bereiche
-           und Voreinstellungen stehen dadurch nur an einer Stelle. -->
-      <div class="reglerleiste" id="reglerleiste" role="group" aria-label="Einstellungen"></div>
-      <p class="reglerhinweis">
-        Der Wind wirkt ohne Neustart — er wandert vom Einlass durch den Kanal.
-        Größe, Anstellwinkel, Höhe und Rechenauflösung setzen die Strömung neu an.
-        Eine feinere Auflösung zeigt schärfere Wirbel, braucht dafür aber mehr
-        Rechenzeit je Bild; voreingestellt ist die Stufe, die auf diesem Gerät
-        zügig vorankommt. Die Ansicht zu wechseln und die Teilchen zu- oder
-        abzuschalten ändert nichts an der Rechnung — sie läuft dabei weiter.
-      </p>
+           und Voreinstellungen stehen dadurch nur an einer Stelle.
+
+           Seit Etappe 3.5 stecken sie in einem einklappbaren Feld. `details`
+           und `summary` sind dafür die eingebauten Elemente des Browsers: sie
+           klappen ohne eine Zeile Programmcode auf und zu, sind mit der
+           Tastatur bedienbar und sagen einer Vorlesehilfe von sich aus, ob das
+           Feld offen ist. Ob es offen aufgeht, entscheidet start.js beim Laden —
+           danach gehört es dem Nutzer. -->
+      <details class="einstellungen" id="einstellungen">
+        <summary class="einstellungenkopf">Einstellungen</summary>
+        <div class="einstellungeninhalt">
+          <div class="reglerleiste" id="reglerleiste"></div>
+          <p class="reglerhinweis">
+            Der Wind wirkt ohne Neustart — er wandert vom Einlass durch den Kanal.
+            Größe, Anstellwinkel, Höhe und Rechenauflösung setzen die Strömung neu an.
+            Eine feinere Auflösung zeigt schärfere Wirbel, braucht dafür aber mehr
+            Rechenzeit je Bild; voreingestellt ist die Stufe, die auf diesem Gerät
+            zügig vorankommt. Die Ansicht zu wechseln und die Teilchen zu- oder
+            abzuschalten ändert nichts an der Rechnung — sie läuft dabei weiter.
+          </p>
+        </div>
+      </details>
     </main>
 
     <script type="module" src="src/ui/start.js"></script>

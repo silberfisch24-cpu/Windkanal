@@ -253,6 +253,36 @@ direkte Commits auf den Hauptzweig. Dann gilt:
   `--dump-dom` allein wartet auf `load`. So läuft die Wanduhr echt. Am 2026-08-01 (Etappe
   3.2) so gemacht; mit virtueller Zeit kam dieselbe Messung einmal auf 3,4 und einmal auf
   288 Millionen Zellen je Sekunde.
+- **Soll die Seite über Minuten wirklich laufen, trägt `--dump-dom` nicht mehr.** Es
+  wartet nur auf `load`, und virtuelle Zeit hilft hier nicht: Ein `setInterval`, das den
+  Zustand mitschreibt, frisst unter virtueller Zeit die ganze Uhr, bevor
+  `requestAnimationFrame` überhaupt drankommt — die Rechnung steht dann bei null Schritten.
+  Der Weg, der sich am 2026-08-02 (Etappe 3.4) bewährt hat, um einen Zusammenbruch nach
+  knapp 3000 Rechenschritten zu beobachten:
+  1. Den lokalen Server so starten, dass sein **Zugriffsprotokoll in eine Datei** geht
+     (`python3 -m http.server 8140 > protokoll.txt 2>&1`).
+  2. Die Prüfseite meldet jedes Ereignis mit `fetch('/melde?' + encodeURIComponent(text))`.
+     Der Server antwortet mit 404 — das stört nicht, die Zeile steht im Protokoll.
+  3. Chromium mit `--headless=new` und **ohne** `--dump-dom`/`--screenshot` starten; er
+     läuft dann weiter, statt nach dem Laden zu beenden.
+  4. Warten, bis die Abschlussmeldung im Protokoll steht, dann Chromium beenden und die
+     Zeilen aus dem Protokoll herausfiltern.
+
+  Beobachtet wird dabei über einen `MutationObserver` auf der Laufanzeige, nicht über
+  einen Zeitgeber. Die Reihenfolge der Meldungen kann leicht durcheinandergeraten, weil
+  `fetch` nebenläufig ist — für „ist es eingetreten" reicht es, für „genau in dieser
+  Reihenfolge" nicht.
+- **`pkill -f` bringt die eigene Shell um.** Das Muster steht auch in der Befehlszeile des
+  Shell-Prozesses, der den Befehl ausführt; `pkill -f "http.server"` trifft deshalb sich
+  selbst, der Rest des Befehls läuft nicht mehr, und was danach kommen sollte, bleibt
+  liegen. Am 2026-08-02 zweimal darauf hereingefallen — es sah aus, als sei der Server
+  nicht hochgekommen, dabei war die Zeile nie ausgeführt worden. Stattdessen über die
+  Prozessnummern gehen und das Muster in Klammern setzen, damit es sich nicht selbst
+  findet: `for P in $(pgrep -f '[h]ttp\.server'); do kill "$P"; done`.
+  **Die Klammern allein genügen nicht**, wenn derselbe Befehl den Server auch startet: In
+  `nohup python3 -m http.server 8160 … ; for P in $(pgrep -f '[h]ttp\.server')` steht die
+  Zeichenfolge ein paar Zeichen weiter vorn im Klartext, und der Treffer sitzt wieder.
+  Aufräumen deshalb **in einem eigenen Befehl**, nicht angehängt.
 - **Das Prüfgerüst darf die Seitenbreite nicht verfälschen.** Ein eingesetzter Kasten mit
   `white-space: pre` und langen Zeilen macht das Dokument breiter als die Seite und meldet
   einen Überlauf, den es ohne ihn nicht gibt — am 2026-08-01 zunächst als Befund

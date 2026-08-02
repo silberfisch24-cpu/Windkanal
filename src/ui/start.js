@@ -21,6 +21,7 @@ import {
   setzeHindernis,
   setzeWindgeschwindigkeit,
   setzeAufAnfangszustand,
+  istHeil,
   AUFLOESUNGEN,
 } from '../kern/loeser.js';
 import { normalisiereForm, ausdehnung, skaliereForm } from '../kern/formen.js';
@@ -162,14 +163,29 @@ const WIND_VOREINSTELLUNG = 0.1;
  * Der Wind reicht deshalb nur bis 100 % (= 0,10) statt bis zu den 0,12, die
  * `loeser.js` zuließe: Diese 0,12 wurden in Etappe 1.5 an einer freistehenden
  * Platte gemessen — ein aufsitzendes Rechteck bei 30° hält sie nicht aus.
- * Größe bis 115 % und Anstellung bis ±30° sind an denselben ungünstigsten
- * Fällen abgesichert. Ein weiterer Bereich bräuchte entweder eine
- * unempfindlichere Rechnung oder das Auffangnetz aus Etappe 3.4.
  *
- * Die Grenzen gelten in **allen drei Auflösungsstufen** — nachgemessen in
- * Etappe 3.2 (siehe Änderungsverlauf zum 2026-08-01): über 3000 Schritte
- * entsteht in keiner Stufe ein ungültiger Wert. Sie müssen deshalb nicht je
- * Stufe verengt werden.
+ * **Die obere Ecke der Regler trägt nicht, und sie lässt sich auch nicht
+ * sauber abschneiden.** Etappe 3.4 hat das in zwei Durchläufen nachgemessen
+ * (Einzelheiten im Änderungsverlauf von `SPEC.md` zum 2026-08-02):
+ *
+ * 1. Alle 288 Kombinationen aus vier Formen, beiden Windenden, beiden
+ *    Größenenden, drei Anstellwinkeln, zwei Höhen und drei Auflösungsstufen
+ *    über je **3000** Schritte: drei zerfallen.
+ * 2. Dieselbe Ecke über **6000** Schritte, dabei je ein Regler zurückgenommen:
+ *    Es sind weit mehr. Bei voller Größe zerfällt es noch bei 22° Anstellung
+ *    (Schritt 5175) und bei 85 % Wind (Schritt 5425). Die drei aus dem ersten
+ *    Durchlauf waren nur die schnellsten.
+ *
+ * Daraus folgt zweierlei. Erstens ist **keine Reglerstellung als stabil
+ * bewiesen** — bewiesen ist nur, dass eine bestimmte Strecke gehalten hat; eine
+ * längere kann jede Grenze verschieben. Zweitens wäre eine engere Grenze eine
+ * Scheinsicherheit: Sie nähme Bereich weg und ließe trotzdem offen, was bei
+ * 20 000 Schritten geschieht.
+ *
+ * Die Grenzen bleiben deshalb stehen, wie sie sind, und die Zuständigkeit liegt
+ * beim **Auffangnetz** aus Etappe 3.4: Es setzt die Strömung neu an und hält
+ * nach dem dritten Mal an. Das wirkt bei jeder Einstellung und jeder Laufzeit,
+ * auch bei einer, die hier niemand ausprobiert hat.
  */
 const REGLER = [
   { schluessel: 'wind', name: 'Wind', mindestens: 10, hoechstens: 100, schritt: 5, wert: 100 },
@@ -253,6 +269,59 @@ const SCHRITTE_HOECHSTENS = 20;
 /** Über wie viele Millisekunden die angezeigte Bildfolge gemittelt wird. */
 const MITTELUNGSZEIT = 500;
 
+/**
+ * In jedem wievielten Bild nachgesehen wird, ob die Rechnung noch heil ist.
+ *
+ * Nicht in jedem: Die Prüfung geht über alle Zellen und kostet in der feinsten
+ * Stufe rund eine Millisekunde (siehe `istHeil`). Sie muss aber auch nicht in
+ * jedem sein — vom ersten Anzeichen bis zum unbrauchbaren Bild vergehen rund
+ * hundert Rechenschritte, also mehrere Bilder. Zehn ist der Abstand, bei dem der
+ * Aufwand unter einem Prozent bleibt und trotzdem nichts zu sehen ist, bevor es
+ * aufgefangen wird.
+ */
+const PRUEFABSTAND = 10;
+
+/**
+ * Wie viele Auffangvorgänge hingenommen werden, bevor die Seite die Rechnung
+ * anhält.
+ *
+ * Ohne diese Grenze liefe die Seite bei einer Einstellung, die zuverlässig
+ * zerfällt, in eine endlose Folge aus Neuansetzen und Zerfallen — der Betrachter
+ * sähe ein Bild, das alle paar Sekunden von vorn beginnt, ohne dass ihm jemand
+ * sagt, woran es liegt. Nach dem dritten Mal wird deshalb angehalten und in der
+ * Laufanzeige gesagt, was zu tun ist.
+ *
+ * **Zurückgesetzt wird die Zählung allein durch einen Eingriff des Nutzers**,
+ * nicht dadurch, dass die Rechnung eine Weile durchhält. Zwei Anläufe über eine
+ * Frist sind gescheitert: erst 1000 Schritte, dann 5000. Beide Male lag die
+ * Frist unter dem Abstand, in dem der Zusammenbruch wiederkehrt, die Zählung war
+ * jedes Mal schon zurückgesetzt, bevor sie die drei erreichte — genau die
+ * endlose Folge, die verhindert werden soll.
+ *
+ * Eine passende Frist gibt es auch nicht: Die Messung vom 2026-08-02 zeigt
+ * Wiederkehrabstände von 2600 bis über 5700 Schritten, je nach Reglerstellung,
+ * und für keine Einstellung ist bewiesen, dass sie überhaupt hält — nur, dass
+ * sie eine bestimmte Strecke gehalten hat. Jede Zahl, die ich hier hinschriebe,
+ * ließe sich von der nächsten Reglerstellung überschreiten.
+ *
+ * Ohne Frist bleibt die Aussage dagegen stimmig: Dreimal zusammengebrochen,
+ * ohne dass jemand etwas verstellt hat, heißt „diese Einstellung trägt nicht" —
+ * gleichgültig, wie viel Zeit dazwischen lag. Und ein einmaliger Ausrutscher
+ * zählt nie weiter, weil er sich nicht wiederholt.
+ */
+const AUFFANGVERSUCHE = 3;
+
+/**
+ * Nach wie vielen Rechenschritten die Meldung „war aus dem Tritt geraten"
+ * wieder aus der Laufanzeige verschwindet.
+ *
+ * Das betrifft **nur den Text**, nicht die Zählung darüber. Der Hinweis soll
+ * lange genug stehen, um gelesen zu werden, aber nicht für immer die
+ * Bildfolge verdecken. Bei 4 bis 20 Rechenschritten je Bild sind 1500 Schritte
+ * grob eine Viertel- bis anderthalb Minuten.
+ */
+const MELDUNG_SCHRITTE = 1500;
+
 starte();
 
 function starte() {
@@ -292,6 +361,13 @@ function starte() {
   let letzteBildfolge = null;
   let letzteSchritteJeBild = null;
 
+  // Auffangnetz: wie viele Bilder seit der letzten Prüfung vergangen sind, wie
+  // oft in Folge aufgefangen werden musste, und was darüber in der Laufanzeige
+  // steht (null, solange nichts vorgefallen ist).
+  let bilderSeitPruefung = 0;
+  let auffangzaehler = 0;
+  let meldung = null;
+
   const bedienung = erzeugeBedienung({
     auswahlfeld: document.querySelector('#formauswahl'),
     ansichtfeld: document.querySelector('#ansichtauswahl'),
@@ -315,7 +391,36 @@ function starte() {
   bedienung.zeigeLauf(laeuft);
   bedienung.zeigeTeilchen(teilchenAn);
   legeKanalAn();
+  richteEinstellungenEin(
+    document.querySelector('#einstellungen'),
+    document.querySelector('#reglerleiste')
+  );
   starteSchleife();
+
+  /**
+   * Weggeschalteter Tab: die Schleife wirklich abstellen statt sie leer
+   * weiterlaufen zu lassen.
+   *
+   * Der Browser hält `requestAnimationFrame` in einem unsichtbaren Tab von
+   * selbst an — aber nicht überall gleich und nicht sofort; manche drosseln nur
+   * auf ein Bild je Sekunde. Beides kostet auf dem Handy Strom für ein Bild, das
+   * niemand sieht.
+   *
+   * Wichtiger ist, was beim Zurückkommen geschieht: `starteSchleife` wirft die
+   * angefangene Messung weg. Ohne das würde die Bildfolge über die ganze Pause
+   * hinweg gemittelt und meldete beim ersten Blick „0 Bilder je Sekunde" — eine
+   * Zahl, die es nie gab, und die aussieht, als hinge die Seite.
+   *
+   * Angehalten bleibt angehalten: Hat der Nutzer selbst auf „Anhalten" gedrückt,
+   * läuft beim Zurückkommen nichts wieder an.
+   */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      haltAn();
+    } else if (laeuft) {
+      starteSchleife();
+    }
+  });
 
   /**
    * Wechselt die Form. Die Reglerstellungen bleiben dabei stehen; nur die Höhe
@@ -324,6 +429,7 @@ function starte() {
    */
   function waehleForm(schluessel) {
     if (schluessel === gewaehlteForm) return;
+    nimmMeldungZurueck();
     gewaehlteForm = schluessel;
     bedienung.zeigeForm(schluessel);
     baueHindernisNeu();
@@ -370,6 +476,7 @@ function starte() {
    * „Hindernisse im Kanal" in SPEC.md).
    */
   function stelleEin(schluessel, wert) {
+    nimmMeldungZurueck();
     einstellungen[schluessel] = wert;
 
     if (schluessel === 'wind') {
@@ -394,6 +501,7 @@ function starte() {
 
   /** Setzt die Strömung auf den Anfangszustand zurück, ohne etwas zu verstellen. */
   function setzeZurueck() {
+    nimmMeldungZurueck();
     setzeAufAnfangszustand(kanal);
     darstellung.saeeTeilchenNeu();
     vergissMessung();
@@ -517,6 +625,7 @@ function starte() {
   }
 
   function wechsleLauf() {
+    nimmMeldungZurueck();
     laeuft = !laeuft;
     bedienung.zeigeLauf(laeuft);
     if (laeuft) {
@@ -525,6 +634,24 @@ function starte() {
       haltAn();
       zeigeAnzeige();
     }
+  }
+
+  /**
+   * Nimmt eine Meldung des Auffangnetzes zurück und vergisst, wie oft schon
+   * aufgefangen wurde.
+   *
+   * Aufgerufen bei jedem Eingriff des Nutzers, der die Rechnung berührt: Form,
+   * Regler, Zurücksetzen, Weiter. Er hat die Meldung gelesen und gehandelt —
+   * die alte Zählung sagt über die neue Einstellung nichts mehr aus. Ohne das
+   * bliebe die Seite nach drei Zusammenbrüchen bei jeder weiteren Einstellung
+   * gleich wieder stehen, auch bei einer harmlosen.
+   *
+   * **Dies ist der einzige Weg, auf dem die Zählung zurückgeht.** Von selbst
+   * verjährt sie nicht — warum nicht, steht bei `AUFFANGVERSUCHE`.
+   */
+  function nimmMeldungZurueck() {
+    meldung = null;
+    auffangzaehler = 0;
   }
 
   function starteSchleife() {
@@ -548,6 +675,24 @@ function starte() {
       schritte++;
     } while (schritte < SCHRITTE_HOECHSTENS && performance.now() < bis);
 
+    // Erst nachsehen, ob die Rechnung noch heil ist, dann zeichnen: ein
+    // zerfallenes Bild soll gar nicht erst auf den Schirm kommen.
+    bilderSeitPruefung++;
+    if (bilderSeitPruefung >= PRUEFABSTAND) {
+      bilderSeitPruefung = 0;
+      if (!istHeil(kanal)) {
+        fangeAuf();
+        if (!laeuft) return; // angehalten — keine neue Bildanforderung
+        bildanforderung = requestAnimationFrame(naechstesBild);
+        return;
+      }
+      // Der Hinweis ist lange genug gestanden. Die Zählung bleibt stehen — sie
+      // gehört zur Einstellung, nicht zum Text (siehe `AUFFANGVERSUCHE`).
+      if (meldung !== null && laeuft && kanal.schrittzahl >= MELDUNG_SCHRITTE) {
+        meldung = null;
+      }
+    }
+
     leseFelder(kanal, felder);
     darstellung.zeichne(felder, { ansicht: gewaehlteAnsicht, teilchen: teilchenAn, schritte });
 
@@ -566,6 +711,42 @@ function starte() {
     }
 
     bildanforderung = requestAnimationFrame(naechstesBild);
+  }
+
+  /**
+   * Fängt eine zerfallene Rechnung auf: Strömung neu ansetzen, sagen was war,
+   * und beim wiederholten Mal anhalten.
+   *
+   * Neu angesetzt wird, nicht angehalten — ein Zusammenbruch kann auch ein
+   * einmaliger Ausrutscher an einer ungünstigen Reglerstellung sein, durch die
+   * der Nutzer eben nur hindurchgezogen hat. Dann läuft es danach von selbst
+   * weiter, und er hat nichts weiter zu tun.
+   *
+   * Was bleibt: die Einstellung. Sie zurückzudrehen wäre bevormundend, und der
+   * Nutzer sähe nicht, was den Zusammenbruch ausgelöst hat. Bleibt sie stehen
+   * und bricht es gleich wieder zusammen, greift `AUFFANGVERSUCHE`.
+   */
+  function fangeAuf() {
+    auffangzaehler++;
+    setzeAufAnfangszustand(kanal);
+    darstellung.saeeTeilchenNeu();
+    vergissMessung();
+
+    if (auffangzaehler >= AUFFANGVERSUCHE) {
+      meldung =
+        'Bei dieser Einstellung bricht die Rechnung immer wieder zusammen — angehalten.' +
+        ' Wind, Größe oder Anstellwinkel zurücknehmen, dann auf „Weiter".';
+      laeuft = false;
+      bedienung.zeigeLauf(false);
+      // Die laufende Bildanforderung ist gerade abgearbeitet worden; es genügt,
+      // keine neue zu stellen. `haltAn` würde hier eine erledigte Nummer
+      // zurückgeben und wäre irreführend.
+      bildanforderung = null;
+    } else {
+      meldung = 'Die Rechnung war aus dem Tritt geraten — die Strömung wurde neu angesetzt.';
+    }
+
+    zeichneStand();
   }
 
   /**
@@ -604,6 +785,13 @@ function starte() {
 
   function zeigeAnzeige() {
     const stand = `${kanal.schrittzahl.toLocaleString('de-DE')} Schritte gerechnet`;
+    // Was das Auffangnetz zu sagen hat, geht der gewohnten Anzeige vor. Es
+    // verschwindet von selbst wieder, sobald die Rechnung lange durchgehalten
+    // hat — siehe `ERHOLUNGSSCHRITTE`.
+    if (meldung !== null) {
+      anzeige.textContent = laeuft ? `${meldung} · ${stand}` : meldung;
+      return;
+    }
     if (!laeuft) {
       anzeige.textContent = `Angehalten · ${stand}`;
       return;
@@ -705,6 +893,46 @@ function baueForm(aktuell, einstellungen) {
   })();
 
   return skaliereForm(inGrobenZellen, stufe(einstellungen).faktor);
+}
+
+/**
+ * Entscheidet, ob das Reglerfeld offen oder zugeklappt aufgeht (Etappe 3.5).
+ *
+ * Die Regel in einem Satz: **Zugeklappt, wenn die fünf Regler untereinander
+ * stehen müssten, offen, wenn sie nebeneinander passen.**
+ *
+ * Sie trifft genau den Fall, um den es geht. Nebeneinander sind die Regler 174
+ * Bildpunkte hoch und kosten fast nichts; untereinander sind es 447, und dazu
+ * kommt ein Hinweistext, der auf schmalen Schirmen auf 195 Punkte anwächst.
+ * Erst dann drückt das Feld die Seite auf ein Vielfaches der Bildschirmhöhe.
+ *
+ * Nachgesehen wird beim Raster selbst, statt eine Bildschirmbreite zu raten. Wo
+ * das Raster umbricht, hängt an der Breite der Reglerspalten, am Seitenrand und
+ * an der Schriftgröße des Nutzers — eine Zahl wie „unter 500 Punkten zu" wäre
+ * schon beim nächsten Eingriff an der Gestaltung falsch, ohne dass es auffiele.
+ * So bleibt beides von selbst zusammen.
+ *
+ * Gemessen wird dafür schlicht die **Breite des ersten Reglers**: Nimmt er die
+ * ganze Zeile ein, steht das Raster auf einer Spalte. Das ist Geometrie und
+ * damit in jedem Browser dasselbe — die Spaltenzahl aus `getComputedStyle`
+ * abzulesen wäre kürzer, aber die Browser geben dort mal den ausgerechneten und
+ * mal den geschriebenen Wert zurück.
+ *
+ * Aufgeklappt wird dafür kurz: Ein zugeklapptes `details` rechnet seinen Inhalt
+ * nicht durch, das Raster stünde also noch auf keiner Breite.
+ *
+ * **Nur einmal beim Laden.** Beim Drehen des Geräts wird nicht nachgerechnet:
+ * Ein Feld, das der Nutzer aufgeklappt hat und das ihm beim Drehen wieder
+ * zufällt, wäre schlimmer als eines, das im Querformat unnötig offen steht — und
+ * das Drehen soll nach Etappe 3.4 gerade nichts umwerfen, was er eingestellt hat.
+ */
+function richteEinstellungenEin(feld, reglerfeld) {
+  feld.open = true;
+  const ersterRegler = reglerfeld.firstElementChild;
+  const nebeneinander =
+    ersterRegler !== null &&
+    ersterRegler.getBoundingClientRect().width < reglerfeld.getBoundingClientRect().width - 1;
+  feld.open = nebeneinander;
 }
 
 /**
