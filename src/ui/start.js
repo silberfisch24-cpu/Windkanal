@@ -867,8 +867,14 @@ function baueForm(aktuell, einstellungen) {
  * schon beim nächsten Eingriff an der Gestaltung falsch, ohne dass es auffiele.
  * So bleibt beides von selbst zusammen.
  *
+ * Gemessen wird dafür schlicht die **Breite des ersten Reglers**: Nimmt er die
+ * ganze Zeile ein, steht das Raster auf einer Spalte. Das ist Geometrie und
+ * damit in jedem Browser dasselbe — die Spaltenzahl aus `getComputedStyle`
+ * abzulesen wäre kürzer, aber die Browser geben dort mal den ausgerechneten und
+ * mal den geschriebenen Wert zurück.
+ *
  * Aufgeklappt wird dafür kurz: Ein zugeklapptes `details` rechnet seinen Inhalt
- * nicht durch, das Raster stünde also noch auf keiner Spaltenzahl.
+ * nicht durch, das Raster stünde also noch auf keiner Breite.
  *
  * **Nur einmal beim Laden.** Beim Drehen des Geräts wird nicht nachgerechnet:
  * Ein Feld, das der Nutzer aufgeklappt hat und das ihm beim Drehen wieder
@@ -877,8 +883,11 @@ function baueForm(aktuell, einstellungen) {
  */
 function richteEinstellungenEin(feld, reglerfeld) {
   feld.open = true;
-  const spalten = getComputedStyle(reglerfeld).gridTemplateColumns.split(' ').length;
-  feld.open = spalten > 1;
+  const ersterRegler = reglerfeld.firstElementChild;
+  const nebeneinander =
+    ersterRegler !== null &&
+    ersterRegler.getBoundingClientRect().width < reglerfeld.getBoundingClientRect().width - 1;
+  feld.open = nebeneinander;
 }
 
 /**
