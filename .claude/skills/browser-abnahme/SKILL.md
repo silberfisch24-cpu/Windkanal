@@ -66,6 +66,11 @@ Sekunde über echte Sekunden, Handybreite 393 ohne Überlauf, keine Konsolenfehl
 - **Zustand als Text auslesen, nicht aus Bildpunkten.** Reglerwerte, Beschriftungen und
   Anzeigen über `textContent` holen; das ist zuverlässiger, und Fehler gehen nicht in
   einem hübschen Bild unter.
+- **Was die Bildschleife in jedem Bild setzt, lässt sich nur im angehaltenen Zustand von
+  Hand verstellen.** Am 2026-08-03 einen Messlauf gekostet: Ein Anzeigeelement über
+  `evaluate` sichtbar gemacht, gemessen — und überall null herausbekommen, weil das
+  nächste Bild es sofort wieder zurückgestellt hatte. Erst „Anhalten" klicken, dann
+  verstellen, dann messen.
 - **Rechenzeit der Kernlogik ohne Browser messen.** Für Fragen nach Geschwindigkeit oder
   Einschwingen ein kleines Node-Skript gegen `src/kern/` laufen lassen; im Browser misst
   man die Oberfläche mit.

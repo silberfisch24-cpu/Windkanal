@@ -7,8 +7,8 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappen 3.4 und 3.5 abgenommen (`v1.3`) — Abschnitt 3 ist
-  bis auf die neu aufgenommene Etappe 3.6 abgearbeitet.**
+- **Aktueller Stand:** **Etappe 3.6 abgenommen (`v1.4`) — Abschnitt 3 ist damit
+  abgearbeitet.**
   Unter <https://silberfisch24-cpu.github.io/Windkanal/> läuft die Strömung als Farbfeld;
   über dem Bild lässt sich zwischen Kreis, Rechteck, Platte und Profil wechseln, zwischen
   den drei Farbfeldern Geschwindigkeit, Druck und Wirbelstärke umschalten, die
@@ -16,21 +16,25 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
   Bild klappt ein Feld die fünf Regler auf** — Wind, Größe, Anstellwinkel, Höhe über dem
   Boden und Rechenauflösung —, auf dem Rechner offen, auf dem Handy zu. Dort passt die
   Seite dadurch ohne Scrollen auf den Schirm. Womit sie aufgeht, misst sie beim Laden
-  selbst. **Zerfällt die Rechnung, fängt die Seite das auf**: neu ansetzen, sagen was war,
-  beim dritten Mal anhalten. Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik:
-  Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden,
-  Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei Auflösungsstufen bei
-  einstellbarer Windgeschwindigkeit. Prüfbar über `node werkzeug/pruefe-kern.js` (neun
-  Teile, 51 Prüfpunkte, etwa 60 Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2`
+  selbst. **Wird die Luft irgendwo im Kanal zu schnell, dämpft die Seite nach und sagt es**
+  („Gedämpft" in der Laufanzeige); **zerfällt die Rechnung doch, fängt sie es auf**: neu
+  ansetzen, sagen was war, beim dritten Mal anhalten. Darunter liegt die in Abschnitt 1
+  fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel
+  und Höhe über dem Boden, Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei
+  Auflösungsstufen bei einstellbarer Windgeschwindigkeit. Prüfbar über
+  `node werkzeug/pruefe-kern.js` (zehn Teile, 57 Prüfpunkte, etwa 62 Sekunden). Frühere
+  Stände: `v0.1` Projektgrundlage, `v0.2`
   Strömung im leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5`
   abgeleitete Größen, `v0.6` Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem
   Bildschirm, `v0.8` Seite bedienbar, `v0.9` öffentlich erreichbar und auf dem Handy
   lauffähig, `v1.0` Szene über Regler einstellbar, `v1.1` Rechenauflösung über einen
-  Regler, `v1.2` alle vier Darstellungsarten. Noch nicht: keine Legende zu den Skalen; die
-  obere Ecke der Regler zerfällt weiterhin und wird nur aufgefangen (Etappe 3.6); das
-  Druckbild pulsiert im Takt der Wirbelablösung (untersucht, echte Erscheinung); im
-  Querformat muss man scrollen (Etappe 4.2). Als Nächstes **Etappe 3.6** — im kritischen
-  Bereich sichtbar nachdämpfen, statt es auf den Zusammenbruch ankommen zu lassen.
+  Regler, `v1.2` alle vier Darstellungsarten, `v1.3` ungewöhnliche Situationen abgefangen
+  und Einstellungen einklappbar. Noch nicht: keine Legende zu den Skalen; den Wind mitten
+  im Lauf stark zurückzunehmen kann die Rechnung in der kritischen Ecke zerstören
+  (Etappe 3.7, zurückgestellt, wird vom Auffangnetz aufgefangen); das Druckbild pulsiert
+  im Takt der Wirbelablösung (untersucht, echte Erscheinung); im Querformat muss man
+  scrollen (Etappe 4.2). Als Nächstes **Abschnitt 4** — beginnend mit Etappe 4.1:
+  stimmige Farbskalen mit Legende und ein glatter Umriss des Körpers.
 
 ---
 
@@ -208,7 +212,7 @@ Commit-Nachrichten verweisen auf diese Nummern.*
   - Anlass: Etappe 3.3 hat die Bedienleiste um zwei Gruppen erweitert; die Unterkante des Bildes rückte dadurch auf 393 Punkten Breite von 498 auf 696 Punkte hinunter.
   - Verhältnis zu **4.2**: Diese Etappe schafft die Voraussetzung (weniger Höhe), 4.2 nimmt das Sitzen im Hoch- und Querformat als Ganzes ab. Sie ersetzt 4.2 nicht.
   - Noch nicht: Bei 320 Punkten Breite reicht es weiterhin nicht ohne Scrollen; bei 375 bricht die Ansichtsreihe auf zwei Zeilen um.
-- [ ] **3.6** *(aufgenommen 2026-08-02)* Nähert sich die Strömung der Grenze des Rechenbaren, dämpft die Seite sichtbar nach, statt es auf den Zusammenbruch ankommen zu lassen.
+- [x] **3.6** *(abgenommen 2026-08-03, v1.4)* Nähert sich die Strömung der Grenze des Rechenbaren, dämpft die Seite sichtbar nach, statt es auf den Zusammenbruch ankommen zu lassen.
   - Abnahme: Platte, Größe und Anstellwinkel am Anschlag, voller Wind. Die Seite zeigt an, dass sie nachdämpft, und **läuft weiter** — die Meldung „aus dem Tritt geraten" aus 3.4 bleibt aus. Wind zurücknehmen: Die Dämpfung schaltet sich wieder ab.
   - Anlass: Etappe 3.4 fängt den Zusammenbruch zwar sauber ab, aber der Nutzer läuft weiterhin blind hinein. Nach der Rückmeldung vom 2026-08-02 (am iPad nachgestellt) ist das die verbleibende Unzulänglichkeit von Abschnitt 3.
   - **Warum Dämpfung und nicht Wind:** Die Dämpfung wirkt in jeder Zelle in jedem Schritt, also sofort und genau dort, wo die Schwingung wächst. Der Windregler wirkt am Einlass, 40 bis 80 Zellen vor dem Körper; bis die Änderung dort ankommt, vergehen 400 bis 800 Schritte, während der Aufschaukelvorgang in rund 100 Schritten durch ist. Außerdem stünde dann eine Zahl auf dem Bildschirm, die nicht mehr stimmt.
@@ -221,6 +225,15 @@ Commit-Nachrichten verweisen auf diese Nummern.*
     aus, die Abbruchbedingung greift nicht — Zahlen im Änderungsverlauf. Die Dämpfung
     setzt bei 55 % der Gitter-Schallgeschwindigkeit ein, steht bei 65 % voll und schlägt
     dann 0,03 Zähigkeit auf.
+  - **Angesagt wird sie als das Wort „Gedämpft" vorn in der Laufanzeige** (auf Wunsch des
+    Nutzers bei der Abnahme). Die erste Fassung war ein farbig hinterlegter Kasten unter
+    dem Bild; er schob bei jedem Kommen und Gehen die Einstellungen um 163 Bildpunkte auf
+    und ab. Was das Wort bedeutet, erklärt ein fester Satz im Hinweistext bei den
+    Einstellungen.
+  - Noch nicht: Den Wind mitten im Lauf **stark** zurückzunehmen kann die Rechnung in
+    derselben Ecke zerstören. Das ist keine Folge der Nachdämpfung — ohne sie tritt es
+    genauso auf, sie verzögert es nur. Als Etappe 3.7 beschrieben und auf Entscheidung des
+    Nutzers zurückgestellt.
 - [ ] **3.7** *(vorgeschlagen 2026-08-03, vom Nutzer am selben Tag zurückgestellt)* Den Wind mitten im Lauf stark zurückzunehmen darf die Rechnung nicht zerstören.
   - **Entscheidung des Nutzers (2026-08-03): bleibt vorerst, wie es ist.** Er hat es selbst nachgestellt und kommt zum selben Ergebnis — die Neustarts lassen sich nicht vollständig verhindern. Die Etappe bleibt beschrieben stehen, damit der Befund nicht verlorengeht; angefasst wird sie nicht, solange er es nicht verlangt.
   - Abnahme: In der kritischen Ecke (Platte, Größe und Anstellwinkel am Anschlag, aufsitzend) den Windregler von 100 % auf 40 % ziehen. Die Strömung beruhigt sich, ohne dass die Meldung „aus dem Tritt geraten" kommt.
@@ -229,9 +242,11 @@ Commit-Nachrichten verweisen auf diese Nummern.*
   - Noch nicht untersucht, welcher Weg trägt: den Wind über einige hundert Schritte einschleichen lassen, statt ihn am Einlass zu setzen, wäre der naheliegende — gemessen ist er nicht. Auch nicht gemessen ist, ob es reicht, oder ob der Auslass die starken Wirbel aus der schnellen Phase nicht verkraftet.
   - Bis dahin greift das Auffangnetz aus 3.4: Die Seite setzt neu an, sagt es, und danach läuft sie bei zurückgenommenem Wind ruhig weiter.
 
-**Abschnitt 3 ist bis auf 3.6 abgearbeitet.** Die Seite ist über Regler
-einstellbar, zeigt alle vier Darstellungsarten, verhält sich in ungewöhnlichen
-Situationen vernünftig und kommt auf dem Handy ohne Scrollen aus.
+**Abschnitt 3 ist abgearbeitet** (3.7 ist keine offene Etappe des Abschnitts,
+sondern ein zurückgestellter Befund). Die Seite ist über Regler einstellbar,
+zeigt alle vier Darstellungsarten, verhält sich in ungewöhnlichen Situationen
+vernünftig, kommt auf dem Handy ohne Scrollen aus und dämpft im kritischen
+Bereich nach, statt es auf den Zusammenbruch ankommen zu lassen.
 
 ### Abschnitt 4 — Darstellung und Politur
 

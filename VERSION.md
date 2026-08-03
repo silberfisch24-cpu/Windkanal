@@ -1,54 +1,44 @@
-v1.3
-Die Seite verhält sich in ungewöhnlichen Situationen vernünftig, und die
-Einstellungen lassen sich einklappen — auf dem Handy passt jetzt alles Wichtige
-ohne Scrollen auf den Schirm.
+v1.4
+Nähert sich die Strömung der Grenze des Rechenbaren, dämpft die Seite nach und
+sagt es — statt es auf den Zusammenbruch ankommen zu lassen. Damit ist
+Abschnitt 3 abgearbeitet.
 
-Etappe 3.4 — ungewöhnliche Situationen:
-- Bricht die Rechnung zusammen, setzt die Seite die Strömung neu an und sagt es
-  in der Laufanzeige, statt ein zerfallenes Bild zu zeigen. Beim dritten Mal
-  hält sie an und nennt die Regler, die zurückzunehmen sind
-- Nachgesehen wird in jedem zehnten Bild über die Dichte jeder Luftzelle. Nicht
-  in jedem: Die Prüfung kostet in der feinen Stufe 1,08 ms, und vom ersten
-  Anzeichen bis zum unbrauchbaren Bild vergehen rund hundert Rechenschritte
-- Die Zählung geht nur durch einen Eingriff des Nutzers zurück, nicht nach einer
-  Frist. Zwei Fristen sind gescheitert, weil sie unter dem Abstand lagen, in dem
-  der Zusammenbruch wiederkehrt
-- Ein weggeschalteter Tab hält die Bildschleife wirklich an; beim Zurückkommen
-  läuft sie weiter, ohne eine Bildfolge zu melden, die es nie gab
-- Fenster verkleinern und Gerät drehen brauchten keine Änderung — bei sieben
-  Breiten und im Wechsel mitten im Lauf nachgemessen, nichts läuft über
+Etappe 3.6 — Nachdämpfung an der Grenze des Rechenbaren:
+- Wird die Luft irgendwo im Kanal zu schnell, macht die Seite sie vorübergehend
+  zäher. Gleitend, je näher an der Grenze desto mehr; wird es wieder ruhig, hört
+  es von selbst auf
+- Angesagt wird es als das Wort „Gedämpft" vorn in der Laufanzeige. Es steht
+  dort, wenn in der letzten halben Sekunde irgendein Bild gedämpft war. Was es
+  bedeutet, erklärt ein fester Satz bei den Einstellungen — das Bild ist in
+  dieser Zeit etwas glatter als die Wirklichkeit, und das zu verschweigen wäre
+  eine Täuschung
+- Die Ecke, die seit Etappe 3.4 als „zerfällt weiterhin" vermerkt war, hält
+  jetzt durch: im Browser 8144 Schritte statt 2584, ohne die Meldung aus 3.4
+- Im Alltag springt nichts an. Gewöhnliche Szenen bleiben bei 31 bis 42 % der
+  Gitter-Schallgeschwindigkeit, die Schwelle liegt bei 55 %
 
-Etappe 3.5 — Einstellungen einklappbar:
-- Die fünf Regler und der Hinweistext stecken in einem einklappbaren Feld unter
-  dem Bild. Auf dem Handy geht es zugeklappt auf, auf dem Rechner offen —
-  entschieden daran, ob die Regler nebeneinander passen, nicht an einer
-  geratenen Bildschirmbreite
-- Auf schmalen Schirmen rücken die Schaltflächen enger zusammen. Ihre Höhe
-  bleibt bei 2,75 rem: das ist die Fläche, die man mit dem Finger trifft
-- Bei 393 Punkten Breite rückt die Unterkante des Bildes von 696 auf 483 Punkte
-  hinauf, die ganze Seite von 1427 auf 610. Alle zehn Schaltflächen bleiben
-  sichtbar
-
-Unterwegs gemessen:
-- Alle 288 Kombinationen aus Form, Wind, Größe, Anstellwinkel, Höhe und
-  Auflösungsstufe über je 3000 Schritte: drei zerfallen, alle mit Wind, Größe
-  und Anstellwinkel gleichzeitig am Anschlag
-- Über 6000 Schritte sind es mehr — die drei waren nur die schnellsten. Bei
-  voller Größe zerfällt es noch bei 22° Anstellung und bei 85 % Wind. Die Grenze
-  ist nicht scharf und nicht einmal monoton: 85 % Wind zerfiel früher als 90 %
-- Ursache in Zahlen: Das Verfahren trägt nur, solange die Luft deutlich
-  langsamer ist als die Schallgeschwindigkeit des Gitters (0,577 Zellen je
-  Schritt). Am Kreis erreicht die schnellste Stelle 30 bis 39 % davon, an der
-  angestellten Platte in voller Größe steigt sie über tausende Schritte von
-  41 auf 93 % — dann kippt es
-- Die Prüfung der Kernlogik hat einen neunten Teil bekommen: 51 Prüfpunkte
-  statt 47
+Gemessen, bevor gebaut wurde — alle vier Fragen, die SPEC.md verlangt hat:
+- Zu wenig Dämpfung verschiebt den Zusammenbruch nur, statt ihn zu verhindern:
+  Zähigkeit 0,015 brachte ihn von Schritt 2584 auf 11056, 0,02 auf 8840. Erst
+  das Dreifache hielt über die ganze gemessene Strecke
+- Die Schwelle trennt sauber: gewöhnliche Szenen 31 bis 42 %, die härteste noch
+  tragfähige 54 %, der Zerfall setzt bei 58 % ein und ist 30 Schritte später da
+- Der Preis am Bild ist klein, selbst bei dauerhaft voller Dämpfung: mittleres
+  Tempo im Kanal −1 bis −4,5 %, schnellste Stelle −6 bis −15 %, Wirbelstraße in
+  unveränderter Stärke
+- Die Suche nach der schnellsten Stelle kostet 0,05 ms und läuft deshalb in
+  jedem Bild — zwanzigmal billiger als die Zerfallsprüfung aus 3.4
+- Die Prüfung der Kernlogik hat einen zehnten Teil bekommen: 57 Prüfpunkte statt
+  51, Laufzeit 62 statt 45 Sekunden
 
 Bekannte Grenzen dieses Standes:
-- Die obere Ecke der Regler zerfällt weiterhin, sie wird nur aufgefangen statt
-  vermieden. Eine engere Reglergrenze wäre Scheinsicherheit, weil für keine
-  Einstellung bewiesen ist, dass sie beliebig lange hält. Dafür ist Etappe 3.6
-  aufgenommen: im kritischen Bereich sichtbar nachdämpfen
+- Den Wind mitten im Lauf stark zurückzunehmen kann die Rechnung in derselben
+  kritischen Ecke zerstören — auch ohne Nachdämpfung, sie verzögert es nur. Am
+  leeren Kanal und an gewöhnlichen Szenen ist derselbe Windwechsel harmlos.
+  Als Etappe 3.7 beschrieben und bewusst zurückgestellt; aufgefangen wird der
+  Fall weiterhin vom Netz aus 3.4
+- „Hält" heißt weiterhin nur „hat diese Strecke gehalten". Für keine
+  Reglerstellung ist bewiesen, dass sie beliebig lange trägt
 - Keine Legende zu den drei Farbskalen (Etappe 4.1)
 - Bei 320 Punkten Breite reicht es nicht ohne Scrollen; bei 375 bricht die
   Ansichtsreihe auf zwei Zeilen um
@@ -56,6 +46,5 @@ Bekannte Grenzen dieses Standes:
 - Das Druckbild pulsiert im Takt der Wirbelablösung (untersucht, echte
   Erscheinung, siehe v1.2)
 
-Als Nächstes Etappe 3.6: Nähert sich die Strömung der Grenze des Rechenbaren,
-soll die Seite sichtbar nachdämpfen, statt es auf den Zusammenbruch ankommen zu
-lassen.
+Als Nächstes Abschnitt 4: Farbskalen mit Legende und ein glatter Umriss des
+Körpers (Etappe 4.1).
