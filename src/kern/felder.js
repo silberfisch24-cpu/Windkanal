@@ -167,6 +167,31 @@ export function leseFelder(kanal, felder = erzeugeFelder(kanal)) {
   return felder;
 }
 
+/**
+ * Die schnellste Stelle im Kanal, aus bereits gelesenen Feldern.
+ *
+ * Diese eine Zahl entscheidet, ob das Verfahren noch trägt: Nicht der Wind am
+ * Einlass bringt es zum Zerfallen, sondern die Spitze irgendwo im Kanal, wenn
+ * sie der Gitter-Schallgeschwindigkeit zu nahe kommt (siehe
+ * `setzeNachdaempfung` in `loeser.js`).
+ *
+ * Der Durchgang ist ein bloßer Vergleich über ein fertiges Feld — kein Rechnen,
+ * keine neun Anteile je Zelle wie bei `istHeil`. Er kostet damit rund ein
+ * Zwanzigstel und darf in **jedem** Bild laufen.
+ *
+ * In Wandzellen steht null, sie fallen also von selbst heraus. `NaN` ebenso:
+ * Der Vergleich ist so geschrieben, dass ein solcher Wert nie größer ist —
+ * eine zerfallene Rechnung ist Sache von `istHeil`, nicht dieser Zeile.
+ */
+export function hoechstesTempo(felder) {
+  const { tempo } = felder;
+  let groesstes = 0;
+  for (let zelle = 0; zelle < tempo.length; zelle++) {
+    if (tempo[zelle] > groesstes) groesstes = tempo[zelle];
+  }
+  return groesstes;
+}
+
 /** Wie `nachbarwert`, nur aus den bereits gefüllten Feldern statt aus dem Gitter. */
 function randgerecht(zellart, ux, uy, zelle, bezugUx) {
   const art = zellart[zelle];

@@ -33,6 +33,13 @@
  * ungültigen Wert findet, dass es einen echten Zusammenbruch früh genug bemerkt
  * und dass es billig genug ist, um in der Bildschleife mitzulaufen. Er läuft
  * schnell — die längste Strecke sind 2000 Schritte auf dem mittleren Gitter.
+ *
+ * Teil 10 (Etappe 3.6): die Nachdämpfung. Geprüft wird, dass sie an der
+ * gemessenen Schwelle einsetzt und gleitend wächst, dass sie im Stoßen um genau
+ * das erwartete Verhältnis wirkt, dass die schnellste Stelle richtig abgelesen
+ * und billig gefunden wird, dass sie im Alltag gar nicht erst anspringt — und,
+ * als Kern der Etappe, dass die Ecke, die ohne sie zerfällt, mit ihr durchhält.
+ * Er dauert rund 20 Sekunden.
  */
 
 import {
@@ -43,6 +50,7 @@ import {
   geschwindigkeitBei,
   istFluid,
   setzeWindgeschwindigkeit,
+  setzeNachdaempfung,
   istHeil,
   AUFLOESUNGEN,
   WIND_MINDESTENS,
@@ -50,8 +58,18 @@ import {
   ZAEHIGKEIT_MINDESTENS,
   DICHTE_MINDESTENS,
   DICHTE_HOECHSTENS,
+  GITTER_SCHALLGESCHWINDIGKEIT,
+  NACHDAEMPFUNG_AB,
+  NACHDAEMPFUNG_VOLL,
+  NACHDAEMPFUNG_ZUSCHLAG,
 } from '../src/kern/loeser.js';
-import { leseFelder, druckBei, wirbelstaerkeBei } from '../src/kern/felder.js';
+import {
+  erzeugeFelder,
+  leseFelder,
+  hoechstesTempo,
+  druckBei,
+  wirbelstaerkeBei,
+} from '../src/kern/felder.js';
 import { ausdehnung, skaliereForm } from '../src/kern/formen.js';
 
 const SCHRITTE_GESAMT = 2000;
@@ -135,6 +153,37 @@ const VERDORBEN_HOECHSTENS = 0.01;
 /** Wie lange ein Aufruf von `istHeil` in der feinsten Stufe dauern darf. */
 const PRUEFKOSTEN_HOECHSTENS = 5;
 
+/**
+ * Teil 10: die Ecke, die seit Etappe 3.4 als „zerfällt weiterhin" vermerkt war —
+ * dieselbe Platte wie die Bezugsszene, aber bei voller Größe (115 % von 30
+ * groben Zellen). Sie zerfiel im mittleren Gitter bei Schritt 2920.
+ *
+ * Anders als bei der Bezugsszene ist der Zerfall hier **gewollt**: Der Prüfteil
+ * hält beide Läufe nebeneinander, den ohne und den mit Nachdämpfung. Nur so sagt
+ * er etwas aus — ein Lauf, der hält, könnte auch halten, weil die Ecke an diesem
+ * Tag gnädig war.
+ *
+ * 4000 Schritte, weil der Zerfall ohne Dämpfung bei 2920 kommt und danach noch
+ * eine Strecke bleiben soll. Das mittlere Gitter statt des feinen: Dort zerfällt
+ * es ebenso, aber der Teil kostet 16 statt 45 Sekunden.
+ */
+const NACHDAEMPFUNG_SZENE = { art: 'platte', x: 40, bodenabstand: 0, winkel: 30, laenge: 35 };
+const NACHDAEMPFUNG_SCHRITTE = 4000;
+
+/**
+ * Die gewöhnliche Szene, an der geprüft wird, dass die Nachdämpfung **nicht**
+ * anspringt: der Kreis, mit dem die Seite aufgeht. Eine Dämpfung, die im Alltag
+ * mitläuft, glättete das Bild ohne Not — und der Hinweis auf der Seite stünde
+ * dauernd da und würde damit bedeutungslos.
+ */
+const ALLTAGSSZENE = { art: 'kreis', x: 40, bodenabstand: 21, durchmesser: 16 };
+
+/** Wie viele Rechenschritte je „Bild" der Prüfteil rechnet, ehe er nachstellt. */
+const SCHRITTE_JE_BILD = 8;
+
+/** Wie lange ein Aufruf von `hoechstesTempo` in der feinsten Stufe dauern darf. */
+const SPITZENKOSTEN_HOECHSTENS = 0.5;
+
 console.log('Windkanal — Prüfung der Kernlogik');
 console.log('=================================');
 
@@ -159,12 +208,16 @@ const bestandenTeile = [
   pruefeAbgeleiteteGroessen(),
   pruefeAufloesungUndWind(),
   pruefeAuffangnetz(),
+  pruefeNachdaempfung(),
 ];
 
 const allesBestanden = bestandenTeile.every(Boolean);
 console.log('\n=================================');
 if (allesBestanden) {
-  console.log('Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.5 und das Auffangnetz aus 3.4 erfüllt.');
+  console.log(
+    'Ergebnis: Alle Prüfpunkte bestanden — Etappen 1.1 bis 1.5, das Auffangnetz aus 3.4' +
+      ' und die Nachdämpfung aus 3.6 erfüllt.'
+  );
 } else {
   console.log('Ergebnis: Mindestens ein Prüfpunkt nicht bestanden.');
 }
@@ -1146,6 +1199,206 @@ function pruefeAuffangnetz() {
         ' der Rechenzeit — die Grenze ist weit gesetzt, damit ein nebenher laufender Rechner sie nicht reißt',
     },
   ]);
+}
+
+// --- Teil 10: die Nachdämpfung (Etappe 3.6) --------------------------------
+
+function pruefeNachdaempfung() {
+  console.log('\nTeil 10 — Nachdämpfung an der Grenze des Rechenbaren (Etappe 3.6)');
+  console.log('-----------------------------------------------------------------');
+
+  // --- Die Schwelle. Geprüft an der Größe, um die es geht: dem Anteil der
+  // Gitter-Schallgeschwindigkeit, den die schnellste Stelle erreicht.
+  const beiAnteil = (anteilSchall) => {
+    const kanal = erzeugeKanal({ breite: 10, hoehe: 10 });
+    return setzeNachdaempfung(kanal, anteilSchall * GITTER_SCHALLGESCHWINDIGKEIT);
+  };
+  const mitte = (NACHDAEMPFUNG_AB + NACHDAEMPFUNG_VOLL) / 2;
+  const schwellenpunkte = [
+    ['weit darunter (30 %)', beiAnteil(0.3), 0],
+    ['knapp darunter', beiAnteil(NACHDAEMPFUNG_AB - 0.01), 0],
+    ['genau auf der Schwelle', beiAnteil(NACHDAEMPFUNG_AB), 0],
+    ['auf halbem Weg', beiAnteil(mitte), 0.5],
+    ['bei voller Wirkung', beiAnteil(NACHDAEMPFUNG_VOLL), 1],
+    ['darüber hinaus (90 %)', beiAnteil(0.9), 1],
+    ['keine Zahl mehr (NaN)', beiAnteil(NaN), 1],
+  ];
+  const danebenliegende = schwellenpunkte.filter(([, ist, soll]) => Math.abs(ist - soll) > 1e-9);
+
+  // --- Wirkt die Nachdämpfung im Stoßen, und wirkt sie **genau** wie mehr
+  // Zähigkeit? Volle Nachdämpfung schlägt NACHDAEMPFUNG_ZUSCHLAG auf die
+  // Zähigkeit. Ein Kanal, der gleich mit dieser höheren Zähigkeit angelegt
+  // wurde, muss aus demselben Zustand also denselben Schritt rechnen.
+  //
+  // Das ist die aussagekräftigste Fassung dieser Prüfung: Sie vergleicht nicht
+  // „hat sich etwas geändert", sondern die Rechnung gegen die Größe, die sie
+  // bedeuten soll. Zugleich muss der ungedämpfte Kanal deutlich abweichen —
+  // sonst wäre auch eine Nachdämpfung bestanden, die gar nichts tut.
+  const ohne = erzeugeKanal({ aufloesung: 'grob', windgeschwindigkeit: WIND_REGLER_HOECHSTENS, hindernis: BEZUGSSZENE });
+  const mit = erzeugeKanal({ aufloesung: 'grob', windgeschwindigkeit: WIND_REGLER_HOECHSTENS, hindernis: BEZUGSSZENE });
+  const zaeh = erzeugeKanal({
+    aufloesung: 'grob',
+    windgeschwindigkeit: WIND_REGLER_HOECHSTENS,
+    zaehigkeit: ohne.zaehigkeit + NACHDAEMPFUNG_ZUSCHLAG,
+    hindernis: BEZUGSSZENE,
+  });
+  schritte(ohne, 200);
+  for (const gleichziehen of [mit, zaeh]) {
+    gleichziehen.anteile.set(ohne.anteile);
+    gleichziehen.schrittzahl = ohne.schrittzahl;
+  }
+  mit.nachdaempfung = 1;
+  schritt(ohne);
+  schritt(mit);
+  schritt(zaeh);
+  const abstandZurZaehen = groesstesAbweichen(mit.anteile, zaeh.anteile);
+  const abstandZurUngedaempften = groesstesAbweichen(mit.anteile, ohne.anteile);
+
+  // --- Findet `hoechstesTempo` wirklich die schnellste Luftzelle? Gegenprobe
+  // über einen zweiten Weg: einzeln abgefragt statt über das fertige Feld.
+  const felder = leseFelder(ohne, erzeugeFelder(ohne));
+  let vonHand = 0;
+  for (let y = 0; y < ohne.hoehe; y++) {
+    for (let x = 0; x < ohne.breite; x++) {
+      if (!istFluid(ohne, x, y)) continue;
+      const { ux, uy } = geschwindigkeitBei(ohne, x, y);
+      vonHand = Math.max(vonHand, Math.hypot(ux, uy));
+    }
+  }
+  const ausFeld = hoechstesTempo(felder);
+
+  // --- Kein Fehlalarm im Alltag.
+  const alltag = laufeMitNachdaempfung(ALLTAGSSZENE, 'mittel', 2000, true);
+
+  // --- Der Kern der Etappe: die Ecke, die zerfiel, nebeneinander.
+  const roh = laufeMitNachdaempfung(NACHDAEMPFUNG_SZENE, 'mittel', NACHDAEMPFUNG_SCHRITTE, false);
+  const gedaempft = laufeMitNachdaempfung(NACHDAEMPFUNG_SZENE, 'mittel', NACHDAEMPFUNG_SCHRITTE, true);
+
+  // --- Kosten. Sie tragen die Entscheidung, in **jedem** Bild nachzusehen —
+  // anders als bei `istHeil`, das nur in jedem zehnten läuft.
+  const grosser = erzeugeKanal({ aufloesung: 'fein', windgeschwindigkeit: WIND_REGLER_HOECHSTENS });
+  schritte(grosser, 50);
+  const grosseFelder = leseFelder(grosser, erzeugeFelder(grosser));
+  for (let n = 0; n < 50; n++) hoechstesTempo(grosseFelder); // aufwärmen
+  let kuerzeste = Infinity;
+  for (let block = 0; block < 5; block++) {
+    const beginn = performance.now();
+    for (let n = 0; n < 100; n++) hoechstesTempo(grosseFelder);
+    kuerzeste = Math.min(kuerzeste, (performance.now() - beginn) / 100);
+  }
+
+  return melde([
+    {
+      name: 'Die Dämpfung setzt an der gemessenen Schwelle ein und wächst gleitend',
+      bestanden: danebenliegende.length === 0,
+      befund:
+        danebenliegende.length === 0
+          ? `aus bis ${(100 * NACHDAEMPFUNG_AB).toFixed(0)} % der Schallgeschwindigkeit, voll ab ${(100 * NACHDAEMPFUNG_VOLL).toFixed(0)} %,` +
+            ' dazwischen gleitend; eine Spitze, die keine Zahl mehr ist, gilt als voll'
+          : `falscher Anteil bei: ${danebenliegende.map(([n, ist, soll]) => `${n} (${ist} statt ${soll})`).join(', ')}`,
+    },
+    {
+      name: 'Volle Nachdämpfung rechnet genau so, als wäre die Luft von vornherein zäher',
+      bestanden: abstandZurZaehen < 1e-15 && abstandZurUngedaempften > 1e-9,
+      befund:
+        `derselbe Zustand, ein Schritt: gedämpft gegen zäh angelegt` +
+        ` (Zähigkeit ${ohne.zaehigkeit} + ${NACHDAEMPFUNG_ZUSCHLAG} = ${zaeh.zaehigkeit},` +
+        ` Angleichzeit ${ohne.angleichzeit.toFixed(2)} → ${zaeh.angleichzeit.toFixed(2)}):` +
+        ` größter Unterschied ${abstandZurZaehen.toExponential(1)};` +
+        ` gegen den ungedämpften Lauf dagegen ${abstandZurUngedaempften.toExponential(1)}`,
+    },
+    {
+      name: 'Die schnellste Stelle wird aus dem Feld richtig abgelesen',
+      bestanden: Math.abs(ausFeld - vonHand) < 1e-12,
+      befund: `aus dem Feld ${ausFeld.toFixed(6)}, einzeln nachgerechnet ${vonHand.toFixed(6)}`,
+    },
+    {
+      // Sonst glättete die Seite dauernd ohne Not, und der Hinweis darauf
+      // stünde immer da — womit er nichts mehr bedeutete.
+      name: 'Im Alltag springt sie gar nicht erst an',
+      bestanden: alltag.groessterAnteil === 0,
+      befund:
+        alltag.groessterAnteil === 0
+          ? `Kreis in der Voreinstellung, 2000 Schritte bei vollem Wind: nie gedämpft` +
+            ` (schnellste Stelle höchstens ${((alltag.hoechsteSpitze / GITTER_SCHALLGESCHWINDIGKEIT) * 100).toFixed(0)} %` +
+            ` der Schallgeschwindigkeit, Schwelle ${(100 * NACHDAEMPFUNG_AB).toFixed(0)} %)`
+          : `gedämpft bis ${(alltag.groessterAnteil * 100).toFixed(0)} %, obwohl nichts los ist`,
+    },
+    {
+      // Das Abnahmekriterium der Etappe, in Zahlen.
+      name: 'Die Ecke, die ohne Nachdämpfung zerfällt, hält mit ihr durch',
+      bestanden: roh.zerfallBei !== null && gedaempft.zerfallBei === null,
+      befund:
+        `Platte 115 %, 30°, aufsitzend, voller Wind, mittleres Gitter:` +
+        ` ohne Nachdämpfung ${roh.zerfallBei === null ? `hielt sie wider Erwarten ${NACHDAEMPFUNG_SCHRITTE} Schritte` : `Zerfall bei Schritt ${roh.zerfallBei}`},` +
+        ` mit ihr ${gedaempft.zerfallBei === null ? `heil über ${NACHDAEMPFUNG_SCHRITTE} Schritte` : `Zerfall bei Schritt ${gedaempft.zerfallBei}`}` +
+        ` (gedämpft in ${(gedaempft.gedaempfterAnteilDerBilder * 100).toFixed(0)} % der Bilder,` +
+        ` höchstens zu ${(gedaempft.groessterAnteil * 100).toFixed(0)} %)`,
+    },
+    {
+      name: 'Die schnellste Stelle zu suchen ist billig genug für jedes Bild',
+      bestanden: kuerzeste <= SPITZENKOSTEN_HOECHSTENS,
+      befund:
+        `feine Stufe (${grosser.breite * grosser.hoehe} Zellen): ${kuerzeste.toFixed(4)} ms je Aufruf` +
+        ` (erlaubt bis ${SPITZENKOSTEN_HOECHSTENS}). Ein bloßer Vergleichsdurchgang über ein fertiges Feld —` +
+        ' deshalb in jedem Bild, während `istHeil` nur in jedem zehnten läuft',
+    },
+  ]);
+}
+
+/** Größter Unterschied zwischen zwei Gitterständen — Zelle für Zelle. */
+function groesstesAbweichen(a, b) {
+  let groesstes = 0;
+  for (let n = 0; n < a.length; n++) groesstes = Math.max(groesstes, Math.abs(a[n] - b[n]));
+  return groesstes;
+}
+
+/**
+ * Rechnet eine Szene in Bildern durch — wie die Oberfläche: erst ein Bündel
+ * Rechenschritte, dann die Felder lesen und die Nachdämpfung danach einstellen.
+ *
+ * Mit `mitNachdaempfung = false` wird sie zwar mitgerechnet, aber nicht wirksam
+ * gesetzt. Der Lauf ist dann derselbe wie vor dieser Etappe — und nur so lassen
+ * sich beide nebeneinanderhalten.
+ */
+function laufeMitNachdaempfung(form, stufe, bis, mitNachdaempfung) {
+  const kanal = erzeugeKanal({
+    aufloesung: stufe,
+    windgeschwindigkeit: WIND_REGLER_HOECHSTENS,
+    hindernis: skaliereForm(form, AUFLOESUNGEN[stufe].faktor),
+  });
+  const felder = erzeugeFelder(kanal);
+
+  let zerfallBei = null;
+  let groessterAnteil = 0;
+  let hoechsteSpitze = 0;
+  let bilder = 0;
+  let gedaempfteBilder = 0;
+
+  while (kanal.schrittzahl < bis) {
+    schritte(kanal, SCHRITTE_JE_BILD);
+    leseFelder(kanal, felder);
+    const spitze = hoechstesTempo(felder);
+    const anteil = setzeNachdaempfung(kanal, spitze);
+    if (!mitNachdaempfung) kanal.nachdaempfung = 0;
+
+    bilder++;
+    if (anteil > 0) gedaempfteBilder++;
+    if (anteil > groessterAnteil) groessterAnteil = anteil;
+    if (spitze > hoechsteSpitze) hoechsteSpitze = spitze;
+
+    if (!istHeil(kanal)) {
+      zerfallBei = kanal.schrittzahl;
+      break;
+    }
+  }
+
+  return {
+    zerfallBei,
+    groessterAnteil,
+    hoechsteSpitze,
+    gedaempfterAnteilDerBilder: gedaempfteBilder / bilder,
+  };
 }
 
 /** Anteil der Luftzellen, deren Dichte den zulässigen Bereich verlassen hat. */

@@ -85,6 +85,49 @@ export const WIND_HOECHSTENS = 0.12;
 export const ZAEHIGKEIT_MINDESTENS = 0.005;
 
 /**
+ * Die Schallgeschwindigkeit des Gitters in Zellen je Zeitschritt.
+ *
+ * Sie ist die Grenze, an der das Verfahren scheitert: Je näher die Luft
+ * irgendwo im Kanal an sie herankommt, desto weniger trägt die Rechnung. Beim
+ * D2Q9-Gitter ist sie die Wurzel aus einem Drittel — dieselbe 1/3, mit der
+ * `felder.js` aus der Dichte den Druck macht.
+ */
+export const GITTER_SCHALLGESCHWINDIGKEIT = Math.sqrt(1 / 3);
+
+/**
+ * Ab wo und bis wo nachgedämpft wird — beides als Anteil der
+ * Gitter-Schallgeschwindigkeit, gemessen an der schnellsten Stelle im Kanal.
+ *
+ * Die beiden Zahlen sind gemessen (2026-08-03, Einzelheiten im Änderungsverlauf
+ * von `SPEC.md`):
+ *
+ *   - **55 % als Schwelle.** Gewöhnliche Szenen bleiben mit 31 bis 42 % weit
+ *     darunter; selbst die härteste noch tragfähige — Platte bei 100 %, 30°,
+ *     aufsitzend — kommt nur auf 54 %. Darüber wird es eng: Der beobachtete
+ *     Zerfall setzte bei 58 % ein.
+ *   - **65 % als volle Wirkung.** Vom ersten Anzeichen bis zum unbrauchbaren
+ *     Bild vergehen rund 30 Rechenschritte, also ein bis vier Einzelbilder. Die
+ *     Dämpfung muss deshalb schon voll dastehen, bevor die Spitze bei 70 oder
+ *     80 % angekommen ist. Mit 65 % blieb die kritische Ecke in der Messung bei
+ *     64 % stehen; mit 70 % schoss sie auf 84 % hoch, ehe sie eingefangen war.
+ */
+export const NACHDAEMPFUNG_AB = 0.55;
+export const NACHDAEMPFUNG_VOLL = 0.65;
+
+/**
+ * Wie viel Zähigkeit die volle Nachdämpfung zuschlägt.
+ *
+ * Gemessen an der Ecke, die seit Etappe 3.4 als „zerfällt weiterhin" vermerkt
+ * ist (fein, Platte 115 %, 30°, aufsitzend, voller Wind): Sie zerfiel bei
+ * Schritt 2584. Fest erhöhte Zähigkeit half erst ab dem Dreifachen —
+ * 0,015 und 0,02 verschoben den Zerfall nur auf 11056 und 8840, 0,04 hielt über
+ * die ganze gemessene Strecke von 12000 Schritten. Der Zuschlag bringt die
+ * Zähigkeit also von 0,01 auf 0,04, und weil er sich nach der Spitze richtet,
+ * steht er nur an, solange es eng ist.
+ */
+export const NACHDAEMPFUNG_ZUSCHLAG = 0.03;
+
+/**
  * In welchem Bereich die Dichte einer Luftzelle liegen darf, damit die Rechnung
  * noch als heil gilt — siehe `istHeil`.
  *
@@ -145,6 +188,10 @@ export function erzeugeKanal({
 
   // Wie schnell sich eine Zelle ihrem Ruhezustand annähert. Aus der Zähigkeit
   // abgeleitet; muss über 0,5 liegen, sonst schaukelt sich die Rechnung auf.
+  //
+  // Das ist der **Grundwert** und bleibt stehen. Wird nachgedämpft, kommt in
+  // `stossen` ein Zuschlag darauf, statt diese Zahl zu verstellen — sonst wüsste
+  // hinterher niemand mehr, womit der Kanal eigentlich angelegt wurde.
   const angleichzeit = 3 * zaehigkeit + 0.5;
 
   const kanal = {
@@ -154,6 +201,9 @@ export function erzeugeKanal({
     windgeschwindigkeit,
     zaehigkeit,
     angleichzeit,
+    // Wie stark gerade nachgedämpft wird: 0 gar nicht, 1 voll. Gesetzt wird das
+    // von außen über `setzeNachdaempfung` — siehe dort.
+    nachdaempfung: 0,
     hindernis: null,
     zellart: new Uint8Array(anzahlZellen),
     anteile: new Float64Array(9 * anzahlZellen),
@@ -312,6 +362,10 @@ export function setzeAufAnfangszustand(kanal) {
     }
   }
   kanal.schrittzahl = 0;
+  // Der Anfangszustand ist überall gleich schnell und damit nirgends kritisch.
+  // Stünde hier noch die Dämpfung des zerfallenen Laufs, dämpfte die frisch
+  // angesetzte Strömung ein Bild lang ohne Anlass.
+  kanal.nachdaempfung = 0;
 }
 
 /**
@@ -332,8 +386,13 @@ export function schritte(kanal, anzahl) {
 
 /** Erste Hälfte: Jede Zelle gleicht ihre neun Anteile ihrem Ruhezustand an. */
 function stossen(kanal) {
-  const { breite, hoehe, zellart, anteile, angleichzeit } = kanal;
+  const { breite, hoehe, zellart, anteile } = kanal;
   const anzahlZellen = breite * hoehe;
+  // Die Nachdämpfung wirkt hier: eine längere Angleichzeit heißt, dass jede
+  // Zelle in jedem Schritt weniger von ihrem Ruhezustand übernimmt — die Luft
+  // ist zäher und schluckt die Schwingung, die sich sonst aufschaukelt. Eine
+  // einzige Zahl je Schritt, keine Rechnung in der Schleife darunter.
+  const angleichzeit = kanal.angleichzeit + 3 * kanal.nachdaempfung * NACHDAEMPFUNG_ZUSCHLAG;
   const anteilNeu = 1 / angleichzeit;
 
   for (let zelle = 0; zelle < anzahlZellen; zelle++) {
@@ -481,6 +540,50 @@ export function geschwindigkeitBei(kanal, x, y) {
 /** Ist die Zelle Luft (im Gegensatz zu Wand)? */
 export function istFluid(kanal, x, y) {
   return kanal.zellart[x + y * kanal.breite] === FLUID;
+}
+
+/**
+ * Stellt die Nachdämpfung nach der schnellsten Stelle im Kanal ein.
+ *
+ * **Der Gedanke:** Das Verfahren scheitert nicht am Wind am Einlass, sondern an
+ * der schnellsten Stelle irgendwo im Kanal — meist an einer Körperkante, wo die
+ * Luft auf ein Mehrfaches beschleunigt wird. Kommt sie der
+ * Gitter-Schallgeschwindigkeit zu nahe, wächst der Fehler in jedem Schritt,
+ * statt gedämpft zu werden. Statt darauf zu warten, wird hier gegengehalten:
+ * Je näher die Spitze der Grenze kommt, desto zäher wird die Luft.
+ *
+ * Zwischen `NACHDAEMPFUNG_AB` und `NACHDAEMPFUNG_VOLL` wächst der Anteil
+ * gleitend von 0 auf 1 — kein Schalter, der umspringt. Ein Schalter wäre an
+ * zwei Stellen schlecht: Er dämpfte an der Schwelle sofort voll, obwohl noch
+ * nichts los ist, und er sprünge im Bild sichtbar hin und her, weil die Spitze
+ * ohnehin um ihren Mittelwert schwankt.
+ *
+ * **Es gibt kein Gedächtnis.** Der Anteil richtet sich allein nach der Spitze
+ * dieses Augenblicks: Ist der Kanal wieder ruhig, ist die Dämpfung im nächsten
+ * Bild wieder aus. Ein langsames Abklingen wurde gemessen und brachte nichts
+ * (siehe Änderungsverlauf) — es hätte nur eine zweite Zahl zu erklären.
+ *
+ * Aufgerufen wird das je **Einzelbild**, nicht je Rechenschritt: Die schnellste
+ * Stelle steht ohnehin in den Feldern, die für das Bild gelesen werden, und ein
+ * Vergleichsdurchgang darüber kostet fast nichts (`hoechstesTempo` in
+ * `felder.js`). Zwischen zwei Bildern liegen 1 bis 20 Rechenschritte — schnell
+ * genug, denn vom ersten Anzeichen bis zum Zerfall vergehen rund 30.
+ *
+ * @param {object} kanal
+ * @param {number} spitze  schnellste Stelle im Kanal, in Zellen je Schritt
+ * @returns {number} der eingestellte Anteil zwischen 0 und 1 — die Oberfläche
+ *   sagt damit an, dass gerade nachgedämpft wird
+ */
+export function setzeNachdaempfung(kanal, spitze) {
+  const ab = NACHDAEMPFUNG_AB * GITTER_SCHALLGESCHWINDIGKEIT;
+  const voll = NACHDAEMPFUNG_VOLL * GITTER_SCHALLGESCHWINDIGKEIT;
+  const anteil = (spitze - ab) / (voll - ab);
+
+  // So herum geschrieben, damit `NaN` nicht durchrutscht: Ist die Spitze keine
+  // Zahl mehr, ist die Rechnung schon zerfallen. Dann gilt volle Dämpfung — sie
+  // schadet nichts, und aufgeräumt wird ohnehin über `istHeil`.
+  kanal.nachdaempfung = anteil > 0 ? Math.min(1, anteil) : Number.isNaN(anteil) ? 1 : 0;
+  return kanal.nachdaempfung;
 }
 
 /**

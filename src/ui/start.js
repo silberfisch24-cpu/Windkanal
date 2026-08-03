@@ -21,11 +21,12 @@ import {
   setzeHindernis,
   setzeWindgeschwindigkeit,
   setzeAufAnfangszustand,
+  setzeNachdaempfung,
   istHeil,
   AUFLOESUNGEN,
 } from '../kern/loeser.js';
 import { normalisiereForm, ausdehnung, skaliereForm } from '../kern/formen.js';
-import { erzeugeFelder, leseFelder } from '../kern/felder.js';
+import { erzeugeFelder, leseFelder, hoechstesTempo } from '../kern/felder.js';
 import { erzeugeDarstellung, ANFANGSANSICHT } from './darstellung.js';
 import { erzeugeBedienung } from './bedienung.js';
 
@@ -312,6 +313,20 @@ const PRUEFABSTAND = 10;
 const AUFFANGVERSUCHE = 3;
 
 /**
+ * Wie viele Bilder der Hinweis „wird nachgedämpft" nach dem letzten gedämpften
+ * Bild noch stehen bleibt.
+ *
+ * Nötig, weil die schnellste Stelle im Kanal um ihren Mittelwert schwankt: In
+ * der gemessenen kritischen Ecke lag sie in 47 % der Bilder über der Schwelle
+ * und dazwischen darunter. Ohne Nachlauf blinkte der Hinweis im Sekundentakt,
+ * und der Nutzer läse ihn nie zu Ende. Die Dämpfung selbst folgt weiterhin
+ * unmittelbar der Spitze — nachlaufen tut allein der **Text**.
+ *
+ * 90 Bilder sind bei 60 Bildern je Sekunde etwa anderthalb Sekunden.
+ */
+const DAEMPFUNG_NACHLAUF = 90;
+
+/**
  * Nach wie vielen Rechenschritten die Meldung „war aus dem Tritt geraten"
  * wieder aus der Laufanzeige verschwindet.
  *
@@ -367,6 +382,11 @@ function starte() {
   let bilderSeitPruefung = 0;
   let auffangzaehler = 0;
   let meldung = null;
+
+  // Nachdämpfung: wie viele Bilder der Hinweis noch stehen bleibt (0 = aus).
+  let daempfungNachlauf = 0;
+
+  const daempfungshinweis = document.querySelector('#daempfungshinweis');
 
   const bedienung = erzeugeBedienung({
     auswahlfeld: document.querySelector('#formauswahl'),
@@ -694,6 +714,7 @@ function starte() {
     }
 
     leseFelder(kanal, felder);
+    stelleNachdaempfung();
     darstellung.zeichne(felder, { ansicht: gewaehlteAnsicht, teilchen: teilchenAn, schritte });
 
     bilderSeitAnzeige++;
@@ -762,6 +783,7 @@ function starte() {
    */
   function zeichneStand() {
     leseFelder(kanal, felder);
+    stelleNachdaempfung();
     darstellung.zeichne(felder, {
       ansicht: gewaehlteAnsicht,
       teilchen: teilchenAn,
@@ -771,9 +793,36 @@ function starte() {
   }
 
   /**
+   * Stellt die Nachdämpfung nach der schnellsten Stelle in den eben gelesenen
+   * Feldern ein und sagt es an (Etappe 3.6).
+   *
+   * Beides gehört zusammen und steht deshalb an einer Stelle: Gedämpft wird nur,
+   * wo es eng wird, und **gesagt wird es immer, wenn gedämpft wird.** Das Bild
+   * ist dabei etwas glatter als die Wirklichkeit; verschwiegen wäre das eine
+   * Täuschung, ausgewiesen ist es eine Lehre über die Grenzen des Verfahrens
+   * (siehe „Warum das erlaubt ist" bei Etappe 3.6 in `SPEC.md`).
+   *
+   * Die Zahl selbst wird bewusst **nicht** angezeigt: Sie schwankt von Bild zu
+   * Bild, und ein zappelnder Prozentsatz sagt weniger als der schlichte Satz,
+   * dass gerade nachgedämpft wird.
+   */
+  function stelleNachdaempfung() {
+    if (setzeNachdaempfung(kanal, hoechstesTempo(felder)) > 0) {
+      daempfungNachlauf = DAEMPFUNG_NACHLAUF;
+    } else if (daempfungNachlauf > 0) {
+      daempfungNachlauf--;
+    }
+    daempfungshinweis.hidden = daempfungNachlauf === 0;
+  }
+
+  /**
    * Wirft die angefangene Messung der Bildfolge weg. Nach einem Anhalten, einem
    * Formwechsel oder einer Reglerstellung wäre sie über die Unterbrechung hinweg
    * gemittelt und meldete eine Bildfolge, die es nie gab.
+   *
+   * Aufgerufen wird das genau dort, wo die Strömung neu ansetzt — deshalb fällt
+   * hier auch der Nachlauf des Dämpfungshinweises weg. Er gehört zum Lauf, der
+   * eben zu Ende gegangen ist; über den neuen sagt er nichts.
    */
   function vergissMessung() {
     bilderSeitAnzeige = 0;
@@ -781,6 +830,7 @@ function starte() {
     letzteAnzeige = performance.now();
     letzteBildfolge = null;
     letzteSchritteJeBild = null;
+    daempfungNachlauf = 0;
   }
 
   function zeigeAnzeige() {
