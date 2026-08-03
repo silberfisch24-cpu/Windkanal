@@ -313,20 +313,6 @@ const PRUEFABSTAND = 10;
 const AUFFANGVERSUCHE = 3;
 
 /**
- * Wie viele Bilder der Hinweis „wird nachgedämpft" nach dem letzten gedämpften
- * Bild noch stehen bleibt.
- *
- * Nötig, weil die schnellste Stelle im Kanal um ihren Mittelwert schwankt: In
- * der gemessenen kritischen Ecke lag sie in 47 % der Bilder über der Schwelle
- * und dazwischen darunter. Ohne Nachlauf blinkte der Hinweis im Sekundentakt,
- * und der Nutzer läse ihn nie zu Ende. Die Dämpfung selbst folgt weiterhin
- * unmittelbar der Spitze — nachlaufen tut allein der **Text**.
- *
- * 90 Bilder sind bei 60 Bildern je Sekunde etwa anderthalb Sekunden.
- */
-const DAEMPFUNG_NACHLAUF = 90;
-
-/**
  * Nach wie vielen Rechenschritten die Meldung „war aus dem Tritt geraten"
  * wieder aus der Laufanzeige verschwindet.
  *
@@ -383,10 +369,13 @@ function starte() {
   let auffangzaehler = 0;
   let meldung = null;
 
-  // Nachdämpfung: wie viele Bilder der Hinweis noch stehen bleibt (0 = aus).
-  let daempfungNachlauf = 0;
-
-  const daempfungshinweis = document.querySelector('#daempfungshinweis');
+  // Nachdämpfung: ob seit der letzten Anzeige irgendein Bild gedämpft war, und
+  // was zuletzt angezeigt wurde. Genau wie die Bildfolge wird das über das
+  // Anzeigefenster gesammelt und nicht im Augenblick des Ablesens abgegriffen —
+  // die schnellste Stelle schwankt von Bild zu Bild, ein einzelner Blick träfe
+  // es zufällig. So heißt das Wort: „in der letzten halben Sekunde gedämpft".
+  let gedaempftSeitAnzeige = false;
+  let letzteDaempfung = false;
 
   const bedienung = erzeugeBedienung({
     auswahlfeld: document.querySelector('#formauswahl'),
@@ -725,8 +714,10 @@ function starte() {
     if (vergangen >= MITTELUNGSZEIT) {
       letzteBildfolge = Math.round((bilderSeitAnzeige * 1000) / vergangen);
       letzteSchritteJeBild = (schritteSeitAnzeige / bilderSeitAnzeige).toFixed(1);
+      letzteDaempfung = gedaempftSeitAnzeige;
       bilderSeitAnzeige = 0;
       schritteSeitAnzeige = 0;
+      gedaempftSeitAnzeige = false;
       letzteAnzeige = jetzt;
       zeigeAnzeige();
     }
@@ -784,6 +775,9 @@ function starte() {
   function zeichneStand() {
     leseFelder(kanal, felder);
     stelleNachdaempfung();
+    // Ein einzelnes Bild ist hier das ganze Anzeigefenster — anders als in der
+    // laufenden Schleife, wo über eine halbe Sekunde gesammelt wird.
+    letzteDaempfung = gedaempftSeitAnzeige;
     darstellung.zeichne(felder, {
       ansicht: gewaehlteAnsicht,
       teilchen: teilchenAn,
@@ -794,7 +788,7 @@ function starte() {
 
   /**
    * Stellt die Nachdämpfung nach der schnellsten Stelle in den eben gelesenen
-   * Feldern ein und sagt es an (Etappe 3.6).
+   * Feldern ein und merkt sich, dass gedämpft wurde (Etappe 3.6).
    *
    * Beides gehört zusammen und steht deshalb an einer Stelle: Gedämpft wird nur,
    * wo es eng wird, und **gesagt wird es immer, wenn gedämpft wird.** Das Bild
@@ -802,17 +796,16 @@ function starte() {
    * Täuschung, ausgewiesen ist es eine Lehre über die Grenzen des Verfahrens
    * (siehe „Warum das erlaubt ist" bei Etappe 3.6 in `SPEC.md`).
    *
-   * Die Zahl selbst wird bewusst **nicht** angezeigt: Sie schwankt von Bild zu
-   * Bild, und ein zappelnder Prozentsatz sagt weniger als der schlichte Satz,
-   * dass gerade nachgedämpft wird.
+   * Angesagt wird es als das eine Wort „Gedämpft" in der Laufanzeige, was es
+   * bedeutet steht fest im Hinweistext bei den Einstellungen. Weder ein Kasten
+   * unter dem Bild noch der Prozentsatz: Der Kasten schöbe die Einstellungen bei
+   * jedem Kommen und Gehen auf und ab, und eine Zahl, die von Bild zu Bild
+   * schwankt, sagt weniger als das Wort.
    */
   function stelleNachdaempfung() {
     if (setzeNachdaempfung(kanal, hoechstesTempo(felder)) > 0) {
-      daempfungNachlauf = DAEMPFUNG_NACHLAUF;
-    } else if (daempfungNachlauf > 0) {
-      daempfungNachlauf--;
+      gedaempftSeitAnzeige = true;
     }
-    daempfungshinweis.hidden = daempfungNachlauf === 0;
   }
 
   /**
@@ -821,8 +814,8 @@ function starte() {
    * gemittelt und meldete eine Bildfolge, die es nie gab.
    *
    * Aufgerufen wird das genau dort, wo die Strömung neu ansetzt — deshalb fällt
-   * hier auch der Nachlauf des Dämpfungshinweises weg. Er gehört zum Lauf, der
-   * eben zu Ende gegangen ist; über den neuen sagt er nichts.
+   * hier auch das Wort „Gedämpft" weg. Es gehört zum Lauf, der eben zu Ende
+   * gegangen ist; über den neuen sagt es nichts.
    */
   function vergissMessung() {
     bilderSeitAnzeige = 0;
@@ -830,11 +823,15 @@ function starte() {
     letzteAnzeige = performance.now();
     letzteBildfolge = null;
     letzteSchritteJeBild = null;
-    daempfungNachlauf = 0;
+    gedaempftSeitAnzeige = false;
+    letzteDaempfung = false;
   }
 
   function zeigeAnzeige() {
     const stand = `${kanal.schrittzahl.toLocaleString('de-DE')} Schritte gerechnet`;
+    // Voran, nicht hinten angehängt: Das Wort ist der Vorbehalt zu dem, was
+    // gerade zu sehen ist, und soll vor den gewohnten Zahlen stehen.
+    const gedaempft = letzteDaempfung ? 'Gedämpft · ' : '';
     // Was das Auffangnetz zu sagen hat, geht der gewohnten Anzeige vor. Es
     // verschwindet von selbst wieder, sobald die Rechnung lange durchgehalten
     // hat — siehe `ERHOLUNGSSCHRITTE`.
@@ -842,8 +839,10 @@ function starte() {
       anzeige.textContent = laeuft ? `${meldung} · ${stand}` : meldung;
       return;
     }
+    // Auch im angehaltenen Zustand: Das Wort gehört zu dem Bild, das gerade auf
+    // dem Schirm steht, nicht zur laufenden Rechnung.
     if (!laeuft) {
-      anzeige.textContent = `Angehalten · ${stand}`;
+      anzeige.textContent = `${gedaempft}Angehalten · ${stand}`;
       return;
     }
     if (letzteBildfolge === null) {
@@ -851,7 +850,8 @@ function starte() {
       return;
     }
     anzeige.textContent =
-      `${letzteBildfolge} Bilder je Sekunde · ${letzteSchritteJeBild} Rechenschritte je Bild · ${stand}`;
+      `${gedaempft}${letzteBildfolge} Bilder je Sekunde` +
+      ` · ${letzteSchritteJeBild} Rechenschritte je Bild · ${stand}`;
   }
 
   /** Schreibt unter die Überschrift, was gerade zu sehen ist. */

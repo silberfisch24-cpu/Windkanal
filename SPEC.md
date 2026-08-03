@@ -221,7 +221,8 @@ Commit-Nachrichten verweisen auf diese Nummern.*
     aus, die Abbruchbedingung greift nicht — Zahlen im Änderungsverlauf. Die Dämpfung
     setzt bei 55 % der Gitter-Schallgeschwindigkeit ein, steht bei 65 % voll und schlägt
     dann 0,03 Zähigkeit auf.
-- [ ] **3.7** *(vorgeschlagen 2026-08-03, noch nicht entschieden)* Den Wind mitten im Lauf stark zurückzunehmen darf die Rechnung nicht zerstören.
+- [ ] **3.7** *(vorgeschlagen 2026-08-03, vom Nutzer am selben Tag zurückgestellt)* Den Wind mitten im Lauf stark zurückzunehmen darf die Rechnung nicht zerstören.
+  - **Entscheidung des Nutzers (2026-08-03): bleibt vorerst, wie es ist.** Er hat es selbst nachgestellt und kommt zum selben Ergebnis — die Neustarts lassen sich nicht vollständig verhindern. Die Etappe bleibt beschrieben stehen, damit der Befund nicht verlorengeht; angefasst wird sie nicht, solange er es nicht verlangt.
   - Abnahme: In der kritischen Ecke (Platte, Größe und Anstellwinkel am Anschlag, aufsitzend) den Windregler von 100 % auf 40 % ziehen. Die Strömung beruhigt sich, ohne dass die Meldung „aus dem Tritt geraten" kommt.
   - Anlass: beim Nachmessen von 3.6 gefunden und dort ausführlich beschrieben. **Es ist keine Folge der Nachdämpfung** — ohne sie tritt es genauso auf, sie verzögert es nur. Am leeren Kanal und an gewöhnlichen Szenen ist derselbe Windwechsel harmlos.
   - Einordnung: **Fehlerbehebung.** Der Kommentar an `setzeWindgeschwindigkeit` sagt, die Änderung mitten im Lauf sei unbedenklich; für die obere Ecke der Regler stimmt das nicht.
@@ -963,11 +964,20 @@ Fehler.*
     Vergleichsdurchgang über ein Feld, das für das Bild ohnehin gelesen wird, und damit
     zwanzigmal billiger als `istHeil` (1,08 ms). Deshalb läuft es in **jedem** Bild,
     während `istHeil` bei jedem zehnten bleibt.
-  - **Nachgemessen im Browser** (feine Stufe, kritische Ecke): Der Hinweis erscheint nach
+  - **Nachgemessen im Browser** (feine Stufe, kritische Ecke): Die Ansage erscheint nach
     5 Sekunden, die Rechnung läuft über 8544 Schritte durch, ohne dass die Meldung aus 3.4
-    kommt — vorher zerfiel sie bei 2584. Keine Fehler in der Konsole. Der Hinweis ist auf
-    393 Punkten Breite 163 Bildpunkte hoch; die Seite kommt damit weiterhin ohne Scrollen
-    aus (bei 320 Punkten nicht mehr, dort reichte es aber schon vorher nicht).
+    kommt — vorher zerfiel sie bei 2584. Keine Fehler in der Konsole.
+  - **Angesagt wird es als das Wort „Gedämpft" in der Laufanzeige** — auf Wunsch des
+    Nutzers (2026-08-03). Die erste Fassung war ein farbig hinterlegter Kasten unter dem
+    Bild; er schob bei jedem Kommen und Gehen die Einstellungen um 163 Bildpunkte auf und
+    ab. Das Wort blinkt zwar auf, greift dafür nicht in den Seitenaufbau ein. **Was es
+    bedeutet, steht dafür fest im Hinweistext bei den Einstellungen** — ungesagt bleiben
+    darf es nicht, dafür ist der Eingriff ins Bild zu wesentlich.
+  - **Gesammelt über das Anzeigefenster, nicht im Augenblick abgegriffen.** Die Laufanzeige
+    wird ohnehin nur alle 500 ms neu geschrieben; das Wort steht dort, wenn in dieser
+    halben Sekunde **irgendein** Bild gedämpft war. Ein Einzelblick träfe es zufällig — die
+    Spitze schwankt von Bild zu Bild. Damit erübrigt sich auch der Nachlauf, den die erste
+    Fassung für den Kasten brauchte.
 - **2026-08-03 (Etappe 3.6, Nebenbefund):** *Den Wind mitten im Lauf **stark**
   zurückzunehmen kann die Rechnung zerstören — unabhängig von der Nachdämpfung.* Gefunden
   beim Nachmessen des Abnahmekriteriums „Wind zurücknehmen: Die Dämpfung schaltet sich

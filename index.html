@@ -14,8 +14,6 @@
         --knopf-grund: #ffffff;
         --knopf-gewaehlt: #1c5cab;
         --knopf-gewaehlt-schrift: #ffffff;
-        --hinweis-linie: #b8860b;
-        --hinweis-grund: #fdf6e3;
       }
 
       body {
@@ -211,26 +209,6 @@
         font-variant-numeric: tabular-nums;
       }
 
-      /* Der Hinweis, dass gerade nachgedämpft wird (Etappe 3.6). Er sagt, dass
-         das Bild in diesem Augenblick geglättet ist — das darf nicht wie die
-         übrige Laufanzeige aussehen, sonst liest man darüber hinweg. Deshalb
-         ein farbiger Balken an der Seite statt einer weiteren grauen Zeile.
-         Kein Rot: Es ist kein Fehler, sondern ein Vorbehalt zum Bild. */
-      .daempfungshinweis {
-        margin: 0.5rem 0 0;
-        padding: 0.5rem 0.75rem;
-        border-left: 3px solid var(--hinweis-linie);
-        background: var(--hinweis-grund);
-        color: var(--schrift);
-        font-size: 0.875rem;
-      }
-
-      /* `hidden` allein reicht bei einem Absatz nicht überall aus — manche
-         Regelsätze für `p` setzen `display` und überschreiben es. */
-      .daempfungshinweis[hidden] {
-        display: none;
-      }
-
       /* Auf schmalen Schirmen rückt alles zusammen, damit das Bild nach oben
          kommt (Etappe 3.5).
          Angefasst werden nur Abstände, nicht die Höhe der Schaltflächen: Die
@@ -304,18 +282,6 @@
       <canvas id="stroemungsbild" aria-label="Farbfeld der Strömungsgeschwindigkeit im Kanal"></canvas>
       <p id="laufanzeige">Die Rechnung läuft an …</p>
 
-      <!-- Erscheint nur, solange nachgedämpft wird (Etappe 3.6). Der Text steht
-           fest hier statt in start.js: Er ändert sich nie, und so ist er beim
-           Lesen der Seite mit zu sehen.
-           `role="status"` sagt einer Vorlesehilfe, dass sie den Satz vorlesen
-           soll, wenn er auftaucht — aber ohne den Nutzer zu unterbrechen. -->
-      <p class="daempfungshinweis" id="daempfungshinweis" role="status" hidden>
-        <strong>Wird nachgedämpft.</strong> Die Luft ist an einer Stelle so schnell,
-        dass die Rechnung zusammenzubrechen droht — die Seite macht sie dagegen
-        vorübergehend zäher. Das Bild ist dabei etwas glatter als die Wirklichkeit.
-        Weniger Wind, Größe oder Anstellwinkel beendet es.
-      </p>
-
       <!-- Die Regler stehen bewusst **unter** dem Bild: übereinander gestellt
            brauchen sie auf dem Handy so viel Platz, dass das Bild sonst aus dem
            Sichtfeld rutscht — und gerade beim Ziehen soll man es sehen.
@@ -339,6 +305,17 @@
             Rechenzeit je Bild; voreingestellt ist die Stufe, die auf diesem Gerät
             zügig vorankommt. Die Ansicht zu wechseln und die Teilchen zu- oder
             abzuschalten ändert nichts an der Rechnung — sie läuft dabei weiter.
+          </p>
+          <!-- Was „Gedämpft" in der Zeile unter dem Bild bedeutet. Es steht hier
+               und nicht dort: In der Laufanzeige wäre für einen ganzen Satz kein
+               Platz, und ungesagt bleiben darf es nicht — die Seite glättet in
+               diesem Augenblick das Bild (siehe Etappe 3.6 in SPEC.md). -->
+          <p class="reglerhinweis">
+            Steht unter dem Bild <strong>„Gedämpft"</strong>, dann ist die Luft an
+            einer Stelle so schnell geworden, dass die Rechnung zusammenzubrechen
+            droht. Die Seite macht sie dagegen vorübergehend zäher — das Bild ist
+            in dieser Zeit etwas glatter als die Wirklichkeit. Weniger Wind, Größe
+            oder Anstellwinkel beendet es.
           </p>
         </div>
       </details>
