@@ -21,11 +21,12 @@ import {
   setzeHindernis,
   setzeWindgeschwindigkeit,
   setzeAufAnfangszustand,
+  setzeNachdaempfung,
   istHeil,
   AUFLOESUNGEN,
 } from '../kern/loeser.js';
 import { normalisiereForm, ausdehnung, skaliereForm } from '../kern/formen.js';
-import { erzeugeFelder, leseFelder } from '../kern/felder.js';
+import { erzeugeFelder, leseFelder, hoechstesTempo } from '../kern/felder.js';
 import { erzeugeDarstellung, ANFANGSANSICHT } from './darstellung.js';
 import { erzeugeBedienung } from './bedienung.js';
 
@@ -368,6 +369,14 @@ function starte() {
   let auffangzaehler = 0;
   let meldung = null;
 
+  // Nachdämpfung: ob seit der letzten Anzeige irgendein Bild gedämpft war, und
+  // was zuletzt angezeigt wurde. Genau wie die Bildfolge wird das über das
+  // Anzeigefenster gesammelt und nicht im Augenblick des Ablesens abgegriffen —
+  // die schnellste Stelle schwankt von Bild zu Bild, ein einzelner Blick träfe
+  // es zufällig. So heißt das Wort: „in der letzten halben Sekunde gedämpft".
+  let gedaempftSeitAnzeige = false;
+  let letzteDaempfung = false;
+
   const bedienung = erzeugeBedienung({
     auswahlfeld: document.querySelector('#formauswahl'),
     ansichtfeld: document.querySelector('#ansichtauswahl'),
@@ -694,6 +703,7 @@ function starte() {
     }
 
     leseFelder(kanal, felder);
+    stelleNachdaempfung();
     darstellung.zeichne(felder, { ansicht: gewaehlteAnsicht, teilchen: teilchenAn, schritte });
 
     bilderSeitAnzeige++;
@@ -704,8 +714,10 @@ function starte() {
     if (vergangen >= MITTELUNGSZEIT) {
       letzteBildfolge = Math.round((bilderSeitAnzeige * 1000) / vergangen);
       letzteSchritteJeBild = (schritteSeitAnzeige / bilderSeitAnzeige).toFixed(1);
+      letzteDaempfung = gedaempftSeitAnzeige;
       bilderSeitAnzeige = 0;
       schritteSeitAnzeige = 0;
+      gedaempftSeitAnzeige = false;
       letzteAnzeige = jetzt;
       zeigeAnzeige();
     }
@@ -762,6 +774,10 @@ function starte() {
    */
   function zeichneStand() {
     leseFelder(kanal, felder);
+    stelleNachdaempfung();
+    // Ein einzelnes Bild ist hier das ganze Anzeigefenster — anders als in der
+    // laufenden Schleife, wo über eine halbe Sekunde gesammelt wird.
+    letzteDaempfung = gedaempftSeitAnzeige;
     darstellung.zeichne(felder, {
       ansicht: gewaehlteAnsicht,
       teilchen: teilchenAn,
@@ -771,9 +787,35 @@ function starte() {
   }
 
   /**
+   * Stellt die Nachdämpfung nach der schnellsten Stelle in den eben gelesenen
+   * Feldern ein und merkt sich, dass gedämpft wurde (Etappe 3.6).
+   *
+   * Beides gehört zusammen und steht deshalb an einer Stelle: Gedämpft wird nur,
+   * wo es eng wird, und **gesagt wird es immer, wenn gedämpft wird.** Das Bild
+   * ist dabei etwas glatter als die Wirklichkeit; verschwiegen wäre das eine
+   * Täuschung, ausgewiesen ist es eine Lehre über die Grenzen des Verfahrens
+   * (siehe „Warum das erlaubt ist" bei Etappe 3.6 in `SPEC.md`).
+   *
+   * Angesagt wird es als das eine Wort „Gedämpft" in der Laufanzeige, was es
+   * bedeutet steht fest im Hinweistext bei den Einstellungen. Weder ein Kasten
+   * unter dem Bild noch der Prozentsatz: Der Kasten schöbe die Einstellungen bei
+   * jedem Kommen und Gehen auf und ab, und eine Zahl, die von Bild zu Bild
+   * schwankt, sagt weniger als das Wort.
+   */
+  function stelleNachdaempfung() {
+    if (setzeNachdaempfung(kanal, hoechstesTempo(felder)) > 0) {
+      gedaempftSeitAnzeige = true;
+    }
+  }
+
+  /**
    * Wirft die angefangene Messung der Bildfolge weg. Nach einem Anhalten, einem
    * Formwechsel oder einer Reglerstellung wäre sie über die Unterbrechung hinweg
    * gemittelt und meldete eine Bildfolge, die es nie gab.
+   *
+   * Aufgerufen wird das genau dort, wo die Strömung neu ansetzt — deshalb fällt
+   * hier auch das Wort „Gedämpft" weg. Es gehört zum Lauf, der eben zu Ende
+   * gegangen ist; über den neuen sagt es nichts.
    */
   function vergissMessung() {
     bilderSeitAnzeige = 0;
@@ -781,10 +823,15 @@ function starte() {
     letzteAnzeige = performance.now();
     letzteBildfolge = null;
     letzteSchritteJeBild = null;
+    gedaempftSeitAnzeige = false;
+    letzteDaempfung = false;
   }
 
   function zeigeAnzeige() {
     const stand = `${kanal.schrittzahl.toLocaleString('de-DE')} Schritte gerechnet`;
+    // Voran, nicht hinten angehängt: Das Wort ist der Vorbehalt zu dem, was
+    // gerade zu sehen ist, und soll vor den gewohnten Zahlen stehen.
+    const gedaempft = letzteDaempfung ? 'Gedämpft · ' : '';
     // Was das Auffangnetz zu sagen hat, geht der gewohnten Anzeige vor. Es
     // verschwindet von selbst wieder, sobald die Rechnung lange durchgehalten
     // hat — siehe `ERHOLUNGSSCHRITTE`.
@@ -792,8 +839,10 @@ function starte() {
       anzeige.textContent = laeuft ? `${meldung} · ${stand}` : meldung;
       return;
     }
+    // Auch im angehaltenen Zustand: Das Wort gehört zu dem Bild, das gerade auf
+    // dem Schirm steht, nicht zur laufenden Rechnung.
     if (!laeuft) {
-      anzeige.textContent = `Angehalten · ${stand}`;
+      anzeige.textContent = `${gedaempft}Angehalten · ${stand}`;
       return;
     }
     if (letzteBildfolge === null) {
@@ -801,7 +850,8 @@ function starte() {
       return;
     }
     anzeige.textContent =
-      `${letzteBildfolge} Bilder je Sekunde · ${letzteSchritteJeBild} Rechenschritte je Bild · ${stand}`;
+      `${gedaempft}${letzteBildfolge} Bilder je Sekunde` +
+      ` · ${letzteSchritteJeBild} Rechenschritte je Bild · ${stand}`;
   }
 
   /** Schreibt unter die Überschrift, was gerade zu sehen ist. */

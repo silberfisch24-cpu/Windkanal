@@ -7,8 +7,8 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
 
 - **Zweck:** Ein interaktiver 2D-Windkanal im Browser, in dem man ein Hindernis in eine Strömung setzt und die Umströmung sofort sieht.
 - **Gehört ausdrücklich nicht dazu:** keine belastbaren Messwerte (Widerstands-/Auftriebsbeiwerte) — die Simulation ist anschaulich, nicht ingenieurstauglich; kein freies Zeichnen eigener Formen; kein Server, keine Nutzerkonten, kein Speichern.
-- **Aktueller Stand:** **Etappen 3.4 und 3.5 abgenommen (`v1.3`) — Abschnitt 3 ist
-  bis auf die neu aufgenommene Etappe 3.6 abgearbeitet.**
+- **Aktueller Stand:** **Etappe 3.6 abgenommen (`v1.4`) — Abschnitt 3 ist damit
+  abgearbeitet.**
   Unter <https://silberfisch24-cpu.github.io/Windkanal/> läuft die Strömung als Farbfeld;
   über dem Bild lässt sich zwischen Kreis, Rechteck, Platte und Profil wechseln, zwischen
   den drei Farbfeldern Geschwindigkeit, Druck und Wirbelstärke umschalten, die
@@ -16,21 +16,25 @@ gehört der Zuwachs in einen der unteren Abschnitte.*
   Bild klappt ein Feld die fünf Regler auf** — Wind, Größe, Anstellwinkel, Höhe über dem
   Boden und Rechenauflösung —, auf dem Rechner offen, auf dem Handy zu. Dort passt die
   Seite dadurch ohne Scrollen auf den Schirm. Womit sie aufgeht, misst sie beim Laden
-  selbst. **Zerfällt die Rechnung, fängt die Seite das auf**: neu ansetzen, sagen was war,
-  beim dritten Mal anhalten. Darunter liegt die in Abschnitt 1 fertiggestellte Kernlogik:
-  Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel und Höhe über dem Boden,
-  Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei Auflösungsstufen bei
-  einstellbarer Windgeschwindigkeit. Prüfbar über `node werkzeug/pruefe-kern.js` (neun
-  Teile, 51 Prüfpunkte, etwa 60 Sekunden). Frühere Stände: `v0.1` Projektgrundlage, `v0.2`
+  selbst. **Wird die Luft irgendwo im Kanal zu schnell, dämpft die Seite nach und sagt es**
+  („Gedämpft" in der Laufanzeige); **zerfällt die Rechnung doch, fängt sie es auf**: neu
+  ansetzen, sagen was war, beim dritten Mal anhalten. Darunter liegt die in Abschnitt 1
+  fertiggestellte Kernlogik: Strömung im Kanal, alle vier Formen mit Größe, Anstellwinkel
+  und Höhe über dem Boden, Geschwindigkeit, Druck und Wirbelstärke ablesbar, drei
+  Auflösungsstufen bei einstellbarer Windgeschwindigkeit. Prüfbar über
+  `node werkzeug/pruefe-kern.js` (zehn Teile, 57 Prüfpunkte, etwa 62 Sekunden). Frühere
+  Stände: `v0.1` Projektgrundlage, `v0.2`
   Strömung im leeren Kanal, `v0.3` Hindernis im Kanal, `v0.4` alle vier Formen, `v0.5`
   abgeleitete Größen, `v0.6` Auflösung und Windgeschwindigkeit, `v0.7` erstes Bild auf dem
   Bildschirm, `v0.8` Seite bedienbar, `v0.9` öffentlich erreichbar und auf dem Handy
   lauffähig, `v1.0` Szene über Regler einstellbar, `v1.1` Rechenauflösung über einen
-  Regler, `v1.2` alle vier Darstellungsarten. Noch nicht: keine Legende zu den Skalen; die
-  obere Ecke der Regler zerfällt weiterhin und wird nur aufgefangen (Etappe 3.6); das
-  Druckbild pulsiert im Takt der Wirbelablösung (untersucht, echte Erscheinung); im
-  Querformat muss man scrollen (Etappe 4.2). Als Nächstes **Etappe 3.6** — im kritischen
-  Bereich sichtbar nachdämpfen, statt es auf den Zusammenbruch ankommen zu lassen.
+  Regler, `v1.2` alle vier Darstellungsarten, `v1.3` ungewöhnliche Situationen abgefangen
+  und Einstellungen einklappbar. Noch nicht: keine Legende zu den Skalen; den Wind mitten
+  im Lauf stark zurückzunehmen kann die Rechnung in der kritischen Ecke zerstören
+  (Etappe 3.7, zurückgestellt, wird vom Auffangnetz aufgefangen); das Druckbild pulsiert
+  im Takt der Wirbelablösung (untersucht, echte Erscheinung); im Querformat muss man
+  scrollen (Etappe 4.2). Als Nächstes **Abschnitt 4** — beginnend mit Etappe 4.1:
+  stimmige Farbskalen mit Legende und ein glatter Umriss des Körpers.
 
 ---
 
@@ -208,7 +212,7 @@ Commit-Nachrichten verweisen auf diese Nummern.*
   - Anlass: Etappe 3.3 hat die Bedienleiste um zwei Gruppen erweitert; die Unterkante des Bildes rückte dadurch auf 393 Punkten Breite von 498 auf 696 Punkte hinunter.
   - Verhältnis zu **4.2**: Diese Etappe schafft die Voraussetzung (weniger Höhe), 4.2 nimmt das Sitzen im Hoch- und Querformat als Ganzes ab. Sie ersetzt 4.2 nicht.
   - Noch nicht: Bei 320 Punkten Breite reicht es weiterhin nicht ohne Scrollen; bei 375 bricht die Ansichtsreihe auf zwei Zeilen um.
-- [ ] **3.6** *(aufgenommen 2026-08-02)* Nähert sich die Strömung der Grenze des Rechenbaren, dämpft die Seite sichtbar nach, statt es auf den Zusammenbruch ankommen zu lassen.
+- [x] **3.6** *(abgenommen 2026-08-03, v1.4)* Nähert sich die Strömung der Grenze des Rechenbaren, dämpft die Seite sichtbar nach, statt es auf den Zusammenbruch ankommen zu lassen.
   - Abnahme: Platte, Größe und Anstellwinkel am Anschlag, voller Wind. Die Seite zeigt an, dass sie nachdämpft, und **läuft weiter** — die Meldung „aus dem Tritt geraten" aus 3.4 bleibt aus. Wind zurücknehmen: Die Dämpfung schaltet sich wieder ab.
   - Anlass: Etappe 3.4 fängt den Zusammenbruch zwar sauber ab, aber der Nutzer läuft weiterhin blind hinein. Nach der Rückmeldung vom 2026-08-02 (am iPad nachgestellt) ist das die verbleibende Unzulänglichkeit von Abschnitt 3.
   - **Warum Dämpfung und nicht Wind:** Die Dämpfung wirkt in jeder Zelle in jedem Schritt, also sofort und genau dort, wo die Schwingung wächst. Der Windregler wirkt am Einlass, 40 bis 80 Zellen vor dem Körper; bis die Änderung dort ankommt, vergehen 400 bis 800 Schritte, während der Aufschaukelvorgang in rund 100 Schritten durch ist. Außerdem stünde dann eine Zahl auf dem Bildschirm, die nicht mehr stimmt.
@@ -217,10 +221,32 @@ Commit-Nachrichten verweisen auf diese Nummern.*
   - **Zuschnitt, bewusst klein gehalten:** global nachdämpfen, nicht je Zelle. Örtliche Dämpfung nur an den Zellen mit hoher Scherung wäre am Bild kaum zu sehen, verlangt aber eine Rechnung in der innersten Schleife und kostet dauerhaft geschätzte 20 bis 40 % Rechenzeit — auf dem Handy ein hoher Dauerpreis für einen seltenen Ausnahmefall. Die globale Fassung ändert eine Zahl und kostet nichts.
   - Vor der Umsetzung zu messen, in dieser Reihenfolge — jede Antwort kann die Etappe beenden: (1) Verhindert eine globale Dämpfungserhöhung den Zerfall überhaupt, oder verschiebt sie ihn nur? (2) Wie viel Zuschlag braucht es, und ab welcher Schwelle? (3) Wie stark verändert sich das Bild sichtbar? (4) Schaltet sie sauber ab oder pumpt sie?
   - **Abbruchbedingung:** Zeigt Messung (1) oder (3), dass es nur mit einer Dämpfung geht, die das Strömungsbild erkennbar verfälscht, wird die Etappe nicht umgesetzt, sondern mit dem Messergebnis geschlossen. Es bleibt dann beim Auffangnetz aus 3.4.
+  - **Ergebnis der vier Messungen (2026-08-03):** Alle vier fielen zugunsten der Umsetzung
+    aus, die Abbruchbedingung greift nicht — Zahlen im Änderungsverlauf. Die Dämpfung
+    setzt bei 55 % der Gitter-Schallgeschwindigkeit ein, steht bei 65 % voll und schlägt
+    dann 0,03 Zähigkeit auf.
+  - **Angesagt wird sie als das Wort „Gedämpft" vorn in der Laufanzeige** (auf Wunsch des
+    Nutzers bei der Abnahme). Die erste Fassung war ein farbig hinterlegter Kasten unter
+    dem Bild; er schob bei jedem Kommen und Gehen die Einstellungen um 163 Bildpunkte auf
+    und ab. Was das Wort bedeutet, erklärt ein fester Satz im Hinweistext bei den
+    Einstellungen.
+  - Noch nicht: Den Wind mitten im Lauf **stark** zurückzunehmen kann die Rechnung in
+    derselben Ecke zerstören. Das ist keine Folge der Nachdämpfung — ohne sie tritt es
+    genauso auf, sie verzögert es nur. Als Etappe 3.7 beschrieben und auf Entscheidung des
+    Nutzers zurückgestellt.
+- [ ] **3.7** *(vorgeschlagen 2026-08-03, vom Nutzer am selben Tag zurückgestellt)* Den Wind mitten im Lauf stark zurückzunehmen darf die Rechnung nicht zerstören.
+  - **Entscheidung des Nutzers (2026-08-03): bleibt vorerst, wie es ist.** Er hat es selbst nachgestellt und kommt zum selben Ergebnis — die Neustarts lassen sich nicht vollständig verhindern. Die Etappe bleibt beschrieben stehen, damit der Befund nicht verlorengeht; angefasst wird sie nicht, solange er es nicht verlangt.
+  - Abnahme: In der kritischen Ecke (Platte, Größe und Anstellwinkel am Anschlag, aufsitzend) den Windregler von 100 % auf 40 % ziehen. Die Strömung beruhigt sich, ohne dass die Meldung „aus dem Tritt geraten" kommt.
+  - Anlass: beim Nachmessen von 3.6 gefunden und dort ausführlich beschrieben. **Es ist keine Folge der Nachdämpfung** — ohne sie tritt es genauso auf, sie verzögert es nur. Am leeren Kanal und an gewöhnlichen Szenen ist derselbe Windwechsel harmlos.
+  - Einordnung: **Fehlerbehebung.** Der Kommentar an `setzeWindgeschwindigkeit` sagt, die Änderung mitten im Lauf sei unbedenklich; für die obere Ecke der Regler stimmt das nicht.
+  - Noch nicht untersucht, welcher Weg trägt: den Wind über einige hundert Schritte einschleichen lassen, statt ihn am Einlass zu setzen, wäre der naheliegende — gemessen ist er nicht. Auch nicht gemessen ist, ob es reicht, oder ob der Auslass die starken Wirbel aus der schnellen Phase nicht verkraftet.
+  - Bis dahin greift das Auffangnetz aus 3.4: Die Seite setzt neu an, sagt es, und danach läuft sie bei zurückgenommenem Wind ruhig weiter.
 
-**Abschnitt 3 ist bis auf 3.6 abgearbeitet.** Die Seite ist über Regler
-einstellbar, zeigt alle vier Darstellungsarten, verhält sich in ungewöhnlichen
-Situationen vernünftig und kommt auf dem Handy ohne Scrollen aus.
+**Abschnitt 3 ist abgearbeitet** (3.7 ist keine offene Etappe des Abschnitts,
+sondern ein zurückgestellter Befund). Die Seite ist über Regler einstellbar,
+zeigt alle vier Darstellungsarten, verhält sich in ungewöhnlichen Situationen
+vernünftig, kommt auf dem Handy ohne Scrollen aus und dämpft im kritischen
+Bereich nach, statt es auf den Zusammenbruch ankommen zu lassen.
 
 ### Abschnitt 4 — Darstellung und Politur
 
@@ -917,3 +943,83 @@ Fehler.*
      ein Skill geladen ist.
   5. *Nicht geändert:* keine Zeile an Programm, Oberfläche oder Prüfskripten. Reine
      Dokumentation, deshalb nur Commit und kein Tag — `VERSION.md` bleibt unberührt.
+- **2026-08-03 (Etappe 3.6):** *Nachdämpfung an der Grenze des Rechenbaren.* Neu im Kern:
+  `hoechstesTempo(felder)` liefert die schnellste Stelle im Kanal,
+  `setzeNachdaempfung(kanal, spitze)` macht daraus einen Anteil zwischen 0 und 1, und
+  `stossen` schlägt ihn als Zähigkeit auf. Die Oberfläche stellt das in **jedem** Bild
+  nach und sagt unter dem Bild an, dass gerade nachgedämpft wird.
+  - **Die vier Messungen, die `SPEC.md` vor der Umsetzung verlangt hat** — an der Ecke,
+    die seit Etappe 3.4 als „zerfällt weiterhin" vermerkt war (fein, Platte 115 %, 30°,
+    aufsitzend, voller Wind; Zerfall bei Schritt 2584):
+
+    | Frage | Antwort |
+    |---|---|
+    | 1. Verhindern oder nur verschieben? | **Verhindern, aber erst ab dem Dreifachen.** Zähigkeit 0,015 verschob den Zerfall auf 11056, 0,02 auf 8840, 0,03 hielt über die ganzen 12000 Schritte. |
+    | 2. Wie viel, ab wann? | **Ab 55 % der Gitter-Schallgeschwindigkeit, voll bei 65 %, Zuschlag 0,03.** |
+    | 3. Wie stark ändert sich das Bild? | **Wenig.** Bei dauerhaft voller Dämpfung — mehr, als im Betrieb je ansteht — mittleres Tempo im Kanal −1 bis −4,5 %, schnellste Stelle −6 bis −15 %, Querausschlag der Wirbelstraße unverändert (101 %), Totwasser eher etwas breiter. Die Abbruchbedingung greift damit nicht. |
+    | 4. Pumpt sie? | **Nein, aber sie geht oft an und aus** — in der kritischen Ecke in 47 % der Bilder, mit 15 An-/Aus-Wechseln über 6000 Schritte. Betroffen ist davon nur der **Text**; er bekommt deshalb einen Nachlauf von 90 Bildern. |
+
+  - **Warum die Schwelle bei 55 % liegt:** Gewöhnliche Szenen bleiben mit 31 bis 42 % weit
+    darunter (Kreis 35, Profil 31, Rechteck 42), die härteste noch tragfähige — Platte
+    100 %, 30°, aufsitzend — kommt auf 54 %. Der Zerfall setzte bei 58 % ein und war
+    30 Schritte später da. Die Schwelle trennt also, ohne im Alltag anzuspringen; im
+    Prüfteil 10 ist das als eigener Punkt festgehalten.
+  - **Warum die volle Wirkung schon bei 65 % steht und nicht erst bei 70 %:** Mit 70 %
+    hielt die Ecke zwar auch, die Spitze schoss aber zwischenzeitlich auf 84 % — zu dicht
+    an der Grenze. Mit 65 % blieb sie bei 64 % stehen. Beide Fassungen dämpfen gleich oft;
+    die schärfere kostet also nichts und lässt mehr Luft.
+  - **Kein Gedächtnis, kein langsames Abklingen.** Eine Fassung, in der der Anteil nur um
+    1 % je Bild fallen darf, wurde gemessen und brachte nichts — sie hätte nur eine zweite
+    Zahl zu erklären. Der Anteil richtet sich allein nach der Spitze dieses Augenblicks;
+    dadurch ist die Dämpfung im nächsten Bild wieder aus, sobald der Kanal ruhig ist.
+  - **Global, nicht je Zelle** — wie im Zuschnitt der Etappe festgelegt. Volle
+    Nachdämpfung rechnet bitgenau so, als wäre der Kanal gleich mit der höheren Zähigkeit
+    angelegt worden; das prüft Teil 10 als eigenen Punkt.
+  - **Kosten:** `hoechstesTempo` braucht in der feinen Stufe 0,05 ms — ein bloßer
+    Vergleichsdurchgang über ein Feld, das für das Bild ohnehin gelesen wird, und damit
+    zwanzigmal billiger als `istHeil` (1,08 ms). Deshalb läuft es in **jedem** Bild,
+    während `istHeil` bei jedem zehnten bleibt.
+  - **Nachgemessen im Browser** (feine Stufe, kritische Ecke): Die Ansage erscheint nach
+    5 Sekunden, die Rechnung läuft über 8544 Schritte durch, ohne dass die Meldung aus 3.4
+    kommt — vorher zerfiel sie bei 2584. Keine Fehler in der Konsole.
+  - **Angesagt wird es als das Wort „Gedämpft" in der Laufanzeige** — auf Wunsch des
+    Nutzers (2026-08-03). Die erste Fassung war ein farbig hinterlegter Kasten unter dem
+    Bild; er schob bei jedem Kommen und Gehen die Einstellungen um 163 Bildpunkte auf und
+    ab. Das Wort blinkt zwar auf, greift dafür nicht in den Seitenaufbau ein. **Was es
+    bedeutet, steht dafür fest im Hinweistext bei den Einstellungen** — ungesagt bleiben
+    darf es nicht, dafür ist der Eingriff ins Bild zu wesentlich.
+  - **Gesammelt über das Anzeigefenster, nicht im Augenblick abgegriffen.** Die Laufanzeige
+    wird ohnehin nur alle 500 ms neu geschrieben; das Wort steht dort, wenn in dieser
+    halben Sekunde **irgendein** Bild gedämpft war. Ein Einzelblick träfe es zufällig — die
+    Spitze schwankt von Bild zu Bild. Damit erübrigt sich auch der Nachlauf, den die erste
+    Fassung für den Kasten brauchte.
+- **2026-08-03 (Etappe 3.6, Nebenbefund):** *Den Wind mitten im Lauf **stark**
+  zurückzunehmen kann die Rechnung zerstören — unabhängig von der Nachdämpfung.* Gefunden
+  beim Nachmessen des Abnahmekriteriums „Wind zurücknehmen: Die Dämpfung schaltet sich
+  wieder ab".
+  - **Was gemessen wurde:** In der kritischen Ecke (Platte 115 %, 30°, aufsitzend) den
+    Wind von 100 % auf 60 % zurückgenommen — in einem Sprung wie in 5-%-Stufen alle 100
+    oder 400 Schritte. Ergebnis in allen Fassungen: Zerfall einige tausend Schritte später
+    (ohne Dämpfung bei 3512 im groben Gitter, mit Dämpfung bei 6952 bis 7336 im feinen).
+    Auf 80 % zurückgenommen hält sie dagegen über 12000 Schritte.
+  - **Es liegt nicht an der Nachdämpfung.** Ohne sie tritt es genauso auf; sie schiebt den
+    Zerfall nur um einige tausend Schritte hinaus. Global mehr Zähigkeit kann es auch
+    nicht verhindern.
+  - **Es liegt auch nicht an den Rändern allgemein.** Am **leeren** Kanal ist derselbe
+    Windwechsel harmlos: mittlere Dichte bleibt bei 1,0007, die Spitze folgt dem neuen
+    Wind sauber von 0,113 auf 0,068. Ebenso harmlos an einer gewöhnlichen Szene (Kreis,
+    feine Stufe, 12000 Schritte).
+  - **Was dabei geschieht:** Ein fester Lauf mit 60 % Wind hat seine schnellste Stelle bei
+    30 % der Schallgeschwindigkeit. Derselbe Kanal, von 100 % heruntergenommen, bleibt
+    3900 Schritte später noch bei 52 bis 63 % — die Spitze folgt dem Wind **nicht**. Die
+    starken Wirbel aus der schnellen Phase bleiben im Kanal und laufen in eine nun
+    langsame Umgebung; der Zerfall setzt weit hinten ein (bei x = 363 von 400).
+  - **Der Kommentar an `setzeWindgeschwindigkeit` ist damit zu weit gefasst.** Er nennt
+    die Änderung mitten im Lauf „unbedenklich". Für den leeren Kanal und für gewöhnliche
+    Szenen stimmt das; für die obere Ecke der Regler stimmt es nicht.
+  - **Nicht behoben, bewusst.** Das ist eine eigene Fehlerbehebung und nicht der Auftrag
+    von 3.6 — hier wäre sie eine zweite Änderung im selben Zug, und die Ursache ließe sich
+    hinterher nicht mehr zuordnen. Aufgefangen wird der Fall weiterhin von Etappe 3.4:
+    Die Seite setzt die Strömung neu an, sagt es, und danach läuft sie bei
+    zurückgenommenem Wind ruhig weiter. Vorschlag für eine eigene Etappe steht in der
+    Etappenliste.
